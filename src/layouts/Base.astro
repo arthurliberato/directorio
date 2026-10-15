@@ -4,7 +4,7 @@ import '@fontsource-variable/inter';
 import '../styles/global.css';
 import Icon from '../components/Icon.astro';
 import JsonLd from '../components/JsonLd.astro';
-import { BRAND, NAP, SITE_MODE, SITE_URL } from '../config.ts';
+import { BRAND, GA4_ID, NAP, SITE_MODE, SITE_URL } from '../config.ts';
 import { getSpecialties, queryHub } from '../lib/data.ts';
 import { MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
 
@@ -38,6 +38,10 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   <meta property="og:url" content={canonical} />
   <meta property="og:locale" content="es_DO" />
   {jsonLd && <JsonLd data={jsonLd} />}
+  {GA4_ID && SITE_MODE === 'production' && (<>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}></script>
+    <script is:inline define:vars={{ GA4_ID }}>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} window.gtag = gtag; gtag('js', new Date()); gtag('config', GA4_ID);</script>
+  </>)}
 </head>
 <body>
   <a class="skip" href="#main">Saltar al contenido</a>
@@ -98,10 +102,9 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   </footer>
   <script is:inline>
     // Minimal event hook: any element with data-event reports to GA4 if it is present (SPEC §11). No-op otherwise.
-    document.addEventListener('click', function (e) {
-      var el = e.target.closest && e.target.closest('[data-event]');
-      if (el && window.gtag) window.gtag('event', el.getAttribute('data-event'), { doctor: el.getAttribute('data-doctor') || undefined });
-    });
+    function report(el) { if (el && window.gtag) window.gtag('event', el.getAttribute('data-event'), { doctor: el.getAttribute('data-doctor') || undefined }); }
+    document.addEventListener('click', function (e) { report(e.target.closest && e.target.closest('[data-event]:not(form)')); });
+    document.addEventListener('submit', function (e) { report(e.target.closest && e.target.closest('form[data-event]')); });
   </script>
 </body>
 </html>

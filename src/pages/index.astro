@@ -22,7 +22,7 @@ const guides = getGuides().slice(0, 3);
       <h1>Encuentra el médico adecuado. <span class="accent">Cuida lo que más importa.</span></h1>
       <p class="lead">Especialistas cerca de ti, información verificada y la tranquilidad de elegir con confianza.</p>
       <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub URL. -->
-      <form class="search-card" action="/buscar" method="get" role="search">
+      <form class="search-card" action="/buscar" method="get" role="search" data-event="search">
         <div class="field"><Icon name="stethoscope" size={28} /><div style="flex:1"><label for="q-esp">Especialidad</label>
           <select id="q-esp" name="especialidad" required><option value="">¿Qué médico necesitas?</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
         <div class="field"><Icon name="pin" size={28} /><div style="flex:1"><label for="q-ciu">Ciudad</label>

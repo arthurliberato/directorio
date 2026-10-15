@@ -2,6 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { ensureDataset } from './lib/dataset.ts';
 import { getRedirect } from './lib/data.ts';
 import { checkAdminAuth } from './lib/admin-auth.ts';
+import { botLogLine, classifyBot } from './lib/bots.ts';
 
 // Order: canonical path form (lowercase, no trailing slash) -> redirects table -> render -> cache headers.
 export const onRequest = defineMiddleware(async (ctx, next) => {
@@ -24,7 +25,9 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
     return new Response(null, { status: 301, headers: { Location: canonical + url.search, 'Cache-Control': 'public, max-age=3600' } });
   }
 
+  const bot = classifyBot(ctx.request.headers.get('user-agent'));
   const res = await next();
+  if (bot) console.log(botLogLine(bot, res.status, path));
   if (!res.headers.has('Cache-Control') && (res.headers.get('content-type') ?? '').includes('text/html')) {
     const noStore = path === '/buscar' || path.startsWith('/admin');
     res.headers.set('Cache-Control', noStore ? 'no-store' : res.status === 200

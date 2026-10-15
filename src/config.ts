@@ -21,3 +21,6 @@ export const NAP = {
   country: 'DO',
   countryName: 'República Dominicana',
 };
+
+// Analytics (SPEC §11): GA4 loads only when an ID is configured.
+export const GA4_ID = env('PUBLIC_GA4_ID') ?? '';

@@ -95,3 +95,24 @@ test('hub queries only count published doctors', () => {
   const n = queryHub({ specialty: getSpecialtyBySlug('cardiologos')!, city: getCityBySlug('santo-domingo')! }).length;
   assert.equal(n, 9);
 });
+
+import { botLogLine, classifyBot } from '../src/lib/bots.ts';
+test('bot classification: AI search/training/user agents are distinguished', () => {
+  assert.equal(classifyBot('Mozilla/5.0 AppleWebKit/537.36; compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot'), 'OAI-SearchBot');
+  assert.equal(classifyBot('Mozilla/5.0 (compatible; GPTBot/1.1)'), 'GPTBot');
+  assert.equal(classifyBot('Claude-User/1.0'), 'Claude-User');
+  assert.equal(classifyBot('Mozilla/5.0 (compatible; Applebot-Extended/0.1)'), 'Applebot-Extended');
+  assert.equal(classifyBot('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Safari/604.1'), null);
+  assert.equal(JSON.parse(botLogLine('ClaudeBot', 403, '/x')).ai, true);
+});
+
+import { parseCsv, summarize } from '../src/lib/ai-visibility.ts';
+test('AI visibility CSV: validates prompt ids and computes citation rate', () => {
+  const ids = new Set(['es-1', 'es-2']);
+  const csv = 'run_month,engine,prompt_id,cited,cited_url,position,accuracy\n2026-10,chatgpt,es-1,1,https://short.do/x,2,accurate\n2026-10,chatgpt,es-2,0,,,\n';
+  const { rows, errors } = parseCsv(csv, ids);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(summarize(rows)[0], { month: '2026-10', engine: 'chatgpt', prompts: 2, cited: 1, citationRate: 50, avgPosition: 2, inaccurate: 0 });
+  assert.ok(parseCsv('run_month,engine,prompt_id,cited\n2026-10,bard,es-1,1', ids).errors.length > 0);
+  assert.ok(parseCsv('run_month,engine,prompt_id,cited\n2026-10,claude,zz-9,1', ids).errors.length > 0);
+});

@@ -1,0 +1,807 @@
+{
+ "version": 1,
+ "es": [
+  {
+   "id": "es-1",
+   "q": "¿Cuál es un buen cardiólogo en Santo Domingo?"
+  },
+  {
+   "id": "es-2",
+   "q": "¿Cuánto cuesta una consulta con cardiólogo en República Dominicana?"
+  },
+  {
+   "id": "es-3",
+   "q": "Recomiéndame cardiólogos en Santiago"
+  },
+  {
+   "id": "es-4",
+   "q": "Recomiéndame cardiólogos en La Romana"
+  },
+  {
+   "id": "es-5",
+   "q": "Recomiéndame cardiólogos en San Pedro de Macorís"
+  },
+  {
+   "id": "es-6",
+   "q": "Recomiéndame cardiólogos en Punta Cana"
+  },
+  {
+   "id": "es-7",
+   "q": "¿Cuál es un buen pediatra en Santo Domingo?"
+  },
+  {
+   "id": "es-8",
+   "q": "¿Cuánto cuesta una consulta con pediatra en República Dominicana?"
+  },
+  {
+   "id": "es-9",
+   "q": "Recomiéndame pediatras en Santiago"
+  },
+  {
+   "id": "es-10",
+   "q": "Recomiéndame pediatras en La Romana"
+  },
+  {
+   "id": "es-11",
+   "q": "Recomiéndame pediatras en San Pedro de Macorís"
+  },
+  {
+   "id": "es-12",
+   "q": "Recomiéndame pediatras en Punta Cana"
+  },
+  {
+   "id": "es-13",
+   "q": "¿Cuál es un buen ginecólogo en Santo Domingo?"
+  },
+  {
+   "id": "es-14",
+   "q": "¿Cuánto cuesta una consulta con ginecólogo en República Dominicana?"
+  },
+  {
+   "id": "es-15",
+   "q": "Recomiéndame ginecólogos en Santiago"
+  },
+  {
+   "id": "es-16",
+   "q": "Recomiéndame ginecólogos en La Romana"
+  },
+  {
+   "id": "es-17",
+   "q": "Recomiéndame ginecólogos en San Pedro de Macorís"
+  },
+  {
+   "id": "es-18",
+   "q": "Recomiéndame ginecólogos en Punta Cana"
+  },
+  {
+   "id": "es-19",
+   "q": "¿Cuál es un buen dermatólogo en Santo Domingo?"
+  },
+  {
+   "id": "es-20",
+   "q": "¿Cuánto cuesta una consulta con dermatólogo en República Dominicana?"
+  },
+  {
+   "id": "es-21",
+   "q": "Recomiéndame dermatólogos en Santiago"
+  },
+  {
+   "id": "es-22",
+   "q": "Recomiéndame dermatólogos en La Romana"
+  },
+  {
+   "id": "es-23",
+   "q": "Recomiéndame dermatólogos en San Pedro de Macorís"
+  },
+  {
+   "id": "es-24",
+   "q": "Recomiéndame dermatólogos en Punta Cana"
+  },
+  {
+   "id": "es-25",
+   "q": "¿Cuál es un buen médico general en Santo Domingo?"
+  },
+  {
+   "id": "es-26",
+   "q": "¿Cuánto cuesta una consulta con médico general en República Dominicana?"
+  },
+  {
+   "id": "es-27",
+   "q": "Recomiéndame médicos generales en Santiago"
+  },
+  {
+   "id": "es-28",
+   "q": "Recomiéndame médicos generales en La Romana"
+  },
+  {
+   "id": "es-29",
+   "q": "Recomiéndame médicos generales en San Pedro de Macorís"
+  },
+  {
+   "id": "es-30",
+   "q": "Recomiéndame médicos generales en Punta Cana"
+  },
+  {
+   "id": "es-31",
+   "q": "¿Cuál es un buen ortopeda en Santo Domingo?"
+  },
+  {
+   "id": "es-32",
+   "q": "¿Cuánto cuesta una consulta con ortopeda en República Dominicana?"
+  },
+  {
+   "id": "es-33",
+   "q": "Recomiéndame ortopedas en Santiago"
+  },
+  {
+   "id": "es-34",
+   "q": "Recomiéndame ortopedas en La Romana"
+  },
+  {
+   "id": "es-35",
+   "q": "Recomiéndame ortopedas en San Pedro de Macorís"
+  },
+  {
+   "id": "es-36",
+   "q": "Recomiéndame ortopedas en Punta Cana"
+  },
+  {
+   "id": "es-37",
+   "q": "¿Cuál es un buen oftalmólogo en Santo Domingo?"
+  },
+  {
+   "id": "es-38",
+   "q": "¿Cuánto cuesta una consulta con oftalmólogo en República Dominicana?"
+  },
+  {
+   "id": "es-39",
+   "q": "Recomiéndame oftalmólogos en Santiago"
+  },
+  {
+   "id": "es-40",
+   "q": "Recomiéndame oftalmólogos en La Romana"
+  },
+  {
+   "id": "es-41",
+   "q": "Recomiéndame oftalmólogos en San Pedro de Macorís"
+  },
+  {
+   "id": "es-42",
+   "q": "Recomiéndame oftalmólogos en Punta Cana"
+  },
+  {
+   "id": "es-43",
+   "q": "¿Cuál es un buen neurólogo en Santo Domingo?"
+  },
+  {
+   "id": "es-44",
+   "q": "¿Cuánto cuesta una consulta con neurólogo en República Dominicana?"
+  },
+  {
+   "id": "es-45",
+   "q": "Recomiéndame neurólogos en Santiago"
+  },
+  {
+   "id": "es-46",
+   "q": "Recomiéndame neurólogos en La Romana"
+  },
+  {
+   "id": "es-47",
+   "q": "Recomiéndame neurólogos en San Pedro de Macorís"
+  },
+  {
+   "id": "es-48",
+   "q": "Recomiéndame neurólogos en Punta Cana"
+  },
+  {
+   "id": "es-49",
+   "q": "Cardiólogos que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-50",
+   "q": "Cardiólogos que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-51",
+   "q": "Cardiólogos que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-52",
+   "q": "Cardiólogos que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-53",
+   "q": "Pediatras que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-54",
+   "q": "Pediatras que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-55",
+   "q": "Pediatras que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-56",
+   "q": "Pediatras que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-57",
+   "q": "Ginecólogos que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-58",
+   "q": "Ginecólogos que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-59",
+   "q": "Ginecólogos que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-60",
+   "q": "Ginecólogos que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-61",
+   "q": "Dermatólogos que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-62",
+   "q": "Dermatólogos que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-63",
+   "q": "Dermatólogos que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-64",
+   "q": "Dermatólogos que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-65",
+   "q": "¿Cómo verificar si un médico tiene exequátur en República Dominicana?"
+  },
+  {
+   "id": "es-66",
+   "q": "¿Dónde puedo buscar médicos verificados en República Dominicana?"
+  },
+  {
+   "id": "es-67",
+   "q": "¿Cómo saber si un médico está en el Colegio Médico Dominicano?"
+  },
+  {
+   "id": "es-68",
+   "q": "¿Qué es el exequátur de un médico en RD?"
+  },
+  {
+   "id": "es-69",
+   "q": "¿Cuál es el mejor directorio médico de República Dominicana?"
+  },
+  {
+   "id": "es-70",
+   "q": "¿Qué médico me puede ver hoy por WhatsApp en Santo Domingo?"
+  },
+  {
+   "id": "es-71",
+   "q": "¿Qué ARS cubre la consulta con especialista en RD?"
+  },
+  {
+   "id": "es-72",
+   "q": "Cómo elegir un médico que acepte mi ARS"
+  },
+  {
+   "id": "es-73",
+   "q": "¿Qué llevar a mi primera consulta médica?"
+  },
+  {
+   "id": "es-74",
+   "q": "¿Cuándo debo visitar a un cardiólogo?"
+  },
+  {
+   "id": "es-75",
+   "q": "¿Cuánto cuesta ir al pediatra en Santo Domingo?"
+  },
+  {
+   "id": "es-76",
+   "q": "Médicos con horario de tarde en Piantini"
+  },
+  {
+   "id": "es-77",
+   "q": "Médicos generales en Santo Domingo"
+  },
+  {
+   "id": "es-78",
+   "q": "Clínicas y hospitales en Santo Domingo"
+  },
+  {
+   "id": "es-79",
+   "q": "Especialistas con exequátur verificado en Santo Domingo"
+  },
+  {
+   "id": "es-80",
+   "q": "Médicos generales en Santiago"
+  },
+  {
+   "id": "es-81",
+   "q": "Clínicas y hospitales en Santiago"
+  },
+  {
+   "id": "es-82",
+   "q": "Especialistas con exequátur verificado en Santiago"
+  },
+  {
+   "id": "es-83",
+   "q": "Médicos generales en La Romana"
+  },
+  {
+   "id": "es-84",
+   "q": "Clínicas y hospitales en La Romana"
+  },
+  {
+   "id": "es-85",
+   "q": "Especialistas con exequátur verificado en La Romana"
+  },
+  {
+   "id": "es-86",
+   "q": "Médicos generales en San Pedro de Macorís"
+  },
+  {
+   "id": "es-87",
+   "q": "Clínicas y hospitales en San Pedro de Macorís"
+  },
+  {
+   "id": "es-88",
+   "q": "Especialistas con exequátur verificado en San Pedro de Macorís"
+  },
+  {
+   "id": "es-89",
+   "q": "Médicos generales en Punta Cana"
+  },
+  {
+   "id": "es-90",
+   "q": "Clínicas y hospitales en Punta Cana"
+  },
+  {
+   "id": "es-91",
+   "q": "Especialistas con exequátur verificado en Punta Cana"
+  },
+  {
+   "id": "es-92",
+   "q": "Cardiólogos en Piantini, Santo Domingo"
+  },
+  {
+   "id": "es-93",
+   "q": "Cardiólogos en Naco, Santo Domingo"
+  },
+  {
+   "id": "es-94",
+   "q": "Cardiólogos en Gazcue, Santo Domingo"
+  },
+  {
+   "id": "es-95",
+   "q": "Cardiólogos en Evaristo Morales, Santo Domingo"
+  },
+  {
+   "id": "es-96",
+   "q": "Cardiólogos en Bella Vista, Santo Domingo"
+  },
+  {
+   "id": "es-97",
+   "q": "Cardiólogos en Arroyo Hondo, Santo Domingo"
+  },
+  {
+   "id": "es-98",
+   "q": "Pediatras en Piantini, Santo Domingo"
+  },
+  {
+   "id": "es-99",
+   "q": "Pediatras en Naco, Santo Domingo"
+  },
+  {
+   "id": "es-100",
+   "q": "Pediatras en Gazcue, Santo Domingo"
+  },
+  {
+   "id": "es-101",
+   "q": "Pediatras en Evaristo Morales, Santo Domingo"
+  },
+  {
+   "id": "es-102",
+   "q": "Pediatras en Bella Vista, Santo Domingo"
+  },
+  {
+   "id": "es-103",
+   "q": "Pediatras en Arroyo Hondo, Santo Domingo"
+  },
+  {
+   "id": "es-104",
+   "q": "Ginecólogos en Piantini, Santo Domingo"
+  },
+  {
+   "id": "es-105",
+   "q": "Ginecólogos en Naco, Santo Domingo"
+  },
+  {
+   "id": "es-106",
+   "q": "Ginecólogos en Gazcue, Santo Domingo"
+  },
+  {
+   "id": "es-107",
+   "q": "Ginecólogos en Evaristo Morales, Santo Domingo"
+  },
+  {
+   "id": "es-108",
+   "q": "Ginecólogos en Bella Vista, Santo Domingo"
+  },
+  {
+   "id": "es-109",
+   "q": "Ginecólogos en Arroyo Hondo, Santo Domingo"
+  },
+  {
+   "id": "es-110",
+   "q": "Dermatólogos en Piantini, Santo Domingo"
+  },
+  {
+   "id": "es-111",
+   "q": "Dermatólogos en Naco, Santo Domingo"
+  },
+  {
+   "id": "es-112",
+   "q": "Dermatólogos en Gazcue, Santo Domingo"
+  },
+  {
+   "id": "es-113",
+   "q": "Dermatólogos en Evaristo Morales, Santo Domingo"
+  },
+  {
+   "id": "es-114",
+   "q": "Dermatólogos en Bella Vista, Santo Domingo"
+  },
+  {
+   "id": "es-115",
+   "q": "Dermatólogos en Arroyo Hondo, Santo Domingo"
+  },
+  {
+   "id": "es-116",
+   "q": "Médicos generales en Piantini, Santo Domingo"
+  },
+  {
+   "id": "es-117",
+   "q": "Médicos generales en Naco, Santo Domingo"
+  },
+  {
+   "id": "es-118",
+   "q": "Médicos generales en Gazcue, Santo Domingo"
+  },
+  {
+   "id": "es-119",
+   "q": "Médicos generales en Evaristo Morales, Santo Domingo"
+  },
+  {
+   "id": "es-120",
+   "q": "Médicos generales en Bella Vista, Santo Domingo"
+  },
+  {
+   "id": "es-121",
+   "q": "Médicos generales en Arroyo Hondo, Santo Domingo"
+  },
+  {
+   "id": "es-122",
+   "q": "Médicos generales que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-123",
+   "q": "Médicos generales que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-124",
+   "q": "Médicos generales que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-125",
+   "q": "Médicos generales que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-126",
+   "q": "Ortopedas que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-127",
+   "q": "Ortopedas que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-128",
+   "q": "Ortopedas que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-129",
+   "q": "Ortopedas que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-130",
+   "q": "Oftalmólogos que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-131",
+   "q": "Oftalmólogos que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-132",
+   "q": "Oftalmólogos que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-133",
+   "q": "Oftalmólogos que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-134",
+   "q": "Neurólogos que aceptan ARS Humano en Santo Domingo"
+  },
+  {
+   "id": "es-135",
+   "q": "Neurólogos que aceptan ARS Universal en Santo Domingo"
+  },
+  {
+   "id": "es-136",
+   "q": "Neurólogos que aceptan SeNaSa en Santo Domingo"
+  },
+  {
+   "id": "es-137",
+   "q": "Neurólogos que aceptan Mapfre Salud en Santo Domingo"
+  },
+  {
+   "id": "es-138",
+   "q": "Cardiólogos con atención por WhatsApp en Santo Domingo"
+  },
+  {
+   "id": "es-139",
+   "q": "Mejor cardiólogo de Santiago de los Caballeros"
+  },
+  {
+   "id": "es-140",
+   "q": "Pediatras con atención por WhatsApp en Santo Domingo"
+  },
+  {
+   "id": "es-141",
+   "q": "Mejor pediatra de Santiago de los Caballeros"
+  },
+  {
+   "id": "es-142",
+   "q": "Ginecólogos con atención por WhatsApp en Santo Domingo"
+  },
+  {
+   "id": "es-143",
+   "q": "Mejor ginecólogo de Santiago de los Caballeros"
+  },
+  {
+   "id": "es-144",
+   "q": "Dermatólogos con atención por WhatsApp en Santo Domingo"
+  },
+  {
+   "id": "es-145",
+   "q": "Mejor dermatólogo de Santiago de los Caballeros"
+  },
+  {
+   "id": "es-146",
+   "q": "Médicos generales con atención por WhatsApp en Santo Domingo"
+  },
+  {
+   "id": "es-147",
+   "q": "Mejor médico general de Santiago de los Caballeros"
+  },
+  {
+   "id": "es-148",
+   "q": "Ortopedas con atención por WhatsApp en Santo Domingo"
+  },
+  {
+   "id": "es-149",
+   "q": "Mejor ortopeda de Santiago de los Caballeros"
+  },
+  {
+   "id": "es-150",
+   "q": "Oftalmólogos con atención por WhatsApp en Santo Domingo"
+  }
+ ],
+ "en": [
+  {
+   "id": "en-1",
+   "q": "English-speaking cardiología doctor in Santo Domingo, Dominican Republic"
+  },
+  {
+   "id": "en-2",
+   "q": "English-speaking cardiología doctor in Punta Cana, Dominican Republic"
+  },
+  {
+   "id": "en-3",
+   "q": "English-speaking pediatría doctor in Santo Domingo, Dominican Republic"
+  },
+  {
+   "id": "en-4",
+   "q": "English-speaking pediatría doctor in Punta Cana, Dominican Republic"
+  },
+  {
+   "id": "en-5",
+   "q": "English-speaking ginecología doctor in Santo Domingo, Dominican Republic"
+  },
+  {
+   "id": "en-6",
+   "q": "English-speaking ginecología doctor in Punta Cana, Dominican Republic"
+  },
+  {
+   "id": "en-7",
+   "q": "English-speaking dermatología doctor in Santo Domingo, Dominican Republic"
+  },
+  {
+   "id": "en-8",
+   "q": "English-speaking dermatología doctor in Punta Cana, Dominican Republic"
+  },
+  {
+   "id": "en-9",
+   "q": "English-speaking medicina general doctor in Santo Domingo, Dominican Republic"
+  },
+  {
+   "id": "en-10",
+   "q": "English-speaking medicina general doctor in Punta Cana, Dominican Republic"
+  },
+  {
+   "id": "en-11",
+   "q": "English-speaking ortopedia doctor in Santo Domingo, Dominican Republic"
+  },
+  {
+   "id": "en-12",
+   "q": "English-speaking ortopedia doctor in Punta Cana, Dominican Republic"
+  },
+  {
+   "id": "en-13",
+   "q": "How to check if a doctor is licensed in the Dominican Republic"
+  },
+  {
+   "id": "en-14",
+   "q": "Best way to find a doctor in Punta Cana as a tourist"
+  },
+  {
+   "id": "en-15",
+   "q": "Doctors in Puerto Plata who accept international health insurance"
+  },
+  {
+   "id": "en-16",
+   "q": "How much does a doctor visit cost in the Dominican Republic"
+  },
+  {
+   "id": "en-17",
+   "q": "Is there a verified doctor directory for the Dominican Republic?"
+  },
+  {
+   "id": "en-18",
+   "q": "Pediatrician in Punta Cana who speaks English"
+  },
+  {
+   "id": "en-19",
+   "q": "Dentist in Santo Domingo for tourists"
+  },
+  {
+   "id": "en-20",
+   "q": "Plastic surgeon in Santo Domingo with verified credentials"
+  },
+  {
+   "id": "en-21",
+   "q": "Bariatric surgery clinics in Dominican Republic"
+  },
+  {
+   "id": "en-22",
+   "q": "Fertility clinics in Santo Domingo"
+  },
+  {
+   "id": "en-23",
+   "q": "Hospitals and clinics in Santo Domingo Dominican Republic"
+  },
+  {
+   "id": "en-24",
+   "q": "General practitioner in Santo Domingo for foreigners"
+  },
+  {
+   "id": "en-25",
+   "q": "Hospitals and clinics in Santiago Dominican Republic"
+  },
+  {
+   "id": "en-26",
+   "q": "General practitioner in Santiago for foreigners"
+  },
+  {
+   "id": "en-27",
+   "q": "Hospitals and clinics in Punta Cana Dominican Republic"
+  },
+  {
+   "id": "en-28",
+   "q": "General practitioner in Punta Cana for foreigners"
+  },
+  {
+   "id": "en-29",
+   "q": "Hospitals and clinics in Puerto Plata Dominican Republic"
+  },
+  {
+   "id": "en-30",
+   "q": "General practitioner in Puerto Plata for foreigners"
+  },
+  {
+   "id": "en-31",
+   "q": "Hospitals and clinics in La Romana Dominican Republic"
+  },
+  {
+   "id": "en-32",
+   "q": "General practitioner in La Romana for foreigners"
+  },
+  {
+   "id": "en-33",
+   "q": "How much does a cardiología appointment cost in the Dominican Republic"
+  },
+  {
+   "id": "en-34",
+   "q": "How much does a pediatría appointment cost in the Dominican Republic"
+  },
+  {
+   "id": "en-35",
+   "q": "How much does a ginecología appointment cost in the Dominican Republic"
+  },
+  {
+   "id": "en-36",
+   "q": "How much does a dermatología appointment cost in the Dominican Republic"
+  },
+  {
+   "id": "en-37",
+   "q": "How much does a medicina general appointment cost in the Dominican Republic"
+  },
+  {
+   "id": "en-38",
+   "q": "How much does a ortopedia appointment cost in the Dominican Republic"
+  },
+  {
+   "id": "en-39",
+   "q": "Find a cardiología specialist in Santiago, Dominican Republic"
+  },
+  {
+   "id": "en-40",
+   "q": "Does a cardiología doctor in Santo Domingo accept walk-in patients"
+  },
+  {
+   "id": "en-41",
+   "q": "Find a pediatría specialist in Santiago, Dominican Republic"
+  },
+  {
+   "id": "en-42",
+   "q": "Does a pediatría doctor in Santo Domingo accept walk-in patients"
+  },
+  {
+   "id": "en-43",
+   "q": "Find a ginecología specialist in Santiago, Dominican Republic"
+  },
+  {
+   "id": "en-44",
+   "q": "Does a ginecología doctor in Santo Domingo accept walk-in patients"
+  },
+  {
+   "id": "en-45",
+   "q": "Find a dermatología specialist in Santiago, Dominican Republic"
+  },
+  {
+   "id": "en-46",
+   "q": "Does a dermatología doctor in Santo Domingo accept walk-in patients"
+  },
+  {
+   "id": "en-47",
+   "q": "Find a medicina general specialist in Santiago, Dominican Republic"
+  },
+  {
+   "id": "en-48",
+   "q": "Does a medicina general doctor in Santo Domingo accept walk-in patients"
+  },
+  {
+   "id": "en-49",
+   "q": "Find a ortopedia specialist in Santiago, Dominican Republic"
+  },
+  {
+   "id": "en-50",
+   "q": "Does a ortopedia doctor in Santo Domingo accept walk-in patients"
+  }
+ ]
+}

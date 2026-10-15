@@ -69,8 +69,8 @@ const pageHref = (p: number) => hubPath(q, p);
     <h2 id="comparar">Compara {q.specialty.name_plural.toLowerCase()} en {place}</h2>
     <div class="sort" aria-label="Ordenar">
       <span class="muted">Ordenar:</span>
-      <a href={r.path} aria-current={!orden || orden === 'nombre' ? 'true' : undefined} rel="nofollow">Nombre</a>
-      <a href={sortHref('precio')} aria-current={orden === 'precio' ? 'true' : undefined} rel="nofollow">Precio</a>
+      <a href={r.path} data-event="filter_use" aria-current={!orden || orden === 'nombre' ? 'true' : undefined} rel="nofollow">Nombre</a>
+      <a href={sortHref('precio')} data-event="filter_use" aria-current={orden === 'precio' ? 'true' : undefined} rel="nofollow">Precio</a>
     </div>
     <div class="table-scroll">
       <table class="compare">
