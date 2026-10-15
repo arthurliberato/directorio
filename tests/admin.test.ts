@@ -38,3 +38,31 @@ test('admin writes: index_status toggle and auditable verification', async () =>
   await assert.rejects(() => markExequaturVerified(run, 900, { checkedBy: 'ana', method: 'm', result: 'valid', evidenceHash: 'not-hex!' }), /evidenceHash/);
   await db.close();
 });
+
+import { setDoctorArs, updateDoctor, validateEdit } from '../src/lib/admin-db.ts';
+test('doctor edit: validation, whitelisted update, slug rename creates 301, ARS replace', async () => {
+  assert.ok(validateEdit({ slug: 'Bad Slug' }).length);
+  assert.ok(validateEdit({ consultation_fee_min: 3000, consultation_fee_max: 2000 }).length);
+  assert.ok(validateEdit({ phone: 'abc' }).length);
+  assert.deepEqual(validateEdit({ slug: 'dra-ok-cardiologa', consultation_fee_min: 2500, phone: '+1-809-555-1234', languages: ['es', 'en'] }), []);
+
+  const db = new PGlite();
+  await db.exec(readFileSync(new URL('../db/migrations/001_core.sql', import.meta.url), 'utf8').replace('create extension if not exists pgcrypto;', ''));
+  for (const s of datasetToSql(seedDataset())) await db.exec(s);
+  const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
+
+  await updateDoctor(run, 1, { consultation_fee_min: 4000, consultation_fee_max: 5000, accepting_new_patients: false, languages: ['es', 'fr'] });
+  const d = (await run('select consultation_fee_min, accepting_new_patients, languages from doctors where id = 1'))[0];
+  assert.deepEqual(d, { consultation_fee_min: 4000, accepting_new_patients: false, languages: ['es', 'fr'] });
+  await assert.rejects(() => updateDoctor(run, 1, { slug: 'guia' }), /reserved/);
+  const before = (await run('select exequatur_verified_at e from doctors where id = 1'))[0].e;
+  await updateDoctor(run, 1, { exequatur_verified_at: '2020-01-01' } as any); // ignored: not whitelisted
+  assert.deepEqual((await run('select exequatur_verified_at e from doctors where id = 1'))[0].e, before, 'verification can only change through the audited action');
+  await updateDoctor(run, 1, { slug: 'dra-renombrada-cardiologa' });
+  assert.equal((await run(`select count(*)::int n from redirects where to_path = '/dra-renombrada-cardiologa'`))[0].n, 1);
+  await assert.rejects(() => updateDoctor(run, 424242, { display_name: 'Dr. Nadie' }), /not found/);
+
+  await setDoctorArs(run, 1, [4, 5]);
+  assert.deepEqual((await run('select ars_id from doctor_ars where doctor_id = 1 order by 1')).map((r) => r.ars_id), [4, 5]);
+  await db.close();
+});

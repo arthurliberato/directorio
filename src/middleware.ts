@@ -35,5 +35,8 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
       : 'public, s-maxage=300');
   }
   res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.headers.set('X-Frame-Options', 'SAMEORIGIN');
   return res;
 });

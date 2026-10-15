@@ -55,7 +55,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     <tbody>
       {rows.map((v) => { const d = profileIndexDecision(v); return (
         <tr>
-          <td><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a><br /><small>{v.specialty.name_singular}</small></td>
+          <td><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a> · <a href={`/admin/doctors/${v.doctor.id}`}>editar</a><br /><small>{v.specialty.name_singular}</small></td>
           <td>{v.doctor.exequatur_verified_at ?? '—'}</td>
           <td>{d.robots}<br /><small>{d.reason}</small></td>
           <td>{canWrite ? <form method="post"><input type="hidden" name="action" value="index_status" /><input type="hidden" name="id" value={v.doctor.id} /><select name="status">{INDEX_STATUSES.map((s) => <option value={s} selected={s === v.doctor.index_status}>{s}</option>)}</select> <button>Guardar</button></form> : v.doctor.index_status}</td>

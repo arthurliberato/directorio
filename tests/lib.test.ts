@@ -116,3 +116,28 @@ test('AI visibility CSV: validates prompt ids and computes citation rate', () =>
   assert.ok(parseCsv('run_month,engine,prompt_id,cited\n2026-10,bard,es-1,1', ids).errors.length > 0);
   assert.ok(parseCsv('run_month,engine,prompt_id,cited\n2026-10,claude,zz-9,1', ids).errors.length > 0);
 });
+
+import { seedDataset as mkSeed, setDataset as setDs } from '../src/lib/dataset.ts';
+import { hubPath } from '../src/lib/hubs.ts';
+test('pagination: >20 doctors yields pages with self paths, sitemap entries, and 404 beyond the last page', () => {
+  const ds = mkSeed();
+  const base = ds.doctors.filter((d) => d.specialty_id === 1 && ds.locations.some((l) => l.doctor_id === d.id && l.city_id === 1));
+  const extra = Array.from({ length: 30 }, (_, i) => ({ ...base[i % base.length], id: 5000 + i, slug: `dr-extra-${i}-cardiologo`, display_name: `Dr. Extra ${i}` }));
+  ds.doctors = [...ds.doctors, ...extra];
+  ds.locations = [...ds.locations, ...extra.map((d) => ({ ...ds.locations.find((l) => l.doctor_id === 1)!, id: 5000 + d.id, doctor_id: d.id }))];
+  ds.doctorArs = [...ds.doctorArs, ...extra.map((d) => ({ doctor_id: d.id, ars_id: 1, verified_at: '2026-10-01' }))];
+  setDs(ds);
+  try {
+    const p1 = resolveHub(['cardiologos', 'santo-domingo']);
+    assert.ok(p1.status === 'ok' && p1.totalPages === 2 && p1.items.length === 20);
+    const p2 = resolveHub(['cardiologos', 'santo-domingo', 'pagina', '2']);
+    assert.ok(p2.status === 'ok' && p2.items.length === p1.total - 20 && p2.path === '/cardiologos/santo-domingo/pagina/2');
+    assert.equal(resolveHub(['cardiologos', 'santo-domingo', 'pagina', '3']).status, 'not_found');
+    assert.equal(hubPath(p1.status === 'ok' ? p1.query : (null as any), 2), '/cardiologos/santo-domingo/pagina/2');
+    const urls = hubUrls().map((u) => u.loc);
+    assert.ok(urls.includes('https://short.do/cardiologos/santo-domingo/pagina/2'));
+    // page-2 items continue the ItemList numbering and don't repeat page 1
+    const ids1 = new Set(p1.status === 'ok' ? p1.items.map((v) => v.doctor.id) : []);
+    assert.ok(p2.status === 'ok' && p2.items.every((v) => !ids1.has(v.doctor.id)));
+  } finally { setDs(mkSeed()); }
+});
