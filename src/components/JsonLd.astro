@@ -1,0 +1,6 @@
+---
+import { serializeJsonLd } from '../lib/schema.ts';
+const { data } = Astro.props;
+const items = Array.isArray(data) ? data : [data];
+---
+{items.map((d) => <script type="application/ld+json" set:html={serializeJsonLd(d)} />)}

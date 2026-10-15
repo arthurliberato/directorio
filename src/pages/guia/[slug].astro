@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import NotFound from '../../components/NotFound.astro';
+import { BRAND } from '../../config.ts';
+import { getGuideBySlug, getReviewer, getSpecialtyBySlug, queryHub } from '../../lib/data.ts';
+import { formatDOP, formatDate, formatDateLong } from '../../lib/format.ts';
+import { hubPath, hubStats } from '../../lib/hubs.ts';
+import { profilePath } from '../../lib/facts.ts';
+import { breadcrumbJsonLd, guideJsonLd } from '../../lib/schema.ts';
+
+const g = getGuideBySlug(Astro.params.slug!);
+if (!g) Astro.response.status = 404;
+const reviewer = g ? getReviewer(g) : null;
+const relatedSpecs = g ? g.related_specialty_slugs.map(getSpecialtyBySlug).filter((s) => !!s) : [];
+const crumbs = g ? [{ name: 'Inicio', path: '/' }, { name: 'Guías de salud', path: '/guia' }, { name: g.title, path: `/guia/${g.slug}` }] : [];
+// Own-data table for the cost guide: states n and date.
+const costStats = g?.slug === 'cuanto-cuesta-consulta-cardiologo' ? hubStats(queryHub({ specialty: getSpecialtyBySlug('cardiologos')! })) : null;
+---
+{g ? (
+  <Base title={`${g.title} | ${BRAND}`} description={g.answer_summary.split('. ')[0] + '.'} jsonLd={[guideJsonLd(g, reviewer, relatedSpecs[0]?.name_singular ?? null), breadcrumbJsonLd(crumbs)]}>
+    <Breadcrumbs items={crumbs} />
+    <article class="wrap narrow section prose">
+      <div class="eyebrow">{g.category}</div>
+      <h1>{g.title}</h1>
+      <p class="summary">{g.answer_summary}</p>
+      {costStats && costStats.feeMin != null && (
+        <>
+          <table class="facts"><caption class="sr-only">Precio de consulta de cardiología en el directorio</caption><tbody>
+            <tr><th scope="row">Mínimo</th><td>{formatDOP(costStats.feeMin)}</td></tr>
+            <tr><th scope="row">Mediana</th><td>{formatDOP(costStats.feeMedian!)}</td></tr>
+            <tr><th scope="row">Máximo</th><td>{formatDOP(costStats.feeMax!)}</td></tr>
+          </tbody></table>
+          <p class="muted">n={costStats.feeN} perfiles verificados, datos al {formatDateLong(costStats.asOf)}.</p>
+        </>
+      )}
+      {g.body.map((p) => <p>{p}</p>)}
+      <h2>Fuentes</h2>
+      <ul>{g.sources.map((s) => <li><a href={s.url} rel="noopener nofollow">{s.title}</a></li>)}</ul>
+      {reviewer && <div class="reviewer">Revisado por <a href={profilePath(reviewer)}>{reviewer.doctor.display_name}</a>, {reviewer.specialty.field_name.toLowerCase()}, exequátur verificado el <time datetime={reviewer.doctor.exequatur_verified_at!}>{formatDate(reviewer.doctor.exequatur_verified_at!)}</time>. Última revisión: <time datetime={g.reviewed_at}>{formatDate(g.reviewed_at)}</time>.</div>}
+      {relatedSpecs.length > 0 && <><h2>Encuentra especialistas</h2><ul class="linklist">{relatedSpecs.map((s) => <li><a href={hubPath({ specialty: s! })}>{s!.name_plural}</a></li>)}</ul></>}
+      <p class="disclaimer">Esta guía es informativa y no reemplaza la evaluación de un profesional de la salud. Ante una emergencia, acude al servicio de urgencias más cercano.</p>
+    </article>
+  </Base>
+) : <NotFound />}

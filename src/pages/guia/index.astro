@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import { BRAND } from '../../config.ts';
+import { getGuides } from '../../lib/data.ts';
+import { breadcrumbJsonLd } from '../../lib/schema.ts';
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Guías de salud', path: '/guia' }];
+---
+<Base title={`Guías de salud con revisión médica | ${BRAND}`} description="Guías claras, con fuentes y revisión de un profesional con exequátur verificado." jsonLd={breadcrumbJsonLd(crumbs)}>
+  <Breadcrumbs items={crumbs} />
+  <div class="wrap section"><h1>Guías de salud</h1>
+    <div class="grid guides">{getGuides().map((g) => <a class="gcard" href={`/guia/${g.slug}`}><span class="art"><Icon name={g.icon} size={44} /></span><span class="body"><span class="eyebrow">{g.category}</span><h3>{g.title}</h3><p>{g.answer_summary.split('. ')[0]}.</p><small>{g.read_minutes} min de lectura · Revisión médica</small></span></a>)}</div></div>
+</Base>

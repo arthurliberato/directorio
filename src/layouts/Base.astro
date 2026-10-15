@@ -1,0 +1,106 @@
+---
+import '@fontsource-variable/outfit';
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import JsonLd from '../components/JsonLd.astro';
+import { BRAND, NAP, SITE_MODE, SITE_URL } from '../config.ts';
+import { getSpecialties } from '../lib/data.ts';
+
+interface Props {
+  title: string; description: string;
+  robots?: 'index,follow' | 'noindex,follow';
+  jsonLd?: unknown; canonicalPath?: string;
+}
+const { title, description, robots = 'index,follow', jsonLd, canonicalPath } = Astro.props;
+// Canonical is always the clean path: filter/sort params never leak into it (SPEC §4.4).
+const path = canonicalPath ?? Astro.url.pathname;
+const canonical = `${SITE_URL}${path}`;
+const effectiveRobots = SITE_MODE === 'prototype' ? 'noindex,nofollow' : robots;
+const specs = getSpecialties();
+---
+<!doctype html>
+<html lang="es-DO">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <meta name="robots" content={effectiveRobots} />
+  <meta name="theme-color" content="#35607f" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content={BRAND} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:locale" content="es_DO" />
+  {jsonLd && <JsonLd data={jsonLd} />}
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+  {SITE_MODE === 'prototype' && <div class="proto-banner">Prototipo · perfiles y datos ilustrativos · sitio no indexable</div>}
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><img src="/logo.svg" alt="" width="36" height="36" />{BRAND}<i>.</i></a>
+      <nav class="nav-desktop" aria-label="Principal">
+        <a href="/especialidad">Especialidades</a><a href="/centro">Clínicas y hospitales</a><a href="/guia">Guías de salud</a><a href="/como-verificamos">Cómo verificamos</a>
+      </nav>
+      <details class="nav-mobile">
+        <summary aria-label="Abrir menú"><Icon name="menu" size={28} /></summary>
+        <nav aria-label="Principal móvil">
+          <a href="/especialidad">Especialidades</a><a href="/centro">Clínicas y hospitales</a><a href="/guia">Guías de salud</a><a href="/como-verificamos">Cómo verificamos</a><a href="/contacto">Contacto</a>
+        </nav>
+      </details>
+    </div>
+  </header>
+  <main id="main"><slot /></main>
+  <footer class="footer">
+    <div class="wrap">
+      <a class="logo" href="/"><img src="/logo.svg" alt="" width="36" height="36" />{BRAND}<i>.</i></a>
+      <p class="muted" style="margin-top:12px">Más claridad. Más confianza.<br />Tu salud, más cerca.</p>
+      <p class="muted">Hecho para República Dominicana</p>
+      <div class="cols">
+        <div>
+          <h2>El directorio</h2>
+          <ul>
+            <li><a href="/especialidad">Buscar médicos</a></li>
+            <li><a href="/centro">Clínicas y hospitales</a></li>
+            <li><a href="/guia">Guías de salud</a></li>
+            {specs.slice(0, 4).map((s) => <li><a href={`/${s.slug}`}>{s.name_plural}</a></li>)}
+          </ul>
+        </div>
+        <div>
+          <h2>Transparencia</h2>
+          <ul>
+            <li><a href="/quienes-somos">Sobre nosotros</a></li>
+            <li><a href="/metodologia">Nuestra metodología</a></li>
+            <li><a href="/como-verificamos">Cómo verificamos a los médicos</a></li>
+            <li><a href="/politica-editorial">Política editorial</a></li>
+            <li><a href="/publicidad-y-patrocinios">Publicidad y patrocinios</a></li>
+            <li><a href="/privacidad">Privacidad</a></li>
+          </ul>
+        </div>
+      </div>
+      <h2>Hablemos</h2>
+      <address>
+        <a href="/contacto">Contacto</a><br />
+        <a href={`mailto:${NAP.email}`}>{NAP.email}</a><br />
+        {NAP.street}<br />{NAP.locality}, {NAP.countryName}
+      </address>
+      <div class="legal">
+        <p>© 2026 {BRAND}. Todos los derechos reservados.</p>
+        {SITE_MODE === 'prototype' && <p>Prototipo · Perfiles, dirección y correo de ejemplo.</p>}
+      </div>
+    </div>
+  </footer>
+  <script is:inline>
+    // Minimal event hook: any element with data-event reports to GA4 if it is present (SPEC §11). No-op otherwise.
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest && e.target.closest('[data-event]');
+      if (el && window.gtag) window.gtag('event', el.getAttribute('data-event'), { doctor: el.getAttribute('data-doctor') || undefined });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import { BRAND } from '../../config.ts';
+import { doctorCount, getSpecialties } from '../../lib/data.ts';
+import { breadcrumbJsonLd } from '../../lib/schema.ts';
+const specs = getSpecialties().map((s) => ({ s, n: doctorCount(s.id) })).filter((x) => x.n > 0);
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Especialidades', path: '/especialidad' }];
+---
+<Base title={`Todas las especialidades médicas en República Dominicana | ${BRAND}`} description="Explora médicos verificados por especialidad en República Dominicana." jsonLd={breadcrumbJsonLd(crumbs)}>
+  <Breadcrumbs items={crumbs} />
+  <div class="wrap section">
+    <h1>Especialidades médicas</h1>
+    <div class="grid spec">{specs.map(({ s, n }) => <a class="spec-card" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={28} /></span><strong>{s.name_singular}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></a>)}</div>
+  </div>
+</Base>

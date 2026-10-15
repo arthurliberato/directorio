@@ -1,0 +1,12 @@
+---
+import HubPage from '../../components/HubPage.astro';
+import NotFound from '../../components/NotFound.astro';
+import { resolveHub } from '../../lib/hubs.ts';
+
+const { specialty, rest } = Astro.params;
+const orden = Astro.url.searchParams.get('orden');
+const r = resolveHub([specialty!, ...(rest ? rest.split('/') : [])], orden);
+if (r.status === 'redirect') return Astro.redirect(r.to, 301);
+if (r.status === 'not_found') Astro.response.status = 404;
+---
+{r.status === 'ok' ? <HubPage r={r} orden={orden} /> : <NotFound />}

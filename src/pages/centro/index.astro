@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { BRAND } from '../../config.ts';
+import { doctorsForFacility, getFacilities } from '../../lib/data.ts';
+import { breadcrumbJsonLd } from '../../lib/schema.ts';
+const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Clínicas y hospitales', path: '/centro' }];
+const list = getFacilities().map((f) => ({ f, n: doctorsForFacility(f.id).length })).filter((x) => x.n > 0);
+---
+<Base title={`Clínicas y hospitales en República Dominicana | ${BRAND}`} description="Centros médicos y hospitales con médicos verificados." jsonLd={breadcrumbJsonLd(crumbs)}>
+  <Breadcrumbs items={crumbs} />
+  <div class="wrap section"><h1>Clínicas y hospitales</h1>
+    <ul class="linklist">{list.map(({ f, n }) => <li><a href={`/centro/${f.slug}`}>{f.name} ({n})</a></li>)}</ul></div>
+</Base>

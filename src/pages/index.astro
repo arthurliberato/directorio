@@ -1,0 +1,71 @@
+---
+import Base from '../layouts/Base.astro';
+import DoctorCard from '../components/DoctorCard.astro';
+import Icon from '../components/Icon.astro';
+import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
+import { doctorCount, getArs, getCities, getGuides, getSpecialties, publishedDoctors, queryHub } from '../lib/data.ts';
+import { hubPath } from '../lib/hubs.ts';
+import { siteJsonLd } from '../lib/schema.ts';
+
+const specs = getSpecialties().map((s) => ({ s, n: doctorCount(s.id) })).filter((x) => x.n > 0);
+const cities = getCities().map((c) => ({ c, n: doctorCount(undefined, c.id) })).filter((x) => x.n > 0);
+const arsList = getArs();
+const sd = getCities().find((c) => c.slug === 'santo-domingo')!;
+const quick = specs.map((x) => x.s).filter((s) => queryHub({ specialty: s, city: sd }).length >= MIN_DOCTORS_FOR_HUB_INDEX).slice(0, 3);
+const featured = [...publishedDoctors().filter((v) => v.doctor.sponsored), ...publishedDoctors().filter((v) => !v.doctor.sponsored && v.specialty.slug === 'cardiologos' && v.doctor.claimed)].slice(0, 3);
+const guides = getGuides().slice(0, 3);
+---
+<Base title={`${BRAND} — Directorio de médicos verificados en República Dominicana`} description="Encuentra médicos y especialistas en República Dominicana con exequátur verificado, ARS aceptadas, precios de consulta y horarios." jsonLd={siteJsonLd()}>
+  <section class="hero">
+    <div class="wrap">
+      <span class="pill"><Icon name="sparkle" size={16} /> Tu directorio médico en República Dominicana</span>
+      <h1>Encuentra el médico adecuado. <span class="accent">Cuida lo que más importa.</span></h1>
+      <p class="lead">Especialistas cerca de ti, información verificada y la tranquilidad de elegir con confianza.</p>
+      <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub URL. -->
+      <form class="search-card" action="/buscar" method="get" role="search">
+        <div class="field"><Icon name="stethoscope" size={28} /><div style="flex:1"><label for="q-esp">Especialidad</label>
+          <select id="q-esp" name="especialidad" required><option value="">¿Qué médico necesitas?</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
+        <div class="field"><Icon name="pin" size={28} /><div style="flex:1"><label for="q-ciu">Ciudad</label>
+          <select id="q-ciu" name="ciudad"><option value="">¿Dónde buscas?</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}</option>)}</select></div></div>
+        <div class="field" style="border-bottom:0"><Icon name="shield" size={28} /><div style="flex:1"><label for="q-ars">Tu seguro <small>Opcional</small></label>
+          <select id="q-ars" name="ars"><option value="">Selecciona tu ARS</option>{arsList.map((a) => <option value={a.slug}>{a.name}</option>)}</select></div></div>
+        <button class="btn block" type="submit"><Icon name="search" size={20} /> Buscar médico</button>
+      </form>
+      {quick.length > 0 && <div class="quick">{quick.map((s) => <a href={hubPath({ specialty: s, city: sd })}>{s.name_singular} en Santo Domingo</a>)}</div>}
+      <div class="ticks"><span><Icon name="check" size={20} /> Exequátur verificado</span><span><Icon name="check" size={20} /> Información transparente</span></div>
+    </div>
+  </section>
+
+  <section class="section wrap" aria-labelledby="esp">
+    <div class="section-head"><div><h2 id="esp">¿Qué especialista necesitas?</h2><p class="muted">Empieza por la especialidad que estás buscando.</p></div><a class="more" href="/especialidad">Todas las especialidades <Icon name="arrow" size={20} /></a></div>
+    <div class="grid spec">
+      {specs.map(({ s, n }) => <a class="spec-card" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={28} /></span><strong>{s.name_singular}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></a>)}
+    </div>
+  </section>
+
+  <section class="section wrap" style="padding-top:0" aria-labelledby="ciudades">
+    <h2 id="ciudades">Tu salud, cerca de ti</h2>
+    <p class="muted">Encuentra atención médica en las principales ciudades del país.</p>
+    <div class="grid cities">
+      {cities.map(({ c, n }) => <a class="city-row" href={`/${(specs[0]?.s.slug) ?? 'cardiologos'}/${c.slug}`}><Icon name="pin" size={24} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span><Icon name="arrow" size={20} /></a>)}
+    </div>
+  </section>
+
+  <section class="banner" aria-label="Verificación">
+    <div class="wrap"><span class="tile"><Icon name="shield" size={32} /></span><div><h2>Tu tranquilidad empieza con información verificada.</h2><p class="muted">Revisamos exequátur, especialidad y datos de contacto.</p><a class="more" href="/como-verificamos">Cómo verificamos a los médicos <Icon name="arrow" size={20} /></a></div></div>
+  </section>
+
+  {featured.length > 0 && (
+    <section class="section wrap" aria-labelledby="medicos">
+      <div class="section-head"><div><div class="eyebrow">Profesionales a tu alcance</div><h2 id="medicos">Conoce a nuestros médicos</h2><p class="muted">Perfiles claros para tomar una decisión informada.</p></div><a class="more" href="/especialidad">Ver todos los médicos <Icon name="arrow" size={20} /></a></div>
+      <div class="grid cards">{featured.map((v) => <DoctorCard v={v} />)}</div>
+    </section>
+  )}
+
+  <section class="section wrap" aria-labelledby="guias">
+    <div class="eyebrow">Información para cuidarte</div><h2 id="guias">Un poco de orientación, mucha tranquilidad</h2><p class="muted">Respuestas claras a tus preguntas de salud.</p>
+    <div class="grid guides">
+      {guides.map((g) => <a class="gcard" href={`/guia/${g.slug}`}><span class="art"><Icon name={g.icon} size={44} /></span><span class="body"><span class="eyebrow">{g.category}</span><h3>{g.title}</h3><p>{g.answer_summary.split('. ')[0]}.</p><small>{g.read_minutes} min de lectura · Revisión médica</small></span></a>)}
+    </div>
+  </section>
+</Base>

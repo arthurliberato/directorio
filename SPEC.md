@@ -104,7 +104,7 @@ Rules:
 - **Reserved root slugs** (block doctor slugs from colliding): `especialidad, ciudad, ars, guia, centro, en, metodologia, quienes-somos, como-verificamos, politica-editorial, publicidad-y-patrocinios, privacidad, contacto, buscar, api, admin, pagina, llms.txt, robots.txt, sitemap*`, and every specialty slug.
 - Duplicate names: disambiguate with specialty/city (`-cardiologa-santiago`), not `-2`.
 - **Any slug change → 301** via the `redirects` table. Never break old URLs.
-- Trailing-slash policy: pick one, enforce site-wide with 301s.
+- **Trailing-slash policy: NO trailing slash, everywhere** (`/cardiologos/santo-domingo`, not `/cardiologos/santo-domingo/`). Enforced with 301s in middleware; all canonicals, sitemaps and JSON-LD use the slash-less form. Wherever this spec shows a trailing slash, read it as slash-less.
 - Fixed facet order in paths: specialty → city → sector OR ars. Never two orders for the same combination.
 
 ---
