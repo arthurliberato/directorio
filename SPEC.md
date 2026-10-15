@@ -4,7 +4,7 @@ Build spec for a doctor directory in the Dominican Republic, optimized for searc
 
 - **Brand:** `[BRAND]` · **Domain:** `[short.do]` (.do ccTLD)
 - **Language:** Spanish (`es-DO`) first; English (`/en/`) section later
-- **Layout:** visual reference only (Lovable mockup in `docs/design/`); no mockup code is imported. All technical choices are driven by search and AI-crawler optimization
+- **Aesthetics:** the Lovable mockup in `docs/design/` defines the look (palette, typography, cards, spacing, tone) and is matched closely. It is not a code source: markup, structure and stack are built from scratch for SEO and AI-crawler needs
 - **Reviews:** NOT in v1. Reserve the space and data model; spec in §12
 
 ---
