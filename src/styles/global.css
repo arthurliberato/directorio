@@ -50,7 +50,7 @@ p { margin: 0 0 1em; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: #fff; border: 0; border-radius: var(--radius-sm); padding: 14px 22px; font: 600 1rem var(--font-body); text-decoration: none; cursor: pointer; }
 .btn:hover { background: var(--primary-dark); } .btn.block { width: 100%; margin-top: 16px; }
 .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: 0 1px 2px #0001; } .btn.ghost:hover { background: var(--sky-soft); }
-.btn.wa { background: #1f8f4d; } .btn.wa:hover { background: #17713c; }
+.btn.wa { background: #187a41; } .btn.wa:hover { background: #136333; }
 .quick { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin: 22px 0 6px; }
 .quick a { color: var(--muted); text-decoration-color: var(--muted); font-size: .95rem; }
 .ticks { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; color: var(--muted); font-size: .95rem; }

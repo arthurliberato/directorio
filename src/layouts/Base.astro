@@ -5,7 +5,8 @@ import '../styles/global.css';
 import Icon from '../components/Icon.astro';
 import JsonLd from '../components/JsonLd.astro';
 import { BRAND, NAP, SITE_MODE, SITE_URL } from '../config.ts';
-import { getSpecialties } from '../lib/data.ts';
+import { getSpecialties, queryHub } from '../lib/data.ts';
+import { MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
 
 interface Props {
   title: string; description: string;
@@ -17,7 +18,7 @@ const { title, description, robots = 'index,follow', jsonLd, canonicalPath } = A
 const path = canonicalPath ?? Astro.url.pathname;
 const canonical = `${SITE_URL}${path}`;
 const effectiveRobots = SITE_MODE === 'prototype' ? 'noindex,nofollow' : robots;
-const specs = getSpecialties();
+const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >= MIN_DOCTORS_FOR_HUB_INDEX);
 ---
 <!doctype html>
 <html lang="es-DO">

@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import NotFound from '../../components/NotFound.astro';
-import { BRAND } from '../../config.ts';
+import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../../config.ts';
 import { getGuideBySlug, getReviewer, getSpecialtyBySlug, queryHub } from '../../lib/data.ts';
 import { formatDOP, formatDate, formatDateLong } from '../../lib/format.ts';
 import { hubPath, hubStats } from '../../lib/hubs.ts';
@@ -12,7 +12,8 @@ import { breadcrumbJsonLd, guideJsonLd } from '../../lib/schema.ts';
 const g = getGuideBySlug(Astro.params.slug!);
 if (!g) Astro.response.status = 404;
 const reviewer = g ? getReviewer(g) : null;
-const relatedSpecs = g ? g.related_specialty_slugs.map(getSpecialtyBySlug).filter((s) => !!s) : [];
+// Only link hubs that exist and are indexable (>= 5 doctors): never link to a 404 or thin page.
+const relatedSpecs = g ? g.related_specialty_slugs.map(getSpecialtyBySlug).filter((s) => !!s && queryHub({ specialty: s }).length >= MIN_DOCTORS_FOR_HUB_INDEX) : [];
 const crumbs = g ? [{ name: 'Inicio', path: '/' }, { name: 'Guías de salud', path: '/guia' }, { name: g.title, path: `/guia/${g.slug}` }] : [];
 // Own-data table for the cost guide: states n and date.
 const costStats = g?.slug === 'cuanto-cuesta-consulta-cardiologo' ? hubStats(queryHub({ specialty: getSpecialtyBySlug('cardiologos')! })) : null;

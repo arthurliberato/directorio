@@ -16,3 +16,5 @@ jobs:
           SITE_MODE=production PORT=4321 HOST=127.0.0.1 node dist/server/entry.mjs &
           sleep 3
           node scripts/check-html.mjs
+          node scripts/crawl.mjs
+          node scripts/lighthouse.mjs
