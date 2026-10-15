@@ -1,0 +1,27 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import DoctorCard from '../../components/DoctorCard.astro';
+import NotFound from '../../components/NotFound.astro';
+import { doctorsForFacility, getCities, getFacilityBySlug } from '../../lib/data.ts';
+import { breadcrumbJsonLd, facilityJsonLd } from '../../lib/schema.ts';
+const f = getFacilityBySlug(Astro.params.slug!);
+const doctors = f ? doctorsForFacility(f.id) : [];
+if (!f || doctors.length === 0) Astro.response.status = 404;
+const city = f ? getCities().find((c) => c.id === f.city_id)! : null;
+const crumbs = f ? [{ name: 'Inicio', path: '/' }, { name: 'Clínicas y hospitales', path: '/centro' }, { name: f.name, path: `/centro/${f.slug}` }] : [];
+---
+{f && doctors.length > 0 && city ? (
+  <Base title={`${f.name}, ${city.name} | [BRAND]`} description={`${f.name} en ${city.name}: ${f.address}. ${doctors.length} médicos verificados.`} jsonLd={[facilityJsonLd(f, doctors, city.name, city.province), breadcrumbJsonLd(crumbs)]}>
+    <Breadcrumbs items={crumbs} />
+    <div class="wrap page-head">
+      <h1>{f.name}</h1>
+      <table class="facts"><tbody>
+        <tr><th scope="row">Tipo</th><td>{f.type === 'Hospital' ? 'Hospital' : 'Clínica / centro médico'}</td></tr>
+        <tr><th scope="row">Dirección</th><td>{f.address}, {city.name}</td></tr>
+        {f.phone && <tr><th scope="row">Teléfono</th><td><a href={`tel:${f.phone}`}>{f.phone}</a></td></tr>}
+      </tbody></table>
+    </div>
+    <section class="wrap section"><h2>Médicos en {f.name}</h2><div class="grid cards">{doctors.map((v) => <DoctorCard v={v} />)}</div></section>
+  </Base>
+) : <NotFound />}

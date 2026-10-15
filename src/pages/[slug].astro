@@ -1,0 +1,31 @@
+---
+// Root-level resolver: trust page | specialty hub | doctor profile | 404 (reserved slugs can never be doctors).
+import HubPage from '../components/HubPage.astro';
+import NotFound from '../components/NotFound.astro';
+import ProfilePage from '../components/ProfilePage.astro';
+import Base from '../layouts/Base.astro';
+import { getTrustPage } from '../data/trust.ts';
+import { getDoctorBySlug, getSpecialtyBySlug } from '../lib/data.ts';
+import { resolveHub } from '../lib/hubs.ts';
+
+const { slug } = Astro.params;
+const orden = Astro.url.searchParams.get('orden');
+const trust = getTrustPage(slug!);
+const spec = trust ? null : getSpecialtyBySlug(slug!);
+const hub = spec ? resolveHub([slug!], orden) : null;
+const doctor = !trust && !spec ? getDoctorBySlug(slug!) : null;
+if (hub?.status === 'redirect') return Astro.redirect(hub.to, 301);
+const notFound = !trust && !doctor && (!hub || hub.status === 'not_found');
+if (notFound) Astro.response.status = 404;
+---
+{trust && (
+  <Base title={`${trust.title} | [BRAND]`} description={trust.description}>
+    <div class="wrap narrow section prose">
+      <h1>{trust.title}</h1>
+      {trust.body.map((p) => <p>{p}</p>)}
+    </div>
+  </Base>
+)}
+{hub?.status === 'ok' && <HubPage r={hub} orden={orden} />}
+{doctor && <ProfilePage v={doctor} />}
+{notFound && <NotFound />}

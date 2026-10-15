@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+import DoctorCard from './DoctorCard.astro';
+import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
+import { getArs, getCities, getSectors, getSpecialties, queryHub } from '../lib/data.ts';
+import { formatDOP, formatDateLong, formatScheduleLines, joinList } from '../lib/format.ts';
+import { agentNoun, profilePath } from '../lib/facts.ts';
+import { hubHeading, hubPath, hubPlace, type HubResolution } from '../lib/hubs.ts';
+import { abs, breadcrumbJsonLd, hubJsonLd } from '../lib/schema.ts';
+import { PAGE_SIZE } from '../config.ts';
+
+interface Props { r: Extract<HubResolution, { status: 'ok' }>; orden: string | null }
+const { r, orden } = Astro.props;
+const { query: q, stats: s } = r;
+const heading = hubHeading(q);
+const place = hubPlace(q);
+
+const crumbs: { name: string; path: string }[] = [{ name: 'Inicio', path: '/' }, { name: q.specialty.name_plural, path: hubPath({ specialty: q.specialty }) }];
+if (q.city) crumbs.push({ name: q.city.name, path: hubPath({ specialty: q.specialty, city: q.city }) });
+if (q.sector) crumbs.push({ name: q.sector.name, path: hubPath({ specialty: q.specialty, city: q.city, sector: q.sector }) });
+if (q.ars) crumbs.push({ name: q.ars.name, path: hubPath({ specialty: q.specialty, city: q.city, ars: q.ars }) });
+if (r.page > 1) crumbs.push({ name: `Página ${r.page}`, path: r.path });
+
+const title = `${heading} (${r.total} verificado${r.total === 1 ? '' : 's'})${r.page > 1 ? ` · Página ${r.page}` : ''} | ${BRAND}`;
+const description = r.intro.slice(0, 155).replace(/\s+\S*$/, r.intro.length > 155 ? '…' : '');
+const startPos = (r.page - 1) * PAGE_SIZE + 1;
+
+// Child hubs: only indexable ones (>= 5 doctors) are linked from navigation blocks.
+const childLinks: { label: string; href: string; n: number }[] = [];
+const ok = (n: number) => n >= MIN_DOCTORS_FOR_HUB_INDEX;
+if (!q.city) {
+  for (const c of getCities()) { const n = queryHub({ specialty: q.specialty, city: c }).length; if (ok(n)) childLinks.push({ label: `${q.specialty.name_plural} en ${c.name}`, href: hubPath({ specialty: q.specialty, city: c }), n }); }
+} else if (!q.sector && !q.ars) {
+  for (const sec of getSectors().filter((x) => x.city_id === q.city!.id)) { const n = queryHub({ ...q, sector: sec }).length; if (ok(n)) childLinks.push({ label: `${q.specialty.name_plural} en ${sec.name}`, href: hubPath({ ...q, sector: sec }), n }); }
+  for (const a of getArs()) { const n = queryHub({ ...q, ars: a }).length; if (ok(n)) childLinks.push({ label: `${q.specialty.name_plural} que aceptan ${a.name}`, href: hubPath({ ...q, ars: a }), n }); }
+}
+const otherSpecs = getSpecialties().filter((sp) => sp.id !== q.specialty.id && ok(queryHub({ ...q, specialty: sp }).length))
+  .map((sp) => ({ label: `${sp.name_plural} en ${place}`, href: hubPath({ ...q, specialty: sp }) }));
+
+// Visible, data-driven Q&A. Every answer cites n and date.
+const qa: { q: string; a: string }[] = [];
+if (s.feeMin != null) qa.push({
+  q: `¿Cuánto cuesta una consulta con ${q.specialty.agent_m} en ${place}?`,
+  a: s.feeMin === s.feeMax
+    ? `La consulta cuesta desde ${formatDOP(s.feeMin)} (n=${s.feeN} perfiles con precio declarado, datos al ${formatDateLong(s.asOf)}).`
+    : `Entre ${formatDOP(s.feeMin)} y ${formatDOP(s.feeMax!)}, con una mediana de ${formatDOP(s.feeMedian!)} (n=${s.feeN} perfiles con precio declarado, datos al ${formatDateLong(s.asOf)}).`,
+});
+if (s.arsCounts.length) qa.push({
+  q: `¿Qué ARS aceptan los ${q.specialty.name_plural.toLowerCase()} en ${place}?`,
+  a: `Las más frecuentes son ${joinList(s.arsCounts.slice(0, 4).map((a) => `${a.name} (${a.count} de ${s.n})`))}. Confirma siempre tu plan con el consultorio.`,
+});
+qa.push({ q: `¿Cuántos ${q.specialty.name_plural.toLowerCase()} verificados hay en ${place}?`, a: `Hay ${s.n} con exequátur verificado en nuestro directorio${s.asOf ? ` (datos al ${formatDateLong(s.asOf)})` : ''}.` });
+
+const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa.map((x) => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) };
+const jsonLd = [...hubJsonLd(q, r.items, r.total, r.path, crumbs, startPos), faqLd];
+const sortHref = (o: string) => `${r.path}?orden=${o}`; // non-indexable: blocked in robots.txt, canonical stays clean
+const pageHref = (p: number) => hubPath(q, p);
+---
+<Base title={title} description={description} robots={r.decision.robots} jsonLd={jsonLd} canonicalPath={r.path}>
+  <Breadcrumbs items={crumbs} />
+  <div class="wrap page-head">
+    <h1>{heading}</h1>
+    <p class="summary">{r.intro}</p>
+    {r.decision.robots === 'noindex,follow' && <p class="muted">Aún estamos verificando más profesionales en esta búsqueda.</p>}
+  </div>
+
+  <section class="wrap" aria-labelledby="comparar">
+    <h2 id="comparar">Compara {q.specialty.name_plural.toLowerCase()} en {place}</h2>
+    <div class="sort" aria-label="Ordenar">
+      <span class="muted">Ordenar:</span>
+      <a href={r.path} data-event="filter_use" aria-current={!orden || orden === 'nombre' ? 'true' : undefined} rel="nofollow">Nombre</a>
+      <a href={sortHref('precio')} data-event="filter_use" aria-current={orden === 'precio' ? 'true' : undefined} rel="nofollow">Precio</a>
+    </div>
+    <div class="table-scroll">
+      <table class="compare">
+        <thead><tr><th scope="col">Médico</th><th scope="col">Subespecialidad</th><th scope="col">Sector</th><th scope="col">ARS</th><th scope="col">Consulta desde</th><th scope="col">Horario</th></tr></thead>
+        <tbody>
+          {r.items.map((v) => (
+            <tr>
+              <th scope="row"><a href={profilePath(v)}>{v.doctor.display_name}</a></th>
+              <td>{v.doctor.subspecialties.join(', ') || v.specialty.field_name}</td>
+              <td>{v.locations[0]?.sector.name}</td>
+              <td>{v.ars.map((a) => a.name).join(', ') || '—'}</td>
+              <td>{v.doctor.consultation_fee_min != null ? formatDOP(v.doctor.consultation_fee_min) : '—'}</td>
+              <td>{v.locations[0] && v.locations[0].schedule.length ? formatScheduleLines(v.locations[0].schedule).join('; ') : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="wrap section" aria-labelledby="medicos">
+    <h2 id="medicos">Médicos verificados</h2>
+    <div class="grid cards">
+      {r.items.map((v) => <DoctorCard v={v} />)}
+    </div>
+    {r.totalPages > 1 && (
+      <nav class="pager" aria-label="Paginación">
+        {r.page > 1 && <a href={pageHref(r.page - 1)} rel="prev">← Anterior</a>}
+        {Array.from({ length: r.totalPages }, (_, i) => i + 1).map((p) => p === r.page ? <span aria-current="page">{p}</span> : <a href={pageHref(p)}>{p}</a>)}
+        {r.page < r.totalPages && <a href={pageHref(r.page + 1)} rel="next">Siguiente →</a>}
+      </nav>
+    )}
+  </section>
+
+  <section class="wrap section" aria-labelledby="preguntas">
+    <h2 id="preguntas">Preguntas frecuentes</h2>
+    {qa.map((x) => <div><h3>{x.q}</h3><p>{x.a}</p></div>)}
+    <p class="muted">Los precios y las ARS son declarados por cada profesional y verificados al momento de la revisión; pueden cambiar. Metodología: <a href="/metodologia">cómo calculamos estos datos</a>.</p>
+  </section>
+
+  {(childLinks.length > 0 || otherSpecs.length > 0) && (
+    <section class="wrap section" aria-labelledby="explora">
+      <h2 id="explora">Sigue explorando</h2>
+      <ul class="linklist">
+        {childLinks.map((l) => <li><a href={l.href}>{l.label} ({l.n})</a></li>)}
+        {otherSpecs.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </section>
+  )}
+</Base>

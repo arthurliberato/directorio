@@ -4,7 +4,7 @@ Build spec for a doctor directory in the Dominican Republic, optimized for searc
 
 - **Brand:** `[BRAND]` · **Domain:** `[short.do]` (.do ccTLD)
 - **Language:** Spanish (`es-DO`) first; English (`/en/`) section later
-- **Layout:** designed separately in Lovable — import components/styles, then implement everything below
+- **Aesthetics:** the Lovable mockup in `docs/design/` defines the look (palette, typography, cards, spacing, tone) and is matched closely. It is not a code source: markup, structure and stack are built from scratch for SEO and AI-crawler needs
 - **Reviews:** NOT in v1. Reserve the space and data model; spec in §12
 
 ---
@@ -21,15 +21,25 @@ Build spec for a doctor directory in the Dominican Republic, optimized for searc
 
 ## 1. Stack
 
-Recommended: **Next.js (App Router) with static generation + ISR**, or **Astro** (SSG/hybrid). Either works if the requirements below hold.
+The Lovable mockup is **visual reference only**. No Lovable/React-SPA code is imported; the stack is chosen purely for search and AI-crawler performance.
 
-- Static pre-render all profiles, hubs, guides and trust pages at build time; incremental regeneration on data change.
-- Database: Postgres (Supabase is fine).
-- Hosting: Vercel / Cloudflare / Netlify with a CDN edge near the Caribbean (Miami).
+**Decision: Astro (SSR on the edge, CDN-cached) + Postgres (Supabase).**
+
+Why, against the requirements:
+- **Server-rendered HTML by default, zero JS shipped unless a component opts in** (islands). Every fact, link and JSON-LD block is in the first response (§0.1), and Core Web Vitals (§9) are easy to hit.
+- **Real HTTP semantics from the server:** true 404 for empty facet combinations, 301s from the `redirects` table, per-request `noindex`/canonical decided from the nightly index-status table (§4). Fully static builds can't do this cleanly at tens of thousands of pages.
+- **ISR-like freshness without a React runtime:** render on request, cache at the CDN with `s-maxage` + `stale-while-revalidate`, purge the affected URLs when data changes (admin edit, verification, nightly job). Hot pages (home, top hubs, guides, trust pages) may be prerendered.
+- Next.js remains an acceptable fallback, but it ships React hydration JS for pages that need none; not chosen.
+
+Supporting choices:
+- Language: TypeScript. Styling: plain CSS / Tailwind compiled to a single small stylesheet (no runtime CSS-in-JS).
+- Interactive islands only: search/filters, "interactive map on click", WhatsApp/GA events. Everything else static markup.
+- JSON-LD, meta tags, sitemaps, robots.txt and llms.txt are generated from the same DB queries as the visible content (one source of truth).
+- Hosting: any host with edge caching near Miami (Cloudflare, Vercel or Netlify). If Cloudflare, explicitly disable/allowlist AI-bot blocking (§7.2).
 - Image pipeline: AVIF/WebP, responsive `srcset`, explicit width/height.
-- Admin panel (simple, internal): edit doctors, mark verification, toggle index status, publish guides.
+- Admin panel (simple, internal, `noindex`): edit doctors, mark verification, toggle index status, publish guides; every save purges affected URLs and queues an IndexNow ping.
 
-**Acceptance test:** `curl -A "OAI-SearchBot" https://[short.do]/dra-maria-perez-cardiologa` must return full HTML containing the doctor's name, fact table, contact info and JSON-LD.
+**Acceptance test:** `curl -A "OAI-SearchBot" https://[short.do]/dra-maria-perez-cardiologa` must return full HTML containing the doctor's name, fact table, contact info and JSON-LD, with zero JS needed.
 
 ---
 
@@ -94,7 +104,7 @@ Rules:
 - **Reserved root slugs** (block doctor slugs from colliding): `especialidad, ciudad, ars, guia, centro, en, metodologia, quienes-somos, como-verificamos, politica-editorial, publicidad-y-patrocinios, privacidad, contacto, buscar, api, admin, pagina, llms.txt, robots.txt, sitemap*`, and every specialty slug.
 - Duplicate names: disambiguate with specialty/city (`-cardiologa-santiago`), not `-2`.
 - **Any slug change → 301** via the `redirects` table. Never break old URLs.
-- Trailing-slash policy: pick one, enforce site-wide with 301s.
+- **Trailing-slash policy: NO trailing slash, everywhere** (`/cardiologos/santo-domingo`, not `/cardiologos/santo-domingo/`). Enforced with 301s in middleware; all canonicals, sitemaps and JSON-LD use the slash-less form. Wherever this spec shows a trailing slash, read it as slash-less.
 - Fixed facet order in paths: specialty → city → sector OR ars. Never two orders for the same combination.
 
 ---
