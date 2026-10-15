@@ -51,7 +51,8 @@ create index on locations (doctor_id); create index on locations (city_id, secto
 create table doctor_ars (doctor_id int references doctors on delete cascade, ars_id int references ars, verified_at timestamptz not null, primary key (doctor_id, ars_id));
 
 create table guides (
-  id serial primary key, slug text unique not null, title text not null, category text, answer_summary text not null,
+  id serial primary key, slug text unique not null, title text not null, category text, icon text, read_minutes int,
+  answer_summary text not null,
   body jsonb not null, reviewer_doctor_id int not null references doctors, reviewed_at date not null,
   sources jsonb not null default '[]', related_specialty_ids int[] not null default '{}'
 );
@@ -68,6 +69,9 @@ create table redirects (from_path text primary key, to_path text not null, statu
 create table index_status_log (
   id bigserial primary key, url text not null, old_status text, new_status text not null, reason text not null, changed_at timestamptz not null default now()
 );
+
+-- Last computed index state per URL; diffed by the nightly job to decide IndexNow pings.
+create table url_index_state (url text primary key, status text not null check (status in ('index','noindex')), reason text not null, lastmod date not null);
 
 -- Reserved root slugs can never be doctors (SPEC §3). Specialty slugs are checked too.
 create or replace function reject_reserved_slug() returns trigger language plpgsql as $$

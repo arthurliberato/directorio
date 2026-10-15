@@ -1,10 +1,18 @@
 import { defineMiddleware } from 'astro:middleware';
+import { ensureDataset } from './lib/dataset.ts';
 import { getRedirect } from './lib/data.ts';
+import { checkAdminAuth } from './lib/admin-auth.ts';
 
 // Order: canonical path form (lowercase, no trailing slash) -> redirects table -> render -> cache headers.
 export const onRequest = defineMiddleware(async (ctx, next) => {
+  await ensureDataset();
   const url = new URL(ctx.request.url);
   let path = url.pathname;
+
+  if (/^\/(admin|api)(\/|$)/.test(path)) {
+    const denied = checkAdminAuth(ctx.request.headers.get('authorization'));
+    if (denied) return denied;
+  }
 
   let canonical = path;
   if (canonical.length > 1 && canonical.endsWith('/')) canonical = canonical.replace(/\/+$/, '') || '/';

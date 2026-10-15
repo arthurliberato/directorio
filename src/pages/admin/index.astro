@@ -1,0 +1,68 @@
+---
+import { ensureDataset, getDataset } from '../../lib/dataset.ts';
+import { allDoctors, getSpecialties, isPublished, publishedDoctors } from '../../lib/data.ts';
+import { INDEX_STATUSES, markExequaturVerified, setIndexStatus, type Run } from '../../lib/admin-db.ts';
+import { profileIndexDecision } from '../../lib/indexing.ts';
+import { computeState, overdueReverification } from '../../lib/nightly.ts';
+import { createHash } from 'node:crypto';
+
+const canWrite = getDataset().source === 'postgres';
+let message = '';
+if (Astro.request.method === 'POST' && canWrite) {
+  const form = await Astro.request.formData();
+  const id = Number(form.get('id'));
+  const { default: postgres } = await import('postgres');
+  const sql = postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} });
+  const run: Run = (q, params) => sql.unsafe(q, params as any[]) as unknown as Promise<any[]>;
+  try {
+    if (form.get('action') === 'index_status') await setIndexStatus(run, id, String(form.get('status')));
+    else if (form.get('action') === 'verify') {
+      const evidence = String(form.get('evidence') ?? '');
+      await markExequaturVerified(run, id, { checkedBy: String(form.get('by') ?? 'admin'), method: 'pgr-consultar-exequatur', result: 'valid', evidenceHash: createHash('sha256').update(evidence).digest('hex') });
+    }
+    await ensureDataset(true);
+    if (process.env.PURGE_WEBHOOK_URL) await fetch(process.env.PURGE_WEBHOOK_URL, { method: 'POST' }).catch(() => {});
+    message = 'Guardado.';
+  } catch (e) { message = `Error: ${(e as Error).message}`; }
+  await sql.end();
+}
+
+const docs = allDoctors();
+const published = publishedDoctors();
+const state = computeState();
+const byType = (re: RegExp) => [...state].filter(([u, s]) => s.status === 'index' && re.test(new URL(u).pathname)).length;
+const overdue = overdueReverification();
+const claimedPct = published.length ? Math.round((100 * published.filter((v) => v.doctor.claimed).length) / published.length) : 0;
+const rows = published.slice(0, 200);
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>Admin</title>
+<style>body{font:15px/1.5 system-ui;margin:0;padding:16px;max-width:72rem;margin-inline:auto}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:12px;margin:16px 0}.k div{border:1px solid #ddd;border-radius:10px;padding:12px}.k b{display:block;font-size:1.6rem}form{display:inline}.warn{color:#a15c00}</style></head>
+<body>
+  <h1>Panel interno</h1>
+  <p>Fuente de datos: <b>{getDataset().source}</b> {!canWrite && <span class="warn">(solo lectura: configura DATABASE_URL para editar)</span>} {message && <b>· {message}</b>}</p>
+  <div class="k">
+    <div>Médicos verificados<b>{published.length}</b>de {docs.length}</div>
+    <div>Perfiles reclamados<b>{claimedPct}%</b></div>
+    <div>Perfiles indexables<b>{byType(/^\/(dra?-)/)}</b></div>
+    <div>Hubs indexables<b>{byType(/^\/[^/]+(\/.*)?$/) - byType(/^\/(dra?-)/) - byType(/^\/(guia|centro)/)}</b></div>
+    <div>Re-verificaciones vencidas<b>{overdue.length}</b></div>
+  </div>
+  <h2>Médicos</h2>
+  <table>
+    <thead><tr><th>Médico</th><th>Exequátur</th><th>Indexación</th><th>Override</th><th>Verificar</th></tr></thead>
+    <tbody>
+      {rows.map((v) => { const d = profileIndexDecision(v); return (
+        <tr>
+          <td><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a><br /><small>{v.specialty.name_singular}</small></td>
+          <td>{v.doctor.exequatur_verified_at ?? '—'}</td>
+          <td>{d.robots}<br /><small>{d.reason}</small></td>
+          <td>{canWrite ? <form method="post"><input type="hidden" name="action" value="index_status" /><input type="hidden" name="id" value={v.doctor.id} /><select name="status">{INDEX_STATUSES.map((s) => <option value={s} selected={s === v.doctor.index_status}>{s}</option>)}</select> <button>Guardar</button></form> : v.doctor.index_status}</td>
+          <td>{canWrite ? <form method="post"><input type="hidden" name="action" value="verify" /><input type="hidden" name="id" value={v.doctor.id} /><input name="evidence" placeholder="evidencia / nº de consulta" required /> <input name="by" placeholder="tu nombre" required /> <button>Marcar verificado hoy</button></form> : '—'}</td>
+        </tr>); })}
+    </tbody>
+  </table>
+  <h2>No publicados</h2>
+  <ul>{docs.filter((d) => !isPublished(d)).map((d) => <li>{d.display_name} ({d.slug})</li>)}</ul>
+</body></html>
