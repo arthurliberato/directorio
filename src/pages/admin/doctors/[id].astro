@@ -1,67 +1,57 @@
 ---
-import { getDataset, ensureDataset } from '../../../lib/dataset.ts';
+import AdminShell from '../../../components/AdminShell.astro';
+import { setConfirmedWithDoctor, setDoctorArs, updateDoctor, type DoctorEdit } from '../../../lib/admin-db.ts';
+import { adminCanWrite, withDb } from '../../../lib/admin-run.ts';
 import { allDoctors, getArs, getSpecialties } from '../../../lib/data.ts';
-import { setDoctorArs, updateDoctor, type DoctorEdit, type Run } from '../../../lib/admin-db.ts';
+import { getDataset } from '../../../lib/dataset.ts';
 
 const id = Number(Astro.params.id);
-const ds = getDataset();
-const doc = allDoctors().find((d) => d.id === id);
-if (!doc) return new Response('Not found', { status: 404 });
-const canWrite = ds.source === 'postgres';
-const myArs = new Set(ds.doctorArs.filter((a) => a.doctor_id === id).map((a) => a.ars_id));
-let message = '';
-if (Astro.request.method === 'POST' && canWrite) {
+if (!allDoctors().some((d) => d.id === id)) return new Response('Not found', { status: 404 });
+let message = ''; let error = false;
+if (Astro.request.method === 'POST' && adminCanWrite()) {
   const f = await Astro.request.formData();
+  const doc0 = allDoctors().find((d) => d.id === id)!;
   const str = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v === '' ? null : v; };
   const num = (k: string) => { const v = str(k); return v == null ? null : Number(v); };
   const edit: DoctorEdit = {
-    slug: String(f.get('slug') ?? doc.slug), display_name: String(f.get('display_name') ?? doc.display_name), bio: str('bio'),
+    slug: String(f.get('slug') ?? doc0.slug), display_name: String(f.get('display_name') ?? doc0.display_name), bio: str('bio'),
     consultation_fee_min: num('fee_min'), consultation_fee_max: num('fee_max'),
     accepting_new_patients: f.get('accepting') === 'unknown' ? null : f.get('accepting') === 'yes',
     whatsapp: str('whatsapp'), phone: str('phone'), website: str('website'), photo_url: str('photo_url'),
     languages: String(f.get('languages') ?? '').split(',').map((l) => l.trim()).filter(Boolean),
   };
-  const { default: postgres } = await import('postgres');
-  const sql = postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} });
-  const run: Run = (q, p) => sql.unsafe(q, p as any[]) as unknown as Promise<any[]>;
   try {
-    await updateDoctor(run, id, edit);
-    await setDoctorArs(run, id, f.getAll('ars').map(Number));
-    await ensureDataset(true);
-    if (process.env.PURGE_WEBHOOK_URL) await fetch(process.env.PURGE_WEBHOOK_URL, { method: 'POST' }).catch(() => {});
+    await withDb(async (run) => {
+      await updateDoctor(run, id, edit);
+      await setDoctorArs(run, id, f.getAll('ars').map(Number));
+      await setConfirmedWithDoctor(run, id, f.get('confirmed') === 'on');
+    });
     message = 'Guardado. Si cambiaste el slug, se creó una redirección 301 automática.';
-  } catch (e) { message = `Error: ${(e as Error).message}`; }
-  await sql.end();
+  } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
 }
 const d = allDoctors().find((x) => x.id === id)!;
+const myArs = new Set(getDataset().doctorArs.filter((a) => a.doctor_id === id).map((a) => a.ars_id));
 const specName = getSpecialties().find((s) => s.id === d.specialty_id)?.name_singular;
-Astro.response.headers.set('Cache-Control', 'no-store');
 ---
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>Editar médico</title>
-<style>body{font:15px/1.5 system-ui;padding:16px;max-width:42rem;margin-inline:auto}label{display:block;margin:12px 0 4px;font-weight:600}input,textarea,select{width:100%;padding:8px;font:inherit}.ars{display:flex;flex-wrap:wrap;gap:12px}.ars label{font-weight:400;margin:0}.ars input{width:auto}.warn{color:#a15c00}</style></head>
-<body>
-  <p><a href="/admin">← Panel</a></p>
-  <h1>{d.display_name} <small>· {specName}</small></h1>
-  <p>{!canWrite && <span class="warn">Solo lectura: configura DATABASE_URL para editar.</span>} {message && <b>{message}</b>}</p>
-  <p>Exequátur: {d.exequatur_verified_at ?? 'sin verificar'} (solo se cambia con la acción auditada «Marcar verificado» en el panel).</p>
-  <form method="post">
-    <fieldset disabled={!canWrite} style="border:0;padding:0">
-      <label for="slug">Slug (URL)</label><input id="slug" name="slug" value={d.slug} pattern="[a-z0-9]+(-[a-z0-9]+)*" />
-      <label for="dn">Nombre público</label><input id="dn" name="display_name" value={d.display_name} />
-      <label for="bio">Biografía</label><textarea id="bio" name="bio" rows="4">{d.bio ?? ''}</textarea>
-      <label for="fmin">Consulta desde (DOP)</label><input id="fmin" name="fee_min" type="number" min="0" value={d.consultation_fee_min ?? ''} />
-      <label for="fmax">Consulta hasta (DOP)</label><input id="fmax" name="fee_max" type="number" min="0" value={d.consultation_fee_max ?? ''} />
-      <label for="acc">Acepta nuevos pacientes</label>
-      <select id="acc" name="accepting"><option value="yes" selected={d.accepting_new_patients === true}>Sí</option><option value="no" selected={d.accepting_new_patients === false}>No</option><option value="unknown" selected={d.accepting_new_patients == null}>Desconocido</option></select>
-      <label for="wa">WhatsApp</label><input id="wa" name="whatsapp" value={d.whatsapp ?? ''} />
-      <label for="ph">Teléfono</label><input id="ph" name="phone" value={d.phone ?? ''} />
-      <label for="web">Sitio web</label><input id="web" name="website" value={d.website ?? ''} />
-      <label for="photo">Foto (URL)</label><input id="photo" name="photo_url" value={d.photo_url ?? ''} />
-      <label for="lang">Idiomas (códigos separados por coma)</label><input id="lang" name="languages" value={d.languages.join(', ')} />
-      <label>ARS que acepta</label>
-      <div class="ars">{getArs().map((a) => <label><input type="checkbox" name="ars" value={a.id} checked={myArs.has(a.id)} /> {a.name}</label>)}</div>
-      <p><button type="submit">Guardar</button></p>
-    </fieldset>
-  </form>
-</body></html>
+<AdminShell title={d.display_name} message={message} error={error}>
+  <p><small>{specName} · exequátur: {d.exequatur_verified_at ?? 'sin verificar'} · {d.exequatur_verified_at ? <a href={`/${d.slug}`}>ver perfil público</a> : <a href="/admin/verify">verificar</a>}</small></p>
+  <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
+    <div class="grid2">
+      <div><label for="slug">Slug (URL)</label><input id="slug" name="slug" value={d.slug} pattern="[a-z0-9]+(-[a-z0-9]+)*" /></div>
+      <div><label for="dn">Nombre público</label><input id="dn" name="display_name" value={d.display_name} /></div>
+      <div><label for="fmin">Consulta desde (DOP)</label><input id="fmin" name="fee_min" type="number" min="0" value={d.consultation_fee_min ?? ''} /></div>
+      <div><label for="fmax">Consulta hasta (DOP)</label><input id="fmax" name="fee_max" type="number" min="0" value={d.consultation_fee_max ?? ''} /></div>
+      <div><label for="acc">Acepta nuevos pacientes</label><select id="acc" name="accepting"><option value="yes" selected={d.accepting_new_patients === true}>Sí</option><option value="no" selected={d.accepting_new_patients === false}>No</option><option value="unknown" selected={d.accepting_new_patients == null}>Desconocido</option></select></div>
+      <div><label for="lang">Idiomas (códigos separados por coma)</label><input id="lang" name="languages" value={d.languages.join(', ')} /></div>
+      <div><label for="wa">WhatsApp</label><input id="wa" name="whatsapp" value={d.whatsapp ?? ''} /></div>
+      <div><label for="ph">Teléfono</label><input id="ph" name="phone" value={d.phone ?? ''} /></div>
+      <div><label for="web">Sitio web</label><input id="web" name="website" value={d.website ?? ''} /></div>
+      <div><label for="photo">Foto (URL)</label><input id="photo" name="photo_url" value={d.photo_url ?? ''} /></div>
+    </div>
+    <label for="bio">Biografía</label><textarea id="bio" name="bio" rows="4">{d.bio ?? ''}</textarea>
+    <label>ARS que acepta</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px 16px">{getArs().map((a) => <label style="font-weight:400;margin:0"><input type="checkbox" name="ars" value={a.id} checked={myArs.has(a.id)} /> {a.name}</label>)}</div>
+    <p><label style="font-weight:400"><input type="checkbox" name="confirmed" checked={d.claimed} /> <b>Confirmado directamente con el médico</b> — el perfil se indexa aunque tenga menos de 3 datos.</label></p>
+    <p><button type="submit">Guardar</button></p>
+  </fieldset></form>
+</AdminShell>

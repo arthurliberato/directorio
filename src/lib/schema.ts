@@ -27,7 +27,7 @@ export function physicianJsonLd(v: DoctorView) {
     name: d.display_name, url: abs(profilePath(v)),
     image: d.photo_url ? abs(d.photo_url) : undefined,
     description: factSummary(v),
-    medicalSpecialty: `https://schema.org/${v.specialty.schema_enum}`,
+    medicalSpecialty: v.specialty.schema_enum ? `https://schema.org/${v.specialty.schema_enum}` : undefined,
     knowsLanguage: d.languages,
     isAcceptingNewPatients: d.accepting_new_patients ?? undefined,
     telephone: d.phone ?? undefined,

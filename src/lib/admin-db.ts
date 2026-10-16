@@ -56,3 +56,32 @@ export async function setDoctorArs(run: Run, doctorId: number, arsIds: number[])
   for (const a of arsIds) await run('insert into doctor_ars (doctor_id, ars_id, verified_at) values ($1, $2, now())', [doctorId, a]);
   await run('update doctors set updated_at = now(), data_verified_at = now() where id = $1', [doctorId]);
 }
+
+// --- Claimed = "confirmed directly with the doctor" (we add doctors ourselves; there is no claim flow) -----------
+export async function setConfirmedWithDoctor(run: Run, doctorId: number, confirmed: boolean): Promise<void> {
+  const rows = await run('update doctors set claimed = $1, claimed_at = case when $1 then now() else null end, updated_at = now() where id = $2 returning id', [confirmed, doctorId]);
+  if (!rows.length) throw new Error(`doctor ${doctorId} not found`);
+}
+
+// --- Facilities -------------------------------------------------------------------------------------------------
+export interface FacilityEdit { name?: string; type?: string; address?: string; phone?: string | null; website?: string | null; lat?: number | null; lng?: number | null; }
+export function validateFacilityEdit(e: FacilityEdit): string[] {
+  const errs: string[] = [];
+  if (e.name !== undefined && e.name.trim().length < 3) errs.push('name too short');
+  if (e.type !== undefined && !['Hospital', 'MedicalClinic'].includes(e.type)) errs.push('type must be Hospital or MedicalClinic');
+  if (e.address !== undefined && e.address.trim().length < 5) errs.push('address too short');
+  if (e.phone && !phoneRe.test(e.phone)) errs.push('invalid phone number');
+  if (e.website && !/^https?:\/\//.test(e.website)) errs.push('website must be an http(s) URL');
+  if ((e.lat == null) !== (e.lng == null)) errs.push('lat and lng must be set together');
+  if (e.lat != null && e.lng != null && (e.lat < 17.3 || e.lat > 20.1 || e.lng < -72.1 || e.lng > -68.2)) errs.push('lat/lng are outside the Dominican Republic: check the order (lat first) and sign (lng is negative)');
+  return errs;
+}
+const FACILITY_EDITABLE = ['name', 'type', 'address', 'phone', 'website', 'lat', 'lng'] as const;
+export async function updateFacility(run: Run, id: number, edit: FacilityEdit): Promise<void> {
+  const errs = validateFacilityEdit(edit);
+  if (errs.length) throw new Error(errs.join('; '));
+  const keys = FACILITY_EDITABLE.filter((k) => k in edit);
+  if (!keys.length) return;
+  const rows = await run(`update facilities set ${keys.map((k, i) => `${k} = $${i + 1}`).join(', ')}, updated_at = now() where id = $${keys.length + 1} returning id`, [...keys.map((k) => (edit as any)[k]), id]);
+  if (!rows.length) throw new Error(`facility ${id} not found`);
+}

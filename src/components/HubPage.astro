@@ -5,9 +5,9 @@ import DoctorCard from './DoctorCard.astro';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
 import { getArs, getCities, getSectors, getSpecialties, queryHub } from '../lib/data.ts';
 import { formatDOP, formatDateLong, formatScheduleLines, joinList } from '../lib/format.ts';
-import { agentNoun, profilePath } from '../lib/facts.ts';
+import { profilePath } from '../lib/facts.ts';
 import { hubHeading, hubPath, hubPlace, type HubResolution } from '../lib/hubs.ts';
-import { abs, breadcrumbJsonLd, hubJsonLd } from '../lib/schema.ts';
+import { hubJsonLd } from '../lib/schema.ts';
 import { PAGE_SIZE } from '../config.ts';
 
 interface Props { r: Extract<HubResolution, { status: 'ok' }>; orden: string | null }

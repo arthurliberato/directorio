@@ -18,7 +18,7 @@
 | `display_name` | yes | `Dra. María Pérez` (public name; `Dr.`/`Dra.` sets gender if `gender` is empty) |
 | `full_legal_name` | yes | as on the exequátur |
 | `gender` | no | `f` or `m` |
-| `specialty` | yes | slug from the reference list, e.g. `cardiologos` |
+| `specialty` | yes | the specialty name or slug, e.g. `Cardiología`, `Cardiólogo` or `cardiologos` (see `db/reference/`) |
 | `subspecialties`, `education`, `ars`, `languages` | no | separated by `;` — ARS by name or slug, languages `es;en` |
 | `cedula` | no | 11 digits. Only a keyed hash is stored; never shown |
 | `exequatur_number` | yes | unique per doctor |

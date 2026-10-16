@@ -4,7 +4,7 @@ create table specialties (
   id serial primary key, slug text unique not null check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   name_singular text not null, name_plural text not null, field_name text not null,
   agent_f text not null, agent_m text not null,            -- cardióloga / cardiólogo (profile grammar)
-  schema_enum text not null,                               -- schema.org MedicalSpecialty value
+  schema_enum text,                                        -- schema.org MedicalSpecialty value; null if schema.org has no matching term
   icon text
 );
 create table cities (id serial primary key, slug text unique not null, name text not null, province text not null);

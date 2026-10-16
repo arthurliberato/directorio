@@ -79,7 +79,7 @@ export interface ImportReport {
 export async function importDoctors(run: Run, rows: Row[], opts: { dryRun?: boolean; pepper?: string } = {}): Promise<ImportReport> {
   const report: ImportReport = { inserted: 0, updated: 0, errors: [], createdSectors: [], createdFacilities: [], dryRun: !!opts.dryRun };
   const [specs, cities, sectors, arsRows] = await Promise.all([
-    run('select id, slug, agent_f, agent_m from specialties'), run('select id, slug from cities'),
+    run('select id, slug, agent_f, agent_m, name_singular, name_plural, field_name from specialties'), run('select id, slug from cities'),
     run('select id, slug, city_id from sectors'), run('select id, slug from ars'),
   ]);
   const specialtyIds = specs.map((s) => s.slug);
@@ -90,7 +90,8 @@ export async function importDoctors(run: Run, rows: Row[], opts: { dryRun?: bool
     const need = (k: string) => { if (!r[k]) msgs.push(`falta ${k}`); return r[k] ?? ''; };
     const display = need('display_name'), legal = need('full_legal_name'), exq = need('exequatur_number').toUpperCase();
     const address = need('address'), citySlug = slugify(need('city')), specSlug = slugify(need('specialty')), sectorName = need('sector');
-    const spec = specs.find((s) => s.slug === specSlug); const city = cities.find((c) => c.slug === citySlug);
+    // accepts the slug or any natural name: cardiologos / Cardiología / Cardiólogo / cardióloga
+    const spec = specs.find((s) => [s.slug, s.name_singular, s.name_plural, s.field_name, s.agent_f, s.agent_m].some((n: string) => slugify(n) === specSlug)); const city = cities.find((c) => c.slug === citySlug);
     if (r.specialty && !spec) msgs.push(`especialidad desconocida "${r.specialty}" (válidas: ${specialtyIds.join(', ')})`);
     if (r.city && !city) msgs.push(`ciudad desconocida "${r.city}"`);
     if (exq) { if (seenExequatur.has(exq)) msgs.push(`exequátur duplicado en el archivo: ${exq}`); seenExequatur.add(exq); }

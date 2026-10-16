@@ -14,3 +14,9 @@ export function checkAdminAuth(header: string | null, env = process.env): Respon
   }
   return new Response('Unauthorized', { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="admin", charset="UTF-8"', 'Cache-Control': 'no-store' } });
 }
+
+/** The signed-in admin's username (recorded as `checked_by` in the verification log). */
+export function adminUser(header: string | null): string {
+  const m = header?.match(/^Basic (.+)$/i);
+  return m ? Buffer.from(m[1], 'base64').toString('utf8').split(':')[0] || 'admin' : 'admin';
+}

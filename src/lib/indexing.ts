@@ -38,3 +38,15 @@ export function hubIndexDecision(n: number): HubDecision {
   if (n < MIN_DOCTORS_FOR_HUB_INDEX) return { kind: 'render', robots: 'noindex,follow', indexable: false, reason: `${n} doctors (< ${MIN_DOCTORS_FOR_HUB_INDEX})` };
   return { kind: 'render', robots: 'index,follow', indexable: true, reason: `${n} doctors` };
 }
+
+export type MissingKey = 'foto' | 'ars' | 'horario' | 'bio' | 'direccion';
+/** Which of the five profile data points are still missing (admin to-do list). */
+export function missingPoints(v: DoctorView): MissingKey[] {
+  const out: MissingKey[] = [];
+  if (!v.locations.some((l) => l.address)) out.push('direccion');
+  if (v.ars.length === 0) out.push('ars');
+  if (!v.locations.some((l) => l.schedule.length > 0)) out.push('horario');
+  if (!v.doctor.photo_url) out.push('foto');
+  if (!v.doctor.bio) out.push('bio');
+  return out;
+}

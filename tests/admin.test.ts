@@ -66,3 +66,32 @@ test('doctor edit: validation, whitelisted update, slug rename creates 301, ARS 
   assert.deepEqual((await run('select ars_id from doctor_ars where doctor_id = 1 order by 1')).map((r) => r.ars_id), [4, 5]);
   await db.close();
 });
+
+import { setConfirmedWithDoctor, updateFacility, validateFacilityEdit } from '../src/lib/admin-db.ts';
+import { adminUser } from '../src/lib/admin-auth.ts';
+import { missingPoints, verifiedPoints } from '../src/lib/indexing.ts';
+import { getDoctorBySlug } from '../src/lib/data.ts';
+test('facility edit validation + update, confirmed-with-doctor flag, missing-data helper, admin username', async () => {
+  assert.ok(validateFacilityEdit({ lat: 18.47 }).length, 'lat without lng');
+  assert.ok(validateFacilityEdit({ lat: 40.7, lng: -74 }).length, 'outside DR');
+  assert.ok(validateFacilityEdit({ lat: -69.9, lng: 18.4 }).length, 'swapped lat/lng');
+  assert.deepEqual(validateFacilityEdit({ name: 'Centro Médico X', type: 'Hospital', lat: 18.47, lng: -69.94, phone: '+1-809-555-0000' }), []);
+  assert.equal(adminUser(basic('ana', 'x')), 'ana');
+  const thin = getDoctorBySlug('dr-datos-minimos-pediatra')!;
+  assert.deepEqual(missingPoints(thin).sort(), ['ars', 'bio', 'foto', 'horario']);
+  assert.equal(5 - missingPoints(thin).length, verifiedPoints(thin));
+
+  const db = new PGlite();
+  await db.exec(readFileSync(new URL('../db/migrations/001_core.sql', import.meta.url), 'utf8'));
+  for (const s of datasetToSql(seedDataset())) await db.exec(s);
+  const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
+  await updateFacility(run, 1, { name: 'Centro Médico Nuevo', type: 'Hospital', lat: 18.5, lng: -69.9, website: 'https://x.do' });
+  assert.deepEqual((await run('select name, type, lat from facilities where id = 1'))[0], { name: 'Centro Médico Nuevo', type: 'Hospital', lat: 18.5 });
+  await assert.rejects(() => updateFacility(run, 1, { type: 'Spa' }), /type/);
+  await assert.rejects(() => updateFacility(run, 999, { name: 'No existe' }), /not found/);
+  await setConfirmedWithDoctor(run, 1, true);
+  assert.equal((await run('select claimed, claimed_at is not null as at from doctors where id = 1'))[0].at, true);
+  await setConfirmedWithDoctor(run, 1, false);
+  assert.equal((await run('select claimed, claimed_at from doctors where id = 1'))[0].claimed, false);
+  await db.close();
+});

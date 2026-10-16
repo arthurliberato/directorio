@@ -1,0 +1,39 @@
+---
+import { createHash } from 'node:crypto';
+import AdminShell from '../../components/AdminShell.astro';
+import { adminUser } from '../../lib/admin-auth.ts';
+import { markExequaturVerified } from '../../lib/admin-db.ts';
+import { adminCanWrite, withDb } from '../../lib/admin-run.ts';
+import { allDoctors, getSpecialties } from '../../lib/data.ts';
+
+const LOOKUP = process.env.EXEQUATUR_LOOKUP_URL ?? 'https://pgr.gob.do/';
+let message = ''; let error = false;
+if (Astro.request.method === 'POST' && adminCanWrite()) {
+  const f = await Astro.request.formData();
+  const evidence = String(f.get('evidence') ?? '').trim();
+  try {
+    if (!evidence) throw new Error('Escribe la evidencia (nº de consulta o nota de la verificación).');
+    await withDb((run) => markExequaturVerified(run, Number(f.get('id')), { checkedBy: adminUser(Astro.request.headers.get('authorization')), method: 'pgr-consultar-exequatur', result: 'valid', evidenceHash: createHash('sha256').update(evidence).digest('hex') }));
+    message = 'Verificado y publicado.';
+  } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
+}
+const spec = new Map(getSpecialties().map((s) => [s.id, s.name_singular]));
+const pending = allDoctors().filter((d) => !d.exequatur_verified_at).sort((a, b) => a.display_name.localeCompare(b.display_name, 'es'));
+---
+<AdminShell title="Verificar exequátur" message={message} error={error}>
+  <p>1) Consulta el exequátur en el <a href={LOOKUP} target="_blank" rel="noopener">servicio oficial</a> con la cédula del profesional. 2) Pega el número de consulta o una nota como evidencia. 3) Marca verificado: el médico se publica y queda registrado quién verificó y cuándo (se guarda un hash de la evidencia).</p>
+  <p><small>{pending.length} pendiente{pending.length === 1 ? '' : 's'}. La cédula no se muestra ni se guarda: consúltala en tu archivo de origen.</small></p>
+  <table>
+    <thead><tr><th>Médico</th><th>Nº de exequátur</th><th>Decreto</th><th>Evidencia y verificación</th></tr></thead>
+    <tbody>
+      {pending.map((d) => (
+        <tr>
+          <td><a href={`/admin/doctors/${d.id}`}>{d.display_name}</a><br /><small>{spec.get(d.specialty_id)} · {d.full_legal_name}</small></td>
+          <td>{d.exequatur_number ?? '—'}</td><td>{d.exequatur_decree ?? '—'}</td>
+          <td>{adminCanWrite() ? <form method="post" style="display:flex;gap:6px"><input type="hidden" name="id" value={d.id} /><input name="evidence" placeholder="nº de consulta / nota" required /><button>Marcar verificado</button></form> : '—'}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  {pending.length === 0 && <p>No hay médicos pendientes. 🎉</p>}
+</AdminShell>

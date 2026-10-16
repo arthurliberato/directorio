@@ -6,7 +6,7 @@ export interface Specialty {
   name_singular: string; name_plural: string; // Cardiología / Cardiólogos
   field_name: string; // Cardiología
   agent_f: string; agent_m: string; // cardióloga / cardiólogo
-  schema_enum: string; // schema.org MedicalSpecialty value
+  schema_enum: string | null; // schema.org MedicalSpecialty value; null when schema.org has no matching term (never guess)
   icon: string;
 }
 export interface City { id: number; slug: string; name: string; province: string; }

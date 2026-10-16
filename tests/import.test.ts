@@ -72,6 +72,9 @@ test('import: loads reference data + example CSV, never publishes, is idempotent
   assert.deepEqual([mixed.inserted, mixed.errors.length], [1, 1]);
   assert.equal(mixed.errors[0].line, 2); assert.ok(mixed.errors[0].messages.length >= 3);
   assert.deepEqual(mixed.createdSectors, ['Nuevo Sector (santo-domingo)']);
+  // specialty may be written naturally
+  const natural = await importDoctors(run, [{ ...bad[0], exequatur_number: 'EX-6', cedula: '', specialty: 'Cardióloga', display_name: 'Dra. Natural Prueba', full_legal_name: 'Natural Prueba' }, { ...bad[0], exequatur_number: 'EX-7', cedula: '', specialty: 'Pediatría', display_name: 'Dr. Natural Dos', full_legal_name: 'Natural Dos' }], {});
+  assert.deepEqual([natural.inserted, natural.errors.length], [2, 0]);
   // cédula without pepper is refused rather than stored raw
   const nopep = await importDoctors(run, [{ ...bad[0], exequatur_number: 'EX-4' }], {});
   assert.match(nopep.errors[0].messages.join(), /CEDULA_PEPPER/);
