@@ -25,7 +25,7 @@ export function physicianJsonLd(v: DoctorView) {
   return clean({
     '@context': CTX, '@type': 'IndividualPhysician', '@id': physicianId(d.slug),
     name: d.display_name, url: abs(profilePath(v)),
-    image: d.photo_url ? abs(d.photo_url) : undefined,
+    image: d.photo_url ? (/^https?:\/\//.test(d.photo_url) ? d.photo_url : abs(d.photo_url)) : undefined,
     description: factSummary(v),
     medicalSpecialty: v.specialty.schema_enum ? `https://schema.org/${v.specialty.schema_enum}` : undefined,
     knowsLanguage: d.languages,

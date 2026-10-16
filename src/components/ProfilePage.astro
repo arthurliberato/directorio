@@ -24,16 +24,24 @@ crumbs.push({ name: d.display_name, path: profilePath(v) });
 const jsonLd = [physicianJsonLd(v), breadcrumbJsonLd(crumbs)];
 const waNumber = d.whatsapp?.replace(/\D/g, '');
 const verified = d.data_verified_at;
+const initials = d.display_name.replace(/^(Dra?\.)\s*/, '').split(' ').map((p) => p[0]).slice(0, 2).join('');
 ---
 <Base title={profileTitle(v, BRAND)} description={profileMetaDescription(v)} robots={decision.robots} jsonLd={jsonLd} canonicalPath={profilePath(v)}>
   <Breadcrumbs items={crumbs} />
   <div class="wrap page-head">
+    <div class="profile-head">
+      <div class="portrait" aria-hidden={d.photo_url ? undefined : 'true'}>
+        {d.photo_url ? <img src={d.photo_url} width="148" height="148" fetchpriority="high" alt={`Foto de ${d.display_name}`} /> : initials}
+      </div>
+      <div>
     <h1>{titleOf(v)} {d.full_legal_name}, {agentNoun(v)}</h1>
-    <p>
-      {d.exequatur_verified_at && <span class="badge"><Icon name="shield" size={16} /> Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span>}
-      {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px">Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span>}
+    <p style="margin:0">
+      {d.exequatur_verified_at && <span class="badge"><Icon name="shield" size={16} /> <span>Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span></span>}
+      {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px"><span>Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span></span>}
       {d.claimed && <span class="badge" style="margin-left:8px">Confirmado con el médico</span>}
     </p>
+      </div>
+    </div>
     <p class="summary">{factSummary(v)}</p>
   </div>
 

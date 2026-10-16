@@ -103,7 +103,8 @@ export async function importDoctors(run: Run, rows: Row[], opts: { dryRun?: bool
     const ph = r.phone ? normalizePhone(r.phone) : null; if (r.phone && !ph) msgs.push(`phone no válido: ${r.phone}`);
     const feeMin = r.fee_min ? Number(r.fee_min.replace(/[^\d]/g, '')) : null, feeMax = r.fee_max ? Number(r.fee_max.replace(/[^\d]/g, '')) : null;
     if (feeMin != null && feeMax != null && feeMax < feeMin) msgs.push('fee_max menor que fee_min');
-    for (const u of [r.website, r.photo_url]) if (u && !/^https?:\/\//.test(u)) msgs.push(`URL no válida: ${u}`);
+    if (r.website && !/^https?:\/\//.test(r.website)) msgs.push(`URL no válida: ${r.website}`);
+    if (r.photo_url && !/^(https?:\/\/|\/)/.test(r.photo_url)) msgs.push(`URL de foto no válida (usa https://… o /ruta): ${r.photo_url}`);
     const langs = r.languages ? list(r.languages).map((l) => LANG[l.toLowerCase()]) : ['es'];
     if (langs.some((l) => !l)) msgs.push(`idioma no reconocido en "${r.languages}"`);
     const arsIds: number[] = [];

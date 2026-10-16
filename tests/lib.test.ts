@@ -151,3 +151,13 @@ test('fact summary states every schedule block accurately (no mixing hours acros
   assert.ok(!/lunes a viernes/.test(s));
   assert.equal(groupSchedule(v.locations[0].schedule).length, 2);
 });
+
+test('physician JSON-LD image: relative photo paths become absolute, absolute URLs stay untouched', () => {
+  const v = structuredClone(getDoctorBySlug('dra-maria-perez-cardiologa')!);
+  v.doctor.photo_url = '/img/doctors/x.webp';
+  assert.equal((physicianJsonLd(v) as any).image, 'https://short.do/img/doctors/x.webp');
+  v.doctor.photo_url = 'https://cdn.example.com/a.jpg';
+  assert.equal((physicianJsonLd(v) as any).image, 'https://cdn.example.com/a.jpg');
+  v.doctor.photo_url = null;
+  assert.equal((physicianJsonLd(v) as any).image, undefined);
+});
