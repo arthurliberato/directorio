@@ -4,6 +4,7 @@ interface Props { lat: number | null; lng: number | null; address: string; event
 const { lat, lng, address, event = 'map_open', slug, id = 'map' } = Astro.props;
 const src = lat != null && lng != null ? `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.004},${lat - 0.0025},${lng + 0.004},${lat + 0.0025}&layer=mapnik&marker=${lat},${lng}` : null;
 ---
+{lat != null && lng != null && (<>
 <div class="map" id={`${id}-box`}>
   <img src="/img/map-placeholder.svg" width="640" height="320" loading="lazy" alt={`Mapa: ${address}`} />
   {src && <button type="button" class="btn ghost" id={`${id}-open`} data-event={event} data-doctor={slug} data-src={src}>Ver mapa interactivo</button>}
@@ -15,3 +16,4 @@ const src = lat != null && lng != null ? `https://www.openstreetmap.org/export/e
     var box = document.getElementById(id + '-box'); box.innerHTML = ''; box.appendChild(f);
   });
 </script>
+</>)}

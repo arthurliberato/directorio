@@ -73,7 +73,7 @@ const verified = d.data_verified_at;
 
     <aside aria-label="Contacto y ubicación">
       <div class="panel contact">
-        <h2 style="font-size:1.3rem">Contacto</h2>
+        <h2 style="font-size:1.3rem">{waNumber || d.phone || d.website ? 'Contacto' : 'Ubicación'}</h2>
         {waNumber && <a class="btn wa" href={`https://wa.me/${waNumber}`} data-event="whatsapp_click" data-doctor={d.slug} rel="noopener"><Icon name="whatsapp" size={20} /> Escribir por WhatsApp</a>}
         {d.phone && <a class="btn ghost" href={`tel:${d.phone.replace(/[^+\d]/g, '')}`} data-event="phone_click" data-doctor={d.slug}><Icon name="phone" size={20} /> {d.phone}</a>}
         {d.website && <a class="btn ghost" href={d.website} data-event="website_click" data-doctor={d.slug} rel="noopener nofollow">Sitio web</a>}
