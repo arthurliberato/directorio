@@ -18,5 +18,6 @@ node scripts/check-html.mjs      # acceptance test: fetches pages as AI crawlers
 - Admin (`/admin`, HTTP Basic via `ADMIN_PASSWORD`): dashboard metrics, per-doctor edit form (fees, contact, languages, ARS, slug rename with auto-301), index-status override, audited exequátur verification (`verification_log`). Read-only on seed data.
 - Monitoring: GA4 event hooks (`PUBLIC_GA4_ID`), crawler JSON logs + `scripts/bot-report.ts` (alerts on AI-bot 403s), AI-visibility prompt panel + report. See `docs/analytics.md`.
 - Quality gates (also in CI): `npx astro check`, `npm test`, `scripts/check-html.mjs` (AI-crawler fetch), `scripts/crawl.mjs` (every sitemap URL + internal links), `scripts/lighthouse.mjs` (mobile: perf >= 90, a11y/SEO/best-practices >= 95; currently 99–100).
+- Importer: `node scripts/import-doctors.ts doctors.csv [--dry-run]` loads a CSV template into Postgres (unverified, unpublished; cédula only stored as a keyed hash). See `docs/import.md`; reference data in `db/reference/`.
 - Not built yet: `/en/` (phase 2), real static maps, automated PGR exequátur lookup, image optimization pipeline for doctor photos, reviews (phase 2).
 - Launch steps that need a human: `docs/launch.md`.
