@@ -1,5 +1,4 @@
 -- Core schema (SPEC §2). Postgres / Supabase.
-create extension if not exists pgcrypto;
 
 create table specialties (
   id serial primary key, slug text unique not null check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),

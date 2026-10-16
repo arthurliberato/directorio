@@ -6,7 +6,11 @@ import { botLogLine, classifyBot } from './lib/bots.ts';
 
 // Order: canonical path form (lowercase, no trailing slash) -> redirects table -> render -> cache headers.
 export const onRequest = defineMiddleware(async (ctx, next) => {
-  await ensureDataset();
+  try { await ensureDataset(); } catch (e) {
+    // Never serve (or let a CDN cache) a half-working site: 503 + no-store, and never fall back to seed data in production.
+    console.error('[dataset] load failed', e);
+    return new Response('Servicio no disponible temporalmente', { status: 503, headers: { 'Retry-After': '30', 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8' } });
+  }
   const url = new URL(ctx.request.url);
   let path = url.pathname;
 

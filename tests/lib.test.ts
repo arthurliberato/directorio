@@ -141,3 +141,13 @@ test('pagination: >20 doctors yields pages with self paths, sitemap entries, and
     assert.ok(p2.status === 'ok' && p2.items.every((v) => !ids1.has(v.doctor.id)));
   } finally { setDs(mkSeed()); }
 });
+
+import { groupSchedule } from '../src/lib/format.ts';
+test('fact summary states every schedule block accurately (no mixing hours across days)', () => {
+  const v = structuredClone(getDoctorBySlug('dra-maria-perez-cardiologa')!);
+  v.locations[0].schedule = [1, 2, 3, 4].map((day) => ({ day: day as 1, open: '08:00', close: '12:00' })).concat([{ day: 5 as 1, open: '14:00', close: '18:00' }]);
+  const s = factSummary(v);
+  assert.match(s, /lunes a jueves, de 08:00 a 12:00 y viernes, de 14:00 a 18:00/);
+  assert.ok(!/lunes a viernes/.test(s));
+  assert.equal(groupSchedule(v.locations[0].schedule).length, 2);
+});

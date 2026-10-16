@@ -1,4 +1,4 @@
-import { formatDate, formatDays, formatDOP, joinList, LANGUAGE_NAMES } from './format.ts';
+import { formatDate, formatDays, formatDOP, groupSchedule, joinList, LANGUAGE_NAMES } from './format.ts';
 import { hubPath } from './hubs.ts';
 import type { DoctorView } from './data.ts';
 
@@ -16,7 +16,7 @@ export function factSummary(v: DoctorView): string {
   if (loc) first += ` en ${loc.city.name} (${loc.sector.name})`;
   if (d.exequatur_verified_at) first += `, con exequátur verificado el ${formatDate(d.exequatur_verified_at)}`;
   parts.push(first + '.');
-  if (loc?.facility && loc.schedule.length) parts.push(`Atiende en ${loc.facility.name} de ${formatDays(loc.schedule.map((s) => s.day))}, de ${loc.schedule[0].open} a ${loc.schedule[0].close}.`);
+  if (loc?.facility && loc.schedule.length) parts.push(`Atiende en ${loc.facility.name}: ${joinList(groupSchedule(loc.schedule).map((g) => `${formatDays(g.days)}, de ${g.open} a ${g.close}`))}.`);
   else if (loc?.facility) parts.push(`Atiende en ${loc.facility.name}.`);
   if (v.ars.length) parts.push(`Acepta ${joinList(v.ars.map((a) => a.name))}.`);
   if (d.consultation_fee_min != null) parts.push(`Consulta desde ${formatDOP(d.consultation_fee_min)}.`);

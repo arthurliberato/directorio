@@ -2,7 +2,8 @@
 
 1. Run `db/reference/001_reference_data.sql` once in the Supabase SQL Editor (specialties, cities, sectors, ARS). Review the ARS names against the current SISALRIL list.
 2. Copy `templates/doctors.csv`, fill it in (Excel/Sheets "Save as CSV" works; both `,` and `;` delimiters are detected). See `templates/doctors.example.csv`.
-3. Dry run, then import:
+3. **No terminal needed:** once the site is deployed, open `/admin/import`, upload the CSV, leave «Prueba (dry run)» checked, fix any reported lines, then untick it and import. (Needs `CEDULA_PEPPER` set on the server if the CSV has a `cedula` column.)
+   Or from a terminal, dry run then import:
    ```bash
    export DATABASE_URL='postgresql://…session-pooler…'
    export CEDULA_PEPPER='a-long-random-secret'      # only needed if the CSV has a cedula column; keep it safe, never change it

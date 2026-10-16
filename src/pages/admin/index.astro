@@ -3,7 +3,8 @@ import { ensureDataset, getDataset } from '../../lib/dataset.ts';
 import { allDoctors, getSpecialties, isPublished, publishedDoctors } from '../../lib/data.ts';
 import { INDEX_STATUSES, markExequaturVerified, setIndexStatus, type Run } from '../../lib/admin-db.ts';
 import { profileIndexDecision } from '../../lib/indexing.ts';
-import { computeState, overdueReverification } from '../../lib/nightly.ts';
+import { overdueReverification } from '../../lib/nightly.ts';
+import { doctorUrls, hubUrls } from '../../lib/sitemap.ts';
 import { createHash } from 'node:crypto';
 
 const canWrite = getDataset().source === 'postgres';
@@ -29,8 +30,6 @@ if (Astro.request.method === 'POST' && canWrite) {
 
 const docs = allDoctors();
 const published = publishedDoctors();
-const state = computeState();
-const byType = (re: RegExp) => [...state].filter(([u, s]) => s.status === 'index' && re.test(new URL(u).pathname)).length;
 const overdue = overdueReverification();
 const claimedPct = published.length ? Math.round((100 * published.filter((v) => v.doctor.claimed).length) / published.length) : 0;
 const rows = published.slice(0, 200);
@@ -45,8 +44,8 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   <div class="k">
     <div>Médicos verificados<b>{published.length}</b>de {docs.length}</div>
     <div>Perfiles reclamados<b>{claimedPct}%</b></div>
-    <div>Perfiles indexables<b>{byType(/^\/(dra?-)/)}</b></div>
-    <div>Hubs indexables<b>{byType(/^\/[^/]+(\/.*)?$/) - byType(/^\/(dra?-)/) - byType(/^\/(guia|centro)/)}</b></div>
+    <div>Perfiles indexables<b>{doctorUrls().length}</b></div>
+    <div>Hubs indexables<b>{hubUrls().length}</b></div>
     <div>Re-verificaciones vencidas<b>{overdue.length}</b></div>
   </div>
   <p><a href="/admin/import">Importar médicos desde CSV →</a></p>
