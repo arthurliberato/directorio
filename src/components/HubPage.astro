@@ -25,6 +25,9 @@ if (r.page > 1) crumbs.push({ name: `Página ${r.page}`, path: r.path });
 const title = `${heading} (${r.total} verificado${r.total === 1 ? '' : 's'})${r.page > 1 ? ` · Página ${r.page}` : ''} | ${BRAND}`;
 const description = r.intro.slice(0, 155).replace(/\s+\S*$/, r.intro.length > 155 ? '…' : '');
 const startPos = (r.page - 1) * PAGE_SIZE + 1;
+// Sponsored placements are shown in their own labeled block and never inside the ordered list/table (SPEC §5.6).
+const sponsored = r.page === 1 ? queryHub(q).filter((v) => v.doctor.sponsored) : [];
+const organic = r.items.filter((v) => !v.doctor.sponsored);
 
 // Child hubs: only indexable ones (>= 5 doctors) are linked from navigation blocks.
 const childLinks: { label: string; href: string; n: number }[] = [];
@@ -53,7 +56,7 @@ if (s.arsCounts.length) qa.push({
 qa.push({ q: `¿Cuántos ${q.specialty.name_plural.toLowerCase()} verificados hay en ${place}?`, a: `Hay ${s.n} con exequátur verificado en nuestro directorio${s.asOf ? ` (datos al ${formatDateLong(s.asOf)})` : ''}.` });
 
 const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa.map((x) => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) };
-const jsonLd = [...hubJsonLd(q, r.items, r.total, r.path, crumbs, startPos), faqLd];
+const jsonLd = [...hubJsonLd(q, organic, r.total, r.path, crumbs, startPos), faqLd];
 const sortHref = (o: string) => `${r.path}?orden=${o}`; // non-indexable: blocked in robots.txt, canonical stays clean
 const pageHref = (p: number) => hubPath(q, p);
 ---
@@ -76,7 +79,7 @@ const pageHref = (p: number) => hubPath(q, p);
       <table class="compare">
         <thead><tr><th scope="col">Médico</th><th scope="col">Subespecialidad</th><th scope="col">Sector</th><th scope="col">ARS</th><th scope="col">Consulta desde</th><th scope="col">Horario</th></tr></thead>
         <tbody>
-          {r.items.map((v) => (
+          {organic.map((v) => (
             <tr>
               <th scope="row"><a href={profilePath(v)}>{v.doctor.display_name}</a></th>
               <td>{v.doctor.subspecialties.join(', ') || v.specialty.field_name}</td>
@@ -93,8 +96,9 @@ const pageHref = (p: number) => hubPath(q, p);
 
   <section class="wrap section" aria-labelledby="medicos">
     <h2 id="medicos">Médicos verificados</h2>
+    {sponsored.length > 0 && <div class="sponsored-block"><p class="label">Profesional patrocinado · <a href="/publicidad-y-patrocinios">qué significa</a></p><div class="grid cards">{sponsored.map((v) => <DoctorCard v={v} />)}</div></div>}
     <div class="grid cards">
-      {r.items.map((v) => <DoctorCard v={v} />)}
+      {organic.map((v) => <DoctorCard v={v} />)}
     </div>
     {r.totalPages > 1 && (
       <nav class="pager" aria-label="Paginación">

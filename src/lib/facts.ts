@@ -52,3 +52,23 @@ export const doctorHubLinks = (v: DoctorView) => {
   }
   return links;
 };
+
+// ---- Facilities -------------------------------------------------------------------------------
+import type { Facility } from './types.ts';
+export const facilityKind = (f: Facility) => (f.type === 'Hospital' ? 'hospital' : 'clínica o centro médico');
+
+export function facilitySpecialtyCounts(doctors: DoctorView[]): { slug: string; name: string; plural: string; count: number }[] {
+  const m = new Map<string, { slug: string; name: string; plural: string; count: number }>();
+  for (const v of doctors) { const cur = m.get(v.specialty.slug) ?? { slug: v.specialty.slug, name: v.specialty.name_singular, plural: v.specialty.name_plural, count: 0 }; cur.count++; m.set(v.specialty.slug, cur); }
+  return [...m.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'es'));
+}
+
+/** Data-driven summary (only stored facts). */
+export function facilitySummary(f: Facility, doctors: DoctorView[], place: string): string {
+  const specs = facilitySpecialtyCounts(doctors);
+  const parts = [`${f.name} es ${f.type === 'Hospital' ? 'un hospital' : 'una clínica o centro médico'} en ${place}.`];
+  parts.push(`En el directorio hay ${doctors.length} ${doctors.length === 1 ? 'médico verificado' : 'médicos verificados'} que atienden aquí, en ${specs.length} ${specs.length === 1 ? 'especialidad' : 'especialidades'}: ${joinList(specs.slice(0, 6).map((s) => `${s.name} (${s.count})`))}.`);
+  const fees = doctors.map((v) => v.doctor.consultation_fee_min).filter((x): x is number => x != null);
+  if (fees.length) parts.push(`Consultas desde ${formatDOP(Math.min(...fees))}.`);
+  return parts.join(' ');
+}

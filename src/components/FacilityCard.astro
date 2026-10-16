@@ -1,0 +1,16 @@
+---
+import Icon from './Icon.astro';
+import type { DoctorView } from '../lib/data.ts';
+import { facilitySpecialtyCounts } from '../lib/facts.ts';
+import type { Facility } from '../lib/types.ts';
+interface Props { f: Facility; doctors: DoctorView[]; place: string }
+const { f, doctors, place } = Astro.props;
+const specs = facilitySpecialtyCounts(doctors);
+---
+<a class="fcard" href={`/centro/${f.slug}`}>
+  <span><span class="badge type">{f.type === 'Hospital' ? 'Hospital' : 'Clínica'}</span></span>
+  <h3>{f.name}</h3>
+  <ul class="meta"><li><Icon name="pin" size={20} /> {place}</li></ul>
+  {specs.length > 0 && <p class="muted" style="margin:0">{specs.slice(0, 4).map((s) => s.name).join(' · ')}{specs.length > 4 ? ` · +${specs.length - 4}` : ''}</p>}
+  <span class="count"><span>Médicos verificados</span><strong>{doctors.length}</strong></span>
+</a>

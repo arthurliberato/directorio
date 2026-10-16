@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import DoctorCard from './DoctorCard.astro';
+import MapBox from './MapBox.astro';
 import Icon from './Icon.astro';
 import { BRAND } from '../config.ts';
 import { nearbyDoctors, type DoctorView } from '../lib/data.ts';
@@ -22,8 +23,6 @@ if (loc) crumbs.push({ name: loc.city.name, path: hubPath({ specialty: v.special
 crumbs.push({ name: d.display_name, path: profilePath(v) });
 const jsonLd = [physicianJsonLd(v), breadcrumbJsonLd(crumbs)];
 const waNumber = d.whatsapp?.replace(/\D/g, '');
-const mapQuery = loc?.lat != null && loc.lng != null ? { lat: loc.lat, lng: loc.lng } : null;
-const mapSrc = mapQuery ? `https://www.openstreetmap.org/export/embed.html?bbox=${mapQuery.lng - 0.004},${mapQuery.lat - 0.0025},${mapQuery.lng + 0.004},${mapQuery.lat + 0.0025}&layer=mapnik&marker=${mapQuery.lat},${mapQuery.lng}` : null;
 const verified = d.data_verified_at;
 ---
 <Base title={profileTitle(v, BRAND)} description={profileMetaDescription(v)} robots={decision.robots} jsonLd={jsonLd} canonicalPath={profilePath(v)}>
@@ -33,7 +32,7 @@ const verified = d.data_verified_at;
     <p>
       {d.exequatur_verified_at && <span class="badge"><Icon name="shield" size={16} /> Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span>}
       {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px">Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span>}
-      {d.claimed && <span class="badge" style="margin-left:8px">Perfil reclamado por el profesional</span>}
+      {d.claimed && <span class="badge" style="margin-left:8px">Confirmado con el médico</span>}
     </p>
     <p class="summary">{factSummary(v)}</p>
   </div>
@@ -78,12 +77,7 @@ const verified = d.data_verified_at;
         {waNumber && <a class="btn wa" href={`https://wa.me/${waNumber}`} data-event="whatsapp_click" data-doctor={d.slug} rel="noopener"><Icon name="whatsapp" size={20} /> Escribir por WhatsApp</a>}
         {d.phone && <a class="btn ghost" href={`tel:${d.phone.replace(/[^+\d]/g, '')}`} data-event="phone_click" data-doctor={d.slug}><Icon name="phone" size={20} /> {d.phone}</a>}
         {d.website && <a class="btn ghost" href={d.website} data-event="website_click" data-doctor={d.slug} rel="noopener nofollow">Sitio web</a>}
-        {loc && (
-          <div class="map" id="map-box">
-            <img src="/img/map-placeholder.svg" width="640" height="320" loading="lazy" alt={`Mapa: ${loc.address}, ${loc.sector.name}, ${loc.city.name}`} />
-            {mapSrc && <button type="button" class="btn ghost" id="map-open" data-event="map_open" data-doctor={d.slug} data-src={mapSrc}>Ver mapa interactivo</button>}
-          </div>
-        )}
+        {loc && <MapBox lat={loc.lat} lng={loc.lng} address={`${loc.address}, ${loc.sector.name}, ${loc.city.name}`} slug={d.slug} />}
         {loc && <p class="muted" style="margin:0">{loc.address}, {loc.sector.name}, {loc.city.name}</p>}
       </div>
     </aside>
@@ -99,12 +93,4 @@ const verified = d.data_verified_at;
   <div class="wrap" style="padding-bottom:32px">
     {verified && <p class="muted">Datos verificados el <time datetime={verified}>{formatDate(verified)}</time>. <a href="/como-verificamos">Cómo verificamos</a>.</p>}
   </div>
-  <script is:inline>
-    // Interactive map loads only on click (SPEC §9). Everything above works without JS.
-    var b = document.getElementById('map-open');
-    if (b) b.addEventListener('click', function () {
-      var f = document.createElement('iframe'); f.src = b.getAttribute('data-src'); f.title = 'Mapa'; f.loading = 'lazy';
-      var box = document.getElementById('map-box'); box.innerHTML = ''; box.appendChild(f);
-    });
-  </script>
 </Base>

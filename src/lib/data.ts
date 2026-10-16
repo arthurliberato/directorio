@@ -81,7 +81,7 @@ export function nearbyDoctors(v: DoctorView, limit = 5): DoctorView[] {
   const sectorIds = new Set(v.locations.map((l) => l.sector_id));
   const sameSector = (o: DoctorView) => Number(o.locations.some((l) => sectorIds.has(l.sector_id)));
   return publishedDoctors()
-    .filter((o) => o.doctor.id !== v.doctor.id && o.specialty.id === v.specialty.id && o.locations.some((l) => cityIds.has(l.city_id)))
+    .filter((o) => !o.doctor.sponsored && o.doctor.id !== v.doctor.id && o.specialty.id === v.specialty.id && o.locations.some((l) => cityIds.has(l.city_id)))
     .sort((a, b) => sameSector(b) - sameSector(a) || a.doctor.slug.localeCompare(b.doctor.slug))
     .slice(0, limit);
 }

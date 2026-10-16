@@ -4,14 +4,19 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import { BRAND } from '../../config.ts';
 import { doctorCount, getSpecialties } from '../../lib/data.ts';
-import { breadcrumbJsonLd } from '../../lib/schema.ts';
-const specs = getSpecialties().map((s) => ({ s, n: doctorCount(s.id) })).filter((x) => x.n > 0);
+import { abs, breadcrumbJsonLd } from '../../lib/schema.ts';
+const specs = getSpecialties().map((s) => ({ s, n: doctorCount(s.id) })).filter((x) => x.n > 0).sort((a, b) => a.s.name_singular.localeCompare(b.s.name_singular, 'es'));
+const total = specs.reduce((n, x) => n + x.n, 0);
 const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Especialidades', path: '/especialidad' }];
+const itemList = { '@context': 'https://schema.org', '@type': 'ItemList', numberOfItems: specs.length, itemListElement: specs.map((x, i) => ({ '@type': 'ListItem', position: i + 1, name: x.s.name_plural, url: abs(`/${x.s.slug}`) })) };
 ---
-<Base title={`Todas las especialidades médicas en República Dominicana | ${BRAND}`} description="Explora médicos verificados por especialidad en República Dominicana." jsonLd={breadcrumbJsonLd(crumbs)}>
+<Base title={`Todas las especialidades médicas en República Dominicana | ${BRAND}`} description={`${specs.length} especialidades con médicos verificados en República Dominicana. Elige una para ver médicos, precios y ARS.`} jsonLd={[breadcrumbJsonLd(crumbs)]}>
   <Breadcrumbs items={crumbs} />
-  <div class="wrap section">
+  <div class="wrap page-head">
     <h1>Especialidades médicas</h1>
-    <div class="grid spec">{specs.map(({ s, n }) => <a class="spec-card" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={28} /></span><strong>{s.name_singular}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></a>)}</div>
+    <p class="summary">{specs.length} especialidades y {total} médicos con exequátur verificado. Elige una especialidad para comparar médicos, precios de consulta y ARS aceptadas.</p>
+  </div>
+  <div class="wrap section" style="padding-top:8px">
+    <div class="grid specs">{specs.map(({ s, n }) => <a class="spec-row" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={22} /></span><span><strong>{s.name_singular}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span></a>)}</div>
   </div>
 </Base>
