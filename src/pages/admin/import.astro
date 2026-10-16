@@ -1,0 +1,56 @@
+---
+import { ensureDataset, getDataset } from '../../lib/dataset.ts';
+import { importDoctors, parseCsv, type ImportReport } from '../../lib/import.ts';
+
+const canWrite = getDataset().source === 'postgres';
+let report: ImportReport | null = null; let rowCount = 0; let message = '';
+if (Astro.request.method === 'POST') {
+  if (!canWrite) message = 'Solo lectura: configura DATABASE_URL.';
+  else {
+    const f = await Astro.request.formData();
+    const file = f.get('csv');
+    const text = file instanceof File && file.size ? await file.text() : String(f.get('text') ?? '');
+    const rows = parseCsv(text); rowCount = rows.length;
+    if (!rows.length) message = 'El archivo no tiene filas.';
+    else if (rows.length > 2000) message = 'Máximo 2000 filas por importación.';
+    else {
+      const { default: postgres } = await import('postgres');
+      const sql = postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} }); // single connection keeps begin/commit in one session
+      try {
+        report = await importDoctors((q, p) => sql.unsafe(q, p as any[]) as unknown as Promise<any[]>, rows, { dryRun: f.get('dry') === 'on', pepper: process.env.CEDULA_PEPPER });
+        if (!report.dryRun) await ensureDataset(true);
+      } catch (e) { message = `Error: ${(e as Error).message}`; }
+      await sql.end();
+    }
+  }
+}
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>Importar médicos</title>
+<style>body{font:15px/1.5 system-ui;padding:16px;max-width:52rem;margin-inline:auto}textarea{width:100%;font:13px monospace}.err{color:#a10000}.ok{color:#1a6b2f}code{background:#eee;padding:1px 4px}</style></head>
+<body>
+  <p><a href="/admin">← Panel</a></p>
+  <h1>Importar médicos (CSV)</h1>
+  <p>Plantilla y columnas: <code>templates/doctors.csv</code> y <code>docs/import.md</code> en el repositorio. Los médicos importados quedan <b>sin verificar y sin publicar</b>.</p>
+  {!canWrite && <p class="err">Solo lectura: configura DATABASE_URL para importar.</p>}
+  {message && <p class="err"><b>{message}</b></p>}
+  <form method="post" enctype="multipart/form-data">
+    <fieldset disabled={!canWrite} style="border:0;padding:0">
+      <p><label>Archivo CSV: <input type="file" name="csv" accept=".csv,text/csv" /></label></p>
+      <p><label>…o pega el contenido:<br /><textarea name="text" rows="8"></textarea></label></p>
+      <p><label><input type="checkbox" name="dry" checked /> Prueba (dry run): valida todo y no guarda nada</label></p>
+      <p><button type="submit">Importar</button></p>
+    </fieldset>
+  </form>
+  {report && (
+    <section>
+      <h2>{report.dryRun ? 'Resultado de la prueba' : 'Resultado'}</h2>
+      <p class={report.errors.length ? 'err' : 'ok'}>Filas: {rowCount} · nuevos: {report.inserted} · actualizados: {report.updated} · con errores: {report.errors.length}</p>
+      {report.createdSectors.length > 0 && <p>Sectores nuevos (revisa los nombres): {report.createdSectors.join('; ')}</p>}
+      {report.createdFacilities.length > 0 && <p>Centros nuevos (revisa tipo y dirección): {report.createdFacilities.join('; ')}</p>}
+      {report.errors.length > 0 && <ul class="err">{report.errors.map((e) => <li>Línea {e.line} — {e.name}: {e.messages.join(' | ')}</li>)}</ul>}
+      {report.dryRun && report.errors.length === 0 && <p class="ok">Todo válido. Desmarca «Prueba» y vuelve a importar para guardar.</p>}
+    </section>
+  )}
+</body></html>

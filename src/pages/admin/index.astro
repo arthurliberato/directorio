@@ -49,6 +49,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
     <div>Hubs indexables<b>{byType(/^\/[^/]+(\/.*)?$/) - byType(/^\/(dra?-)/) - byType(/^\/(guia|centro)/)}</b></div>
     <div>Re-verificaciones vencidas<b>{overdue.length}</b></div>
   </div>
+  <p><a href="/admin/import">Importar médicos desde CSV →</a></p>
   <h2>Médicos</h2>
   <table>
     <thead><tr><th>Médico</th><th>Exequátur</th><th>Indexación</th><th>Override</th><th>Verificar</th></tr></thead>
