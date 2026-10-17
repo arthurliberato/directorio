@@ -140,7 +140,7 @@ export function convert(md: string) {
         if (suite && /^\d+(-\d+)?$/.test(suite)) suite = `consultorio ${suite}`;
         if (/^(ND|Solo móvil|Clínica Corominas|Centro Médico Cibao)/i.test(suite)) suite = '';
         const ext = (cell(iPhone).match(/ext\.?\s*([\d]+(?:\/[\d]+)?)/i)?.[1]) ?? '';
-        const edu = isND(cell(iEdu)) ? '' : cell(iEdu).replace(/\bND\b/g, '').replace(/;\s*;/g, ';').replace(/[;\s]+$/, '').trim();
+        const edu = isND(cell(iEdu)) ? '' : cell(iEdu).replace(/\([^)]*\bND\b[^)]*\)/g, '').replace(/\bND\b/g, '').replace(/;\s*;/g, ';').replace(/[;\s]+$/, '').trim();
         const bioBits = [others.length ? `También consta en: ${others.join('; ')}.` : '', clinic.note ? '' : ''].filter(Boolean);
         const rowOut: Record<string, string> = {
           display_name: name, full_legal_name: '', gender: genderFromUrl(url), specialty: spec.slug, subspecialties: spec.subs.join('; '), education: edu, bio: bioBits.join(' '), city: clinic.city,

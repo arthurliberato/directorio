@@ -6,7 +6,7 @@ import Icon from '../../components/Icon.astro';
 import MapBox from '../../components/MapBox.astro';
 import NotFound from '../../components/NotFound.astro';
 import { MIN_DOCTORS_FOR_HUB_INDEX } from '../../config.ts';
-import { byTierThenName, doctorsForFacility, getCities, getFacilityBySlug, getSectors, queryHub, getSpecialtyBySlug } from '../../lib/data.ts';
+import { byTierThenName, doctorsForFacility, isAffiliated, getCities, getFacilityBySlug, getSectors, queryHub, getSpecialtyBySlug } from '../../lib/data.ts';
 import { facilityKind, facilitySpecialtyCounts, facilitySummary } from '../../lib/facts.ts';
 import { hubPath } from '../../lib/hubs.ts';
 import { breadcrumbJsonLd, facilityJsonLd } from '../../lib/schema.ts';
@@ -22,6 +22,8 @@ const fullAddress = f && city ? (sector && f.address.toLowerCase().includes(sect
 const crumbs = f ? [{ name: 'Inicio', path: '/' }, { name: 'Clínicas y hospitales', path: '/centro' }, { name: f.name, path: `/centro/${f.slug}` }] : [];
 const specs = f ? facilitySpecialtyCounts(doctors) : [];
 const sections = specs.map((s) => ({ s, docs: doctors.filter((v) => v.specialty.slug === s.slug).sort(byTierThenName) }));
+const affiliates = doctors.filter((v) => isAffiliated(v.doctor)).sort(byTierThenName);
+const listedBySpec = sections.map(({ s, docs }) => ({ s, docs: docs.filter((v) => !isAffiliated(v.doctor)) })).filter((x) => x.docs.length > 0);
 const hubFor = (slug: string) => { const sp = getSpecialtyBySlug(slug)!; return city && queryHub({ specialty: sp, city }).length >= MIN_DOCTORS_FOR_HUB_INDEX ? hubPath({ specialty: sp, city }) : null; };
 ---
 {f && doctors.length > 0 && city ? (
@@ -36,10 +38,16 @@ const hubFor = (slug: string) => { const sp = getSpecialtyBySlug(slug)!; return 
       <div>
         <h2 id="especialidades">Especialidades en {f.name}</h2>
         <ul class="linklist">{specs.map((s) => <li><a href={`#${s.slug}`}>{s.plural} ({s.count})</a></li>)}</ul>
-        {sections.map(({ s, docs }) => (
+        {affiliates.length > 0 && (
+          <section id="verificados" style="margin-top:2em" aria-labelledby="h-verificados">
+            <h2 id="h-verificados" style="font-size:1.5rem">Médicos verificados</h2>
+            <div class="grid cards" style="grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))">{affiliates.map((v) => <DoctorCard v={v} />)}</div>
+          </section>
+        )}
+        {listedBySpec.map(({ s, docs }) => (
           <section id={s.slug} style="margin-top:2em" aria-labelledby={`h-${s.slug}`}>
-            <h2 id={`h-${s.slug}`} style="font-size:1.5rem">{s.plural} en {f.name}</h2>
-            <div class="grid cards" style="grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))">{docs.map((v) => <DoctorCard v={v} />)}</div>
+            <h2 id={`h-${s.slug}`} style="font-size:1.4rem">{s.plural} en {f.name}</h2>
+            <ul class="doclist">{docs.map((v) => <li><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a><small>{[v.locations.find((l) => l.facility_id === f.id)?.suite, v.locations.find((l) => l.facility_id === f.id)?.phone_ext ? `ext. ${v.locations.find((l) => l.facility_id === f.id)!.phone_ext}` : null].filter(Boolean).join(' · ') || 'Perfil informativo'}</small></li>)}</ul>
             {hubFor(s.slug) && <p style="margin-top:12px"><a class="more" href={hubFor(s.slug)!}>Todos los {s.plural.toLowerCase()} en {city.name} <Icon name="arrow" size={18} /></a></p>}
           </section>
         ))}

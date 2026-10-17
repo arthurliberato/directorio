@@ -26,7 +26,7 @@ if (Astro.request.method === 'POST' && adminCanWrite()) {
       await setDoctorArs(run, id, f.getAll('ars').map(Number));
       await setConfirmedWithDoctor(run, id, f.get('confirmed') === 'on');
       await setListingStatus(run, id, String(f.get('listing_status') ?? doc0.listing_status));
-    });
+    }, { reload: true, tx: true });
     message = 'Guardado. Si cambiaste el slug, se creó una redirección 301 automática.';
   } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
 }
