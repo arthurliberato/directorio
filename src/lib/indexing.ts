@@ -21,6 +21,8 @@ export function profileIndexDecision(v: DoctorView): IndexDecision {
   const no = (reason: string): IndexDecision => ({ robots: 'noindex,follow', indexable: false, reason });
   if (d.index_status === 'force_index') return yes('override: force_index');
   if (d.index_status === 'force_noindex') return no('override: force_noindex');
+  // Public-source listings are informational and unverified: reachable and linked, never indexed (SPEC §0.3).
+  if (d.listing_status !== 'affiliated') return no('listed from public sources (not verified)');
   if (!d.exequatur_verified_at) return no('exequatur not verified');
   const pts = verifiedPoints(v);
   if (d.claimed) return yes('verified + claimed');

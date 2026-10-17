@@ -85,6 +85,17 @@ Verification: check exequátur via the PGR "Consultar Exequátur" service (by c�
 
 ---
 
+## 2.1 Listing tiers (decision, October 2026)
+
+Doctors come in three tiers (`doctors.listing_status`):
+- **affiliated (verificado):** exequátur verified by us (DB-enforced) and a relationship with the doctor. Shows photo and the "Médico verificado" badge, is **sorted first** everywhere (hubs, nearby, home), and follows the profile indexing rules of §4.2.
+- **listed (perfil informativo):** built from public sources (clinic directories, specialty societies). Shows **no photo**, a neutral "Perfil informativo · no verificado" badge, the source and date, and a "request verification, correction or removal" link. Never claims verification. `noindex,follow` always (override with `index_status`). Sorted after verified doctors.
+- **draft:** hidden everywhere.
+
+Rules that follow: no direct/mobile phones for listed doctors (only the clinic switchboard + extension); gender is never guessed (unknown ⇒ no title, "cardiólogo/a"); languages and fees are never assumed; a sector is optional; hubs count all published doctors and say how many are verified; import can create `listed`/`draft` but never `affiliated`.
+
+---
+
 ## 3. URL architecture
 
 | Page | URL |
@@ -125,7 +136,7 @@ Rules:
 ### 4.2 Doctor profiles
 
 Index a profile only if:
-- `exequatur_verified_at` is set, AND
+- it is `affiliated` (verified tier, §2.1), AND `exequatur_verified_at` is set, AND
 - it has ≥ 3 verified data points beyond name (confirmed address, ARS list, schedule, photo, bio) — OR `claimed = true`.
 
 Otherwise `noindex,follow` (still reachable through internal links).

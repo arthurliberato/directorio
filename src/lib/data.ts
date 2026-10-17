@@ -3,7 +3,7 @@
 import { getDataset, type Dataset } from './dataset.ts';
 import type { Ars, City, Doctor, Facility, Guide, Location, Sector, Specialty } from './types.ts';
 
-export interface LocationView extends Location { city: City; sector: Sector; facility: Facility | null; }
+export interface LocationView extends Location { city: City; sector: Sector | null; facility: Facility | null; }
 export interface DoctorView { doctor: Doctor; specialty: Specialty; locations: LocationView[]; ars: Ars[]; }
 export interface HubQuery { specialty: Specialty; city?: City; sector?: Sector; ars?: Ars; }
 
@@ -23,12 +23,12 @@ const idx = (): Index => {
   const locs = new Map<number, LocationView[]>();
   for (const l of ds.locations) {
     const arr = locs.get(l.doctor_id) ?? [];
-    arr.push({ ...l, city: city.get(l.city_id)!, sector: sector.get(l.sector_id)!, facility: l.facility_id ? fac.get(l.facility_id) ?? null : null });
+    arr.push({ ...l, city: city.get(l.city_id)!, sector: l.sector_id != null ? sector.get(l.sector_id) ?? null : null, facility: l.facility_id ? fac.get(l.facility_id) ?? null : null });
     locs.set(l.doctor_id, arr);
   }
   const arsByDoctor = new Map<number, Ars[]>();
   for (const a of ds.doctorArs) { const r = ars.get(a.ars_id); if (r) arsByDoctor.set(a.doctor_id, [...(arsByDoctor.get(a.doctor_id) ?? []), r]); }
-  // "Published" = verified exequátur (SPEC §4.2). Unverified doctors never render.
+  // "Published" = listed or affiliated. Drafts (e.g. doctors you have not decided to show yet) never render.
   const published = ds.doctors.filter(isPublished).map((d): DoctorView => ({ doctor: d, specialty: spec.get(d.specialty_id)!, locations: locs.get(d.id) ?? [], ars: arsByDoctor.get(d.id) ?? [] }));
   i = {
     ds, published, bySlug: new Map(published.map((v) => [v.doctor.slug, v])),
@@ -40,7 +40,12 @@ const idx = (): Index => {
   return i;
 };
 
-export const isPublished = (d: Doctor) => d.exequatur_verified_at != null;
+export const isPublished = (d: Doctor) => d.listing_status !== 'draft';
+/** Verified affiliates: show photo, "Médico verificado" badge, and sort first. Everyone else is a public-source listing. */
+export const isAffiliated = (d: Doctor) => d.listing_status === 'affiliated';
+/** Sort key: affiliates first (0), then listed (1). */
+export const tierRank = (v: DoctorView) => (isAffiliated(v.doctor) ? 0 : 1);
+export const byTierThenName = (a: DoctorView, b: DoctorView) => tierRank(a) - tierRank(b) || a.doctor.display_name.localeCompare(b.doctor.display_name, 'es');
 export const publishedDoctors = (): DoctorView[] => idx().published;
 export const getDoctorBySlug = (slug: string) => idx().bySlug.get(slug) ?? null;
 export const getSpecialties = () => idx().ds.specialties;
@@ -78,11 +83,11 @@ export function queryHub(q: HubQuery): DoctorView[] {
 
 export function nearbyDoctors(v: DoctorView, limit = 5): DoctorView[] {
   const cityIds = new Set(v.locations.map((l) => l.city_id));
-  const sectorIds = new Set(v.locations.map((l) => l.sector_id));
-  const sameSector = (o: DoctorView) => Number(o.locations.some((l) => sectorIds.has(l.sector_id)));
+  const sectorIds = new Set(v.locations.map((l) => l.sector_id).filter((x): x is number => x != null));
+  const sameSector = (o: DoctorView) => Number(o.locations.some((l) => l.sector_id != null && sectorIds.has(l.sector_id)));
   return publishedDoctors()
     .filter((o) => !o.doctor.sponsored && o.doctor.id !== v.doctor.id && o.specialty.id === v.specialty.id && o.locations.some((l) => cityIds.has(l.city_id)))
-    .sort((a, b) => sameSector(b) - sameSector(a) || a.doctor.slug.localeCompare(b.doctor.slug))
+    .sort((a, b) => tierRank(a) - tierRank(b) || sameSector(b) - sameSector(a) || a.doctor.slug.localeCompare(b.doctor.slug))
     .slice(0, limit);
 }
 

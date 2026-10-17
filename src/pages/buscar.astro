@@ -1,11 +1,14 @@
 ---
 // Non-indexable search entry (robots.txt Disallow). Redirects to the canonical hub path, fixed facet order.
-import { getArsBySlug, getCityBySlug, getSpecialtyBySlug } from '../lib/data.ts';
+import { getArsBySlug, getCityBySlug, getSpecialtyBySlug, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 const p = Astro.url.searchParams;
 const specialty = getSpecialtyBySlug(p.get('especialidad') ?? '');
 if (!specialty) return Astro.redirect('/especialidad', 302);
 const city = getCityBySlug(p.get('ciudad') ?? '') ?? undefined;
 const ars = city ? getArsBySlug(p.get('ars') ?? '') ?? undefined : undefined;
-return Astro.redirect(hubPath({ specialty, city, ars }), 302);
+// most specific page that actually has doctors: never send a visitor to a 404
+const attempts = [{ specialty, city, ars }, { specialty, city }, { specialty }];
+const hit = attempts.find((q) => queryHub(q).length > 0);
+return Astro.redirect(hit ? hubPath(hit) : '/especialidad', 302);
 ---

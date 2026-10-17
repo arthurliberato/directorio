@@ -1,9 +1,9 @@
 ---
 import AdminShell from '../../components/AdminShell.astro';
 import { adminCanWrite, withDb } from '../../lib/admin-run.ts';
-import { importDoctors, parseCsv, type ImportReport } from '../../lib/import.ts';
+import { importDoctors, importFacilities, isFacilitiesCsv, parseCsv, type FacilityReport, type ImportReport } from '../../lib/import.ts';
 
-let report: ImportReport | null = null; let rowCount = 0; let message = ''; let error = false;
+let report: ImportReport | null = null; let facReport: FacilityReport | null = null; let rowCount = 0; let message = ''; let error = false;
 if (Astro.request.method === 'POST' && adminCanWrite()) {
   const f = await Astro.request.formData();
   const file = f.get('csv');
@@ -14,19 +14,30 @@ if (Astro.request.method === 'POST' && adminCanWrite()) {
   else {
     try {
       const dry = f.get('dry') === 'on';
-      report = await withDb((run) => importDoctors(run, rows, { dryRun: dry, pepper: process.env.CEDULA_PEPPER }), { reload: !dry });
+      // a centers file (name,type,address,city,...) is detected by its columns; import centers before doctors
+      if (isFacilitiesCsv(rows)) facReport = await withDb((run) => importFacilities(run, rows, { dryRun: dry }), { reload: !dry });
+      else report = await withDb((run) => importDoctors(run, rows, { dryRun: dry, pepper: process.env.CEDULA_PEPPER }), { reload: !dry });
     } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
   }
 }
 ---
 <AdminShell title="Importar médicos (CSV)" message={message} error={error}>
-  <p>Plantilla y columnas: <code>templates/doctors.csv</code> y <code>docs/import.md</code> en el repositorio. Los médicos importados quedan <b>sin verificar y sin publicar</b>.</p>
+  <p><b>Orden recomendado:</b> primero el archivo de clínicas y hospitales (columnas <code>name,type,address,city,…</code>), después el de médicos. Se detecta solo por sus columnas. Plantilla y columnas: <code>templates/doctors.csv</code> y <code>docs/import.md</code> en el repositorio. Los médicos importados quedan <b>sin verificar y sin publicar</b>.</p>
   <form method="post" enctype="multipart/form-data"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
     <p><label>Archivo CSV: <input type="file" name="csv" accept=".csv,text/csv" /></label></p>
     <p><label>…o pega el contenido:<br /><textarea name="text" rows="8" style="font:13px monospace"></textarea></label></p>
     <p><label style="font-weight:400"><input type="checkbox" name="dry" checked /> Prueba (dry run): valida todo y no guarda nada</label></p>
     <p><button type="submit">Importar</button></p>
   </fieldset></form>
+  {facReport && (
+    <section>
+      <h2>{facReport.dryRun ? 'Prueba de clínicas y hospitales' : 'Clínicas y hospitales'}</h2>
+      <p class:list={['msg', { err: facReport.errors.length > 0 }]}>Filas: {rowCount} · nuevas: {facReport.inserted} · actualizadas: {facReport.updated} · con errores: {facReport.errors.length}</p>
+      {facReport.createdSectors.length > 0 && <p>Sectores nuevos: {facReport.createdSectors.join('; ')}</p>}
+      {facReport.errors.length > 0 && <ul style="color:#a10000">{facReport.errors.map((e) => <li>Línea {e.line} — {e.name}: {e.messages.join(' | ')}</li>)}</ul>}
+      {facReport.dryRun && facReport.errors.length === 0 && <p class="msg">Todo válido. Desmarca «Prueba» y vuelve a importar para guardar.</p>}
+    </section>
+  )}
   {report && (
     <section>
       <h2>{report.dryRun ? 'Resultado de la prueba' : 'Resultado'}</h2>

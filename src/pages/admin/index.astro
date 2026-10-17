@@ -2,7 +2,7 @@
 import AdminShell from '../../components/AdminShell.astro';
 import { INDEX_STATUSES, setIndexStatus } from '../../lib/admin-db.ts';
 import { adminCanWrite, withDb } from '../../lib/admin-run.ts';
-import { allDoctors, publishedDoctors } from '../../lib/data.ts';
+import { allDoctors, isAffiliated, publishedDoctors } from '../../lib/data.ts';
 import { getDataset } from '../../lib/dataset.ts';
 import { missingPoints, profileIndexDecision, type MissingKey } from '../../lib/indexing.ts';
 import { overdueReverification } from '../../lib/nightly.ts';
@@ -15,7 +15,8 @@ if (Astro.request.method === 'POST' && adminCanWrite()) {
   catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
 }
 const falta = Astro.url.searchParams.get('falta') as MissingKey | 'cualquiera' | null;
-const estado = Astro.url.searchParams.get('estado'); // publicados | sin-verificar | no-indexables
+const estado = Astro.url.searchParams.get('estado'); // no-indexables
+const tipo = Astro.url.searchParams.get('tipo'); // verificados | listados
 const docs = allDoctors();
 const published = publishedDoctors();
 const claimedPct = published.length ? Math.round((100 * published.filter((v) => v.doctor.claimed).length) / published.length) : 0;
@@ -24,15 +25,19 @@ const rows = published
   .map((v) => ({ v, missing: missingPoints(v), dec: profileIndexDecision(v) }))
   .filter((r) => (!falta ? true : falta === 'cualquiera' ? r.missing.length > 0 : r.missing.includes(falta)))
   .filter((r) => (estado === 'no-indexables' ? !r.dec.indexable : true))
+  .filter((r) => (tipo === 'verificados' ? isAffiliated(r.v.doctor) : tipo === 'listados' ? !isAffiliated(r.v.doctor) : true))
   .slice(0, 300);
 const MISSING_LABEL: Record<MissingKey, string> = { foto: 'foto', ars: 'ARS', horario: 'horario', bio: 'biografía', direccion: 'dirección' };
-const unverified = all.filter((x) => !x.v).length;
+const drafts = all.filter((x) => !x.v).length;
+const affiliatedN = published.filter((v) => isAffiliated(v.doctor)).length;
+const listedN = published.length - affiliatedN;
 ---
 <AdminShell title="Panel interno" message={message} error={error}>
   <p>Fuente de datos: <b>{getDataset().source}</b></p>
   <div class="k">
-    <div>Médicos publicados<b>{published.length}</b>de {docs.length}</div>
-    <div>Sin verificar<b>{unverified}</b><a href="/admin/verify">verificar →</a></div>
+    <div>Verificados (afiliados)<b>{affiliatedN}</b>foto + primeros en los listados</div>
+    <div>Listados (perfil informativo)<b>{listedN}</b>sin verificar, sin foto</div>
+    <div>Borradores (ocultos)<b>{drafts}</b><a href="/admin/verify">verificar →</a></div>
     <div>Confirmados con el médico<b>{claimedPct}%</b></div>
     <div>Perfiles indexables<b>{doctorUrls().length}</b></div>
     <div>Páginas de listado indexables<b>{hubUrls().length}</b></div>
@@ -40,16 +45,18 @@ const unverified = all.filter((x) => !x.v).length;
   </div>
   <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:16px 0">
     <div><label for="falta">Falta</label><select id="falta" name="falta"><option value="">(todos)</option><option value="cualquiera" selected={falta === 'cualquiera'}>cualquier dato</option>{Object.entries(MISSING_LABEL).map(([k, l]) => <option value={k} selected={falta === k}>{l}</option>)}</select></div>
+    <div><label for="tipo">Tipo</label><select id="tipo" name="tipo"><option value="">(todos)</option><option value="verificados" selected={tipo === 'verificados'}>verificados</option><option value="listados" selected={tipo === 'listados'}>listados</option></select></div>
     <div><label for="estado">Indexación</label><select id="estado" name="estado"><option value="">(todos)</option><option value="no-indexables" selected={estado === 'no-indexables'}>no indexables</option></select></div>
     <button type="submit" class="ghost">Filtrar</button> <a href="/admin">limpiar</a>
   </form>
-  <p><small>Un perfil se indexa con exequátur verificado y al menos 3 datos (dirección, ARS, horario, foto, biografía), o si está confirmado con el médico.</small></p>
+  <p><small>Un perfil verificado se indexa con exequátur comprobado y al menos 3 datos (dirección, ARS, horario, foto, biografía), o si está confirmado con el médico. Los perfiles listados nunca se indexan.</small></p>
   <table>
-    <thead><tr><th>Médico</th><th>Exequátur</th><th>Indexación</th><th>Datos que faltan</th><th>Override</th></tr></thead>
+    <thead><tr><th>Médico</th><th>Tipo</th><th>Exequátur</th><th>Indexación</th><th>Datos que faltan</th><th>Override</th></tr></thead>
     <tbody>
       {rows.map(({ v, missing, dec }) => (
         <tr>
           <td><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a> · <a href={`/admin/doctors/${v.doctor.id}`}>editar</a><br /><small>{v.specialty.name_singular}{v.locations[0] ? ` · ${v.locations[0].city.name}` : ''}</small></td>
+          <td>{isAffiliated(v.doctor) ? 'Verificado' : 'Listado'}</td>
           <td>{v.doctor.exequatur_verified_at ?? '—'}</td>
           <td>{dec.robots}<br /><small>{dec.reason}</small></td>
           <td>{missing.length ? missing.map((m) => <span class="chip">{MISSING_LABEL[m]}</span>) : <small>completo</small>}</td>

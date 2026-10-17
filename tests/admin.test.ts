@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { schemaSql } from './schema-sql.ts';
 import { PGlite } from '@electric-sql/pglite';
 import { checkAdminAuth } from '../src/lib/admin-auth.ts';
 import { markExequaturVerified, setIndexStatus, type Run } from '../src/lib/admin-db.ts';
@@ -21,7 +22,7 @@ test('admin auth: disabled without password, 401 on bad creds, allowed on good c
 
 test('admin writes: index_status toggle and auditable verification', async () => {
   const db = new PGlite();
-  await db.exec(readFileSync(new URL('../db/migrations/001_core.sql', import.meta.url), 'utf8').replace('create extension if not exists pgcrypto;', ''));
+  await db.exec(schemaSql());
   for (const s of datasetToSql(seedDataset())) await db.exec(s);
   const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
 
@@ -47,7 +48,7 @@ test('doctor edit: validation, whitelisted update, slug rename creates 301, ARS 
   assert.deepEqual(validateEdit({ slug: 'dra-ok-cardiologa', consultation_fee_min: 2500, phone: '+1-809-555-1234', languages: ['es', 'en'] }), []);
 
   const db = new PGlite();
-  await db.exec(readFileSync(new URL('../db/migrations/001_core.sql', import.meta.url), 'utf8').replace('create extension if not exists pgcrypto;', ''));
+  await db.exec(schemaSql());
   for (const s of datasetToSql(seedDataset())) await db.exec(s);
   const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
 
@@ -82,7 +83,7 @@ test('facility edit validation + update, confirmed-with-doctor flag, missing-dat
   assert.equal(5 - missingPoints(thin).length, verifiedPoints(thin));
 
   const db = new PGlite();
-  await db.exec(readFileSync(new URL('../db/migrations/001_core.sql', import.meta.url), 'utf8'));
+  await db.exec(schemaSql());
   for (const s of datasetToSql(seedDataset())) await db.exec(s);
   const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
   await updateFacility(run, 1, { name: 'Centro Médico Nuevo', type: 'Hospital', lat: 18.5, lng: -69.9, website: 'https://x.do' });
@@ -93,5 +94,24 @@ test('facility edit validation + update, confirmed-with-doctor flag, missing-dat
   assert.equal((await run('select claimed, claimed_at is not null as at from doctors where id = 1'))[0].at, true);
   await setConfirmedWithDoctor(run, 1, false);
   assert.equal((await run('select claimed, claimed_at from doctors where id = 1'))[0].claimed, false);
+  await db.close();
+});
+
+
+import { setListingStatus } from '../src/lib/admin-db.ts';
+test('listing status: affiliated requires a verified exequátur; verifying a draft makes it listed', async () => {
+  const db = new PGlite();
+  await db.exec(schemaSql());
+  for (const st of datasetToSql(seedDataset())) await db.exec(st);
+  const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
+  // id 900 is an unverified draft in the seed
+  await assert.rejects(() => setListingStatus(run, 900, 'affiliated'), /primero verifica el exequátur/);
+  await assert.rejects(() => setListingStatus(run, 900, 'vip'), /invalid listing_status/);
+  await markExequaturVerified(run, 900, { checkedBy: 'ana', method: 'pgr', result: 'valid', evidenceHash: 'b'.repeat(64) });
+  assert.equal((await run('select listing_status::text s from doctors where id = 900'))[0].s, 'listed');
+  await setListingStatus(run, 900, 'affiliated');
+  assert.equal((await run('select listing_status::text s from doctors where id = 900'))[0].s, 'affiliated');
+  await setListingStatus(run, 900, 'draft');
+  assert.equal((await run('select listing_status::text s from doctors where id = 900'))[0].s, 'draft');
   await db.close();
 });

@@ -11,7 +11,7 @@ export async function setIndexStatus(run: Run, doctorId: number, status: string)
 /** Records a successful exequátur check: stamps the doctor and appends an auditable verification_log row. */
 export async function markExequaturVerified(run: Run, doctorId: number, o: { checkedBy: string; method: string; result: string; evidenceHash: string }): Promise<void> {
   if (!o.checkedBy || !o.method || !/^[a-f0-9]{16,128}$/i.test(o.evidenceHash)) throw new Error('checkedBy, method and a hex evidenceHash are required');
-  const rows = await run('update doctors set exequatur_verified_at = now(), data_verified_at = now(), updated_at = now() where id = $1 returning id', [doctorId]);
+  const rows = await run("update doctors set exequatur_verified_at = now(), data_verified_at = now(), updated_at = now(), listing_status = case when listing_status = 'draft' then 'listed'::listing_status else listing_status end where id = $1 returning id", [doctorId]);
   if (!rows.length) throw new Error(`doctor ${doctorId} not found`);
   await run('insert into verification_log (doctor_id, type, method, result, evidence_hash, checked_by) values ($1, $2, $3, $4, $5, $6)', [doctorId, 'exequatur', o.method, o.result, o.evidenceHash, o.checkedBy]);
 }
@@ -84,4 +84,18 @@ export async function updateFacility(run: Run, id: number, edit: FacilityEdit): 
   if (!keys.length) return;
   const rows = await run(`update facilities set ${keys.map((k, i) => `${k} = $${i + 1}`).join(', ')}, updated_at = now() where id = $${keys.length + 1} returning id`, [...keys.map((k) => (edit as any)[k]), id]);
   if (!rows.length) throw new Error(`facility ${id} not found`);
+}
+
+// --- Listing tier ---------------------------------------------------------------------------------------------
+export const LISTING_STATUSES = ['draft', 'listed', 'affiliated'] as const;
+/** draft = hidden · listed = public-source profile · affiliated = verified affiliate (needs a verified exequátur; the DB enforces it). */
+export async function setListingStatus(run: Run, doctorId: number, status: string): Promise<void> {
+  if (!(LISTING_STATUSES as readonly string[]).includes(status)) throw new Error(`invalid listing_status: ${status}`);
+  try {
+    const rows = await run('update doctors set listing_status = $1::listing_status, updated_at = now() where id = $2 returning id', [status, doctorId]);
+    if (!rows.length) throw new Error(`doctor ${doctorId} not found`);
+  } catch (e) {
+    if (/affiliated_requires_exequatur/.test((e as Error).message)) throw new Error('Para marcar como afiliado (verificado) primero verifica el exequátur en «Verificar exequátur».');
+    throw e;
+  }
 }

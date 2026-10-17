@@ -3,16 +3,22 @@ import Base from '../layouts/Base.astro';
 import DoctorCard from '../components/DoctorCard.astro';
 import Icon from '../components/Icon.astro';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
-import { doctorCount, getArs, getCities, getGuides, getSpecialties, publishedDoctors, queryHub } from '../lib/data.ts';
+import { doctorCount, getArs, getCities, getGuides, getSpecialties, isAffiliated, publishedDoctors, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 import { siteJsonLd } from '../lib/schema.ts';
 
 const specs = getSpecialties().map((s) => ({ s, n: doctorCount(s.id) })).filter((x) => x.n > 0);
-const cities = getCities().map((c) => ({ c, n: doctorCount(undefined, c.id) })).filter((x) => x.n > 0);
+// each city links to the hub of its best-represented specialty (always a page that exists)
+const cities = getCities().map((c) => {
+  const best = getSpecialties().map((sp) => ({ sp, k: queryHub({ specialty: sp, city: c }).length })).sort((a, b) => b.k - a.k)[0];
+  return { c, n: doctorCount(undefined, c.id), href: best && best.k > 0 ? hubPath({ specialty: best.sp, city: c }) : null };
+}).filter((x) => x.n > 0 && x.href);
 const arsList = getArs();
 const sd = getCities().find((c) => c.slug === 'santo-domingo')!;
 const quick = specs.map((x) => x.s).filter((s) => queryHub({ specialty: s, city: sd }).length >= MIN_DOCTORS_FOR_HUB_INDEX).slice(0, 3);
-const featured = [...publishedDoctors().filter((v) => v.doctor.sponsored), ...publishedDoctors().filter((v) => !v.doctor.sponsored && v.specialty.slug === 'cardiologos' && v.doctor.claimed)].slice(0, 3);
+// Home features verified affiliates only (sponsored first, labeled), never public-source listings.
+const verifiedDocs = publishedDoctors().filter((v) => isAffiliated(v.doctor));
+const featured = [...verifiedDocs.filter((v) => v.doctor.sponsored), ...verifiedDocs.filter((v) => !v.doctor.sponsored && v.doctor.claimed)].slice(0, 3);
 const guides = getGuides().slice(0, 3);
 ---
 <Base title={`${BRAND} — Directorio de médicos verificados en República Dominicana`} description="Encuentra médicos y especialistas en República Dominicana con exequátur verificado, ARS aceptadas, precios de consulta y horarios." jsonLd={siteJsonLd()}>
@@ -47,7 +53,7 @@ const guides = getGuides().slice(0, 3);
     <h2 id="ciudades">Tu salud, cerca de ti</h2>
     <p class="muted">Encuentra atención médica en las principales ciudades del país.</p>
     <div class="grid cities">
-      {cities.map(({ c, n }) => <a class="city-row" href={`/${(specs[0]?.s.slug) ?? 'cardiologos'}/${c.slug}`}><Icon name="pin" size={24} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span><Icon name="arrow" size={20} /></a>)}
+      {cities.map(({ c, n, href }) => <a class="city-row" href={href!}><Icon name="pin" size={24} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span><Icon name="arrow" size={20} /></a>)}
     </div>
   </section>
 

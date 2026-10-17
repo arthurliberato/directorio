@@ -1,5 +1,5 @@
 import { PAGE_SIZE } from '../config.ts';
-import { getArsBySlug, getCityBySlug, getSectorBySlug, getSpecialtyBySlug, queryHub, type DoctorView, type HubQuery } from './data.ts';
+import { byTierThenName, getArsBySlug, getCityBySlug, getSectorBySlug, getSpecialtyBySlug, isAffiliated, queryHub, type DoctorView, type HubQuery } from './data.ts';
 import { formatDOP, formatMonthYear, joinList, median } from './format.ts';
 
 export type HubParse =
@@ -66,7 +66,7 @@ export function hubHeading(q: HubQuery): string {
 }
 
 export interface HubStats {
-  n: number; feeMin: number | null; feeMedian: number | null; feeMax: number | null; feeN: number;
+  n: number; affiliated: number; feeMin: number | null; feeMedian: number | null; feeMax: number | null; feeN: number;
   arsCounts: { name: string; count: number }[]; facilities: { name: string; slug: string; count: number }[];
   languages: { code: string; count: number }[]; asOf: string;
 }
@@ -86,7 +86,7 @@ export function hubStats(doctors: DoctorView[]): HubStats {
   }
   const dates = doctors.map((v) => v.doctor.data_verified_at).filter((x): x is string => !!x).sort();
   return {
-    n: doctors.length,
+    n: doctors.length, affiliated: doctors.filter((v) => isAffiliated(v.doctor)).length,
     feeMin: fees.length ? Math.min(...fees) : null, feeMax: fees.length ? Math.max(...fees) : null,
     feeMedian: fees.length ? median(fees) : null, feeN: fees.length,
     arsCounts: [...arsMap].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
@@ -99,8 +99,9 @@ export function hubStats(doctors: DoctorView[]): HubStats {
 /** Data-driven intro: unique per hub because it is built from that hub's own numbers. */
 export function hubIntro(q: HubQuery, s: HubStats, langName: (c: string) => string): string {
   const parts: string[] = [];
-  const who = s.n === 1 ? `Hay 1 ${q.specialty.agent_m} con exequátur verificado` : `Hay ${s.n} ${q.specialty.name_plural.toLowerCase()} con exequátur verificado`;
-  parts.push(`${who} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''}.`);
+  const what = s.n === 1 ? `1 ${q.specialty.agent_m}` : `${s.n} ${q.specialty.name_plural.toLowerCase()}`;
+  const verified = s.affiliated === 0 ? 'ninguno verificado todavía' : s.affiliated === s.n && s.n > 1 ? 'todos verificados' : s.affiliated === 1 ? '1 verificado' : `${s.affiliated} verificados`;
+  parts.push(`Hay ${what} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''} (${verified}).`);
   if (s.feeMin != null && s.feeMax != null) {
     parts.push(s.feeMin === s.feeMax
       ? `La consulta cuesta desde ${formatDOP(s.feeMin)}.`
@@ -116,10 +117,11 @@ export function hubIntro(q: HubQuery, s: HubStats, langName: (c: string) => stri
   return parts.join(' ');
 }
 
+/** Verified affiliates always come first; within each group: by name (default) or by price. */
 export function sortDoctors(list: DoctorView[], orden: string | null): DoctorView[] {
   const l = [...list];
-  if (orden === 'precio') l.sort((a, b) => (a.doctor.consultation_fee_min ?? Infinity) - (b.doctor.consultation_fee_min ?? Infinity) || a.doctor.slug.localeCompare(b.doctor.slug));
-  else l.sort((a, b) => a.doctor.display_name.localeCompare(b.doctor.display_name, 'es'));
+  if (orden === 'precio') l.sort((a, b) => (isAffiliated(a.doctor) ? 0 : 1) - (isAffiliated(b.doctor) ? 0 : 1) || (a.doctor.consultation_fee_min ?? Infinity) - (b.doctor.consultation_fee_min ?? Infinity) || a.doctor.slug.localeCompare(b.doctor.slug));
+  else l.sort(byTierThenName);
   return l;
 }
 

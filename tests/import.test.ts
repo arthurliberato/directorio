@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { schemaSql } from './schema-sql.ts';
 import { PGlite } from '@electric-sql/pglite';
 import { hashCedula, importDoctors, normalizePhone, parseCsv, parseSchedule, type Run } from '../src/lib/import.ts';
 
@@ -35,7 +36,7 @@ test('phones normalize to DR format; cédula is hashed, never raw', () => {
 
 test('import: loads reference data + example CSV, never publishes, is idempotent, reports row errors', async () => {
   const db = new PGlite();
-  await db.exec(sqlFile('../db/migrations/001_core.sql').replace('create extension if not exists pgcrypto;', ''));
+  await db.exec(schemaSql());
   await db.exec(sqlFile('../db/reference/001_reference_data.sql'));
   const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
   const csv = readFileSync(new URL('../templates/doctors.example.csv', import.meta.url), 'utf8');
@@ -82,5 +83,46 @@ test('import: loads reference data + example CSV, never publishes, is idempotent
   const dup = await importDoctors(run, [{ ...bad[0], exequatur_number: 'EX-5', cedula: '' }], {});
   assert.equal(dup.inserted, 1);
   assert.deepEqual((await run('select slug from doctors where exequatur_number = $1', ['EX-5'])).map((r) => r.slug), ['dra-ejemplo-prueba-cardiologa-santo-domingo']);
+  await db.close();
+});
+
+import { importFacilities, isFacilitiesCsv } from '../src/lib/import.ts';
+test('public-source listings: facilities first, then doctors without exequátur/gender/sector; never affiliated; no assumed languages', async () => {
+  const db = new PGlite();
+  await db.exec(schemaSql());
+  await db.exec(sqlFile('../db/reference/001_reference_data.sql'));
+  await db.exec(sqlFile('../db/reference/002_more_specialties.sql'));
+  const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
+
+  const facCsv = 'name;type;address;city;sector;phone;website;lat;lng\nHospital Metropolitano de Santiago;Hospital;Autopista Juan Pablo Duarte Km 2.8;Santiago;;+1 829‑947‑2222;https://homs.com.do;;\nClínica Corominas;Clínica;Calle Restauración 57;Santiago;;809‑580‑1171;;;\n';
+  const facRows = parseCsv(facCsv);
+  assert.ok(isFacilitiesCsv(facRows));
+  const fr = await importFacilities(run, facRows);
+  assert.deepEqual([fr.inserted, fr.errors.length], [2, 0]);
+  assert.deepEqual((await run('select name, type, phone from facilities order by name')).map((r) => `${r.name}|${r.type}|${r.phone}`), ['Clínica Corominas|MedicalClinic|+1-809-580-1171', 'Hospital Metropolitano de Santiago|Hospital|+1-829-947-2222']);
+
+  const rows = parseCsv([
+    'display_name,specialty,city,facility,suite,phone_ext,clinic_phone,source_name,source_url,source_retrieved_at,listing_status,subspecialties,education',
+    'Eddy A. Peralta Jiménez,Psiquiatría,Santiago,Hospital Metropolitano de Santiago,"405, HOMS Health and Wellness Center, 4.º",,+1 829‑947‑2222,HOMS,https://homs.com.do/medico/eddy-a-peralta-jimenez/,2026-10-16,listed,Estimulación magnética transcraneal,"MD PUCMM; posgrado en Psiquiatría"',
+    'Glenny Paulino,Medicina interna,Santiago,Hospital Metropolitano de Santiago,"1010, Edificio Profesional, 10.º",60402,829-947-2222,HOMS,https://homs.com.do/medico/glenny/,2026-10-16,listed,,',
+    'Dra. Ana Prueba,Cardiología,Santiago,Clínica Corominas,torre A,,809-580-1171,Corominas,https://directoriocorominas.com/doctor/ana,2026-10-16,affiliated,,',
+  ].join('\n'));
+  const rep = await importDoctors(run, rows, {});
+  assert.deepEqual([rep.inserted, rep.errors.length], [2, 1]);
+  assert.match(rep.errors[0].messages.join(), /affiliated.*no se puede importar/);
+  const d = (await run(`select d.*, l.suite, l.phone_ext, l.phone lphone, l.address, l.sector_id from doctors d join locations l on l.doctor_id = d.id where d.display_name = 'Eddy A. Peralta Jiménez'`))[0];
+  assert.equal(d.slug, 'eddy-a-peralta-jimenez-psiquiatria', 'unknown gender => neutral slug');
+  assert.equal(d.gender, null); assert.equal(d.exequatur_number, null); assert.equal(d.listing_status, 'listed');
+  assert.deepEqual(d.languages, [], 'languages are not assumed');
+  assert.equal(d.phone, null, 'the clinic switchboard is never stored as the doctor\'s own phone');
+  assert.equal(d.lphone, '+1-829-947-2222'); assert.equal(d.suite, '405, HOMS Health and Wellness Center, 4.º');
+  assert.equal(d.address, 'Autopista Juan Pablo Duarte Km 2.8', 'address falls back to the clinic\'s'); assert.equal(d.sector_id, null);
+  assert.equal(d.source_name, 'HOMS'); assert.equal(d.source_retrieved_at.toISOString().slice(0, 10), '2026-10-16');
+  assert.equal((await run(`select phone_ext from locations l join doctors d on d.id = l.doctor_id where d.display_name = 'Glenny Paulino'`))[0].phone_ext, '60402');
+
+  // re-import is idempotent for doctors without an exequátur number (same name + specialty + city)
+  const again = await importDoctors(run, rows.slice(0, 2), {});
+  assert.deepEqual([again.inserted, again.updated], [0, 2]);
+  assert.equal((await run('select count(*)::int n from doctors'))[0].n, 2);
   await db.close();
 });

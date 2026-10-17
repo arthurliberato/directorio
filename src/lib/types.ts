@@ -1,5 +1,6 @@
 export type IndexStatus = 'auto' | 'force_index' | 'force_noindex';
 export type Gender = 'f' | 'm';
+export type ListingStatus = 'draft' | 'listed' | 'affiliated';
 
 export interface Specialty {
   id: number; slug: string; // plural, no accents: cardiologos
@@ -20,11 +21,12 @@ export interface Facility {
 export interface ScheduleEntry { day: 1 | 2 | 3 | 4 | 5 | 6 | 7; open: string; close: string; } // 1=Mon
 export interface Location {
   id: number; doctor_id: number; facility_id: number | null; address: string;
-  sector_id: number; city_id: number; lat: number | null; lng: number | null;
+  sector_id: number | null; city_id: number; lat: number | null; lng: number | null;
+  suite: string | null; phone_ext: string | null;
   schedule: ScheduleEntry[]; phone: string | null;
 }
 export interface Doctor {
-  id: number; slug: string; full_legal_name: string; display_name: string; gender: Gender;
+  id: number; slug: string; full_legal_name: string; display_name: string; gender: Gender | null;
   specialty_id: number; subspecialties: string[];
   exequatur_number: string | null; exequatur_decree: string | null;
   exequatur_verified_at: string | null; cmd_member: boolean; cmd_verified_at: string | null;
@@ -37,6 +39,8 @@ export interface Doctor {
   data_verified_at: string | null; updated_at: string;
   index_status: IndexStatus;
   sponsored: boolean;
+  listing_status: ListingStatus;
+  source_name: string | null; source_url: string | null; source_retrieved_at: string | null;
 }
 export interface DoctorArs { doctor_id: number; ars_id: number; verified_at: string; }
 export interface Guide {

@@ -1,6 +1,6 @@
 ---
 import AdminShell from '../../../components/AdminShell.astro';
-import { setConfirmedWithDoctor, setDoctorArs, updateDoctor, type DoctorEdit } from '../../../lib/admin-db.ts';
+import { LISTING_STATUSES, setConfirmedWithDoctor, setDoctorArs, setListingStatus, updateDoctor, type DoctorEdit } from '../../../lib/admin-db.ts';
 import { adminCanWrite, withDb } from '../../../lib/admin-run.ts';
 import { allDoctors, getArs, getSpecialties } from '../../../lib/data.ts';
 import { getDataset } from '../../../lib/dataset.ts';
@@ -25,6 +25,7 @@ if (Astro.request.method === 'POST' && adminCanWrite()) {
       await updateDoctor(run, id, edit);
       await setDoctorArs(run, id, f.getAll('ars').map(Number));
       await setConfirmedWithDoctor(run, id, f.get('confirmed') === 'on');
+      await setListingStatus(run, id, String(f.get('listing_status') ?? doc0.listing_status));
     });
     message = 'Guardado. Si cambiaste el slug, se creó una redirección 301 automática.';
   } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
@@ -46,11 +47,17 @@ const specName = getSpecialties().find((s) => s.id === d.specialty_id)?.name_sin
       <div><label for="wa">WhatsApp</label><input id="wa" name="whatsapp" value={d.whatsapp ?? ''} /></div>
       <div><label for="ph">Teléfono</label><input id="ph" name="phone" value={d.phone ?? ''} /></div>
       <div><label for="web">Sitio web</label><input id="web" name="website" value={d.website ?? ''} /></div>
-      <div><label for="photo">Foto (URL)</label><input id="photo" name="photo_url" value={d.photo_url ?? ''} /></div>
+      <div><label for="photo">Foto (URL) — solo se muestra a médicos verificados</label><input id="photo" name="photo_url" value={d.photo_url ?? ''} /></div>
     </div>
     <label for="bio">Biografía</label><textarea id="bio" name="bio" rows="4">{d.bio ?? ''}</textarea>
     <label>ARS que acepta</label>
     <div style="display:flex;flex-wrap:wrap;gap:6px 16px">{getArs().map((a) => <label style="font-weight:400;margin:0"><input type="checkbox" name="ars" value={a.id} checked={myArs.has(a.id)} /> {a.name}</label>)}</div>
+    <div class="grid2">
+      <div><label for="ls">Estado de la ficha</label>
+        <select id="ls" name="listing_status">{LISTING_STATUSES.map((st) => <option value={st} selected={d.listing_status === st}>{{ draft: 'Borrador (oculto)', listed: 'Listado (perfil informativo, sin verificar)', affiliated: 'Verificado (afiliado)' }[st]}</option>)}</select>
+        <small>Verificado exige el exequátur comprobado. Solo los verificados muestran foto y aparecen primero.</small></div>
+      {d.source_name && <div><label>Fuente de los datos</label><p style="margin:6px 0">{d.source_url ? <a href={d.source_url} rel="noopener nofollow" target="_blank">{d.source_name}</a> : d.source_name}{d.source_retrieved_at ? ` · consultada el ${d.source_retrieved_at}` : ''}</p></div>}
+    </div>
     <p><label style="font-weight:400"><input type="checkbox" name="confirmed" checked={d.claimed} /> <b>Confirmado directamente con el médico</b> — el perfil se indexa aunque tenga menos de 3 datos.</label></p>
     <p><button type="submit">Guardar</button></p>
   </fieldset></form>

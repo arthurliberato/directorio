@@ -118,11 +118,12 @@ for (const [specSlug, cityId, count] of PLAN) {
       data_verified_at: `2026-10-${String(verifiedDay).padStart(2, '0')}`,
       updated_at: `2026-10-${String(verifiedDay).padStart(2, '0')}`,
       index_status: 'auto', sponsored: false,
+      listing_status: 'affiliated', source_name: null, source_url: null, source_retrieved_at: null,
     };
     doctors.push(d);
     locations.push({
       id, doctor_id: id, facility_id: facility.id, address: facility.address, sector_id: sector.id, city_id: cityId,
-      lat: facility.lat, lng: facility.lng, schedule: SCHEDULES[n % SCHEDULES.length], phone: facility.phone,
+      lat: facility.lat, lng: facility.lng, schedule: SCHEDULES[n % SCHEDULES.length], phone: facility.phone, suite: null, phone_ext: null,
     });
     for (let k = 0; k < 3; k++) {
       doctorArs.push({ doctor_id: id, ars_id: ars[(n + k * 2) % ars.length].id, verified_at: d.data_verified_at! });
@@ -132,11 +133,29 @@ for (const [specSlug, cityId, count] of PLAN) {
 
 // --- Edge cases that exercise the indexing rules -------------------------------------------
 // Unverified exequatur: never published, never in hubs.
-doctors.push({ ...doctors[0], id: 900, slug: 'dr-sin-verificar-cardiologo', display_name: 'Dr. Sin Verificar', full_legal_name: 'Sin Verificar', gender: 'm', exequatur_verified_at: null, claimed: false, claimed_at: null, data_verified_at: null });
+doctors.push({ ...doctors[0], id: 900, slug: 'dr-sin-verificar-cardiologo', display_name: 'Dr. Sin Verificar', full_legal_name: 'Sin Verificar', gender: 'm', exequatur_verified_at: null, claimed: false, claimed_at: null, data_verified_at: null, listing_status: 'draft' });
 locations.push({ ...locations[0], id: 900, doctor_id: 900 });
 // Verified but thin (only an address): profile stays noindex,follow.
 doctors.push({ ...doctors[1], id: 901, slug: 'dr-datos-minimos-pediatra', display_name: 'Dr. Datos Mínimos', full_legal_name: 'Datos Mínimos', gender: 'm', specialty_id: 2, subspecialties: [], bio: null, education: [], whatsapp: null, claimed: false, claimed_at: null });
 locations.push({ ...locations[0], id: 901, doctor_id: 901, schedule: [], facility_id: null });
+// Listed doctors: public-source profiles (not verified, no photo, gender unknown => neutral wording).
+const LISTED: [string, string, number, string, string | null, string | null][] = [
+  ['Marcos Tejeda Liriano', 'cardiologos', 1, 'Clínica Ejemplo A', 'consultorio 405, 4.º', '60405'],
+  ['Yudelka Brito Paulino', 'cardiologos', 1, 'Clínica Ejemplo A', 'consultorio 610', '60610'],
+  ['Rolando Estévez Cuello', 'pediatras', 1, 'Clínica Ejemplo A', null, null],
+  ['Idalia Pimentel Rosa', 'cardiologos', 2, 'Clínica Ejemplo B', 'torre A, suite 502', '7502'],
+];
+LISTED.forEach(([name, specSlug, cityId, clinic, suite, ext], i) => {
+  const spec = specialties.find((x) => x.slug === specSlug)!; const id2 = 950 + i;
+  doctors.push({ ...doctors[0], id: id2, slug: `${strip(name)}-${strip(spec.field_name)}`, full_legal_name: name, display_name: name, gender: null,
+    specialty_id: spec.id, subspecialties: [], exequatur_number: null, exequatur_decree: null, exequatur_verified_at: null, cmd_member: false, cmd_verified_at: null,
+    specialty_verified_at: null, claimed: false, claimed_at: null, bio: null, education: ['MD UASD; posgrado en ' + spec.field_name], languages: ['es'], photo_url: '/img/never-shown.jpg',
+    consultation_fee_min: null, consultation_fee_max: null, accepting_new_patients: null, whatsapp: null, phone: null, website: null, data_verified_at: null,
+    updated_at: '2026-10-10', listing_status: 'listed', source_name: clinic, source_url: 'https://clinica-ejemplo.example/directorio', source_retrieved_at: '2026-10-10' });
+  locations.push({ id: id2, doctor_id: id2, facility_id: cityId === 1 ? 1 : 4, address: cityId === 1 ? facilities[0].address : facilities[3].address, sector_id: null, city_id: cityId,
+    lat: null, lng: null, schedule: [], phone: cityId === 1 ? '+1-809-555-0101' : '+1-809-555-0104', suite, phone_ext: ext });
+});
+
 // Sponsored placement (labeled, outside any ranking).
 doctors[2].sponsored = true;
 

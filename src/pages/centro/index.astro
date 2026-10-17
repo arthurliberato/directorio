@@ -13,11 +13,11 @@ const list = getFacilities().map((f) => ({ f, docs: doctorsForFacility(f.id) }))
 const byCity = getCities().map((c) => ({ c, items: list.filter((x) => x.f.city_id === c.id).sort((a, b) => b.docs.length - a.docs.length || a.f.name.localeCompare(b.f.name, 'es')) })).filter((g) => g.items.length > 0);
 const hospitals = list.filter((x) => x.f.type === 'Hospital').length;
 ---
-<Base title={`Clínicas y hospitales en República Dominicana | ${BRAND}`} description={`${list.length} clínicas y hospitales con médicos verificados en ${joinList(byCity.map((g) => g.c.name).slice(0, 4))}.`} jsonLd={breadcrumbJsonLd(crumbs)}>
+<Base title={`Clínicas y hospitales en República Dominicana | ${BRAND}`} description={`${list.length} clínicas y hospitales con médicos en el directorio en ${joinList(byCity.map((g) => g.c.name).slice(0, 4))}.`} jsonLd={breadcrumbJsonLd(crumbs)}>
   <Breadcrumbs items={crumbs} />
   <div class="wrap page-head">
     <h1>Clínicas y hospitales</h1>
-    <p class="summary">Encuentra el centro donde atiende tu médico. Hay {list.length} {list.length === 1 ? 'centro' : 'centros'} con médicos verificados en {byCity.length} {byCity.length === 1 ? 'ciudad' : 'ciudades'}{hospitals ? `, ${hospitals} ${hospitals === 1 ? 'hospital' : 'hospitales'}` : ''}.</p>
+    <p class="summary">Encuentra el centro donde atiende tu médico. Hay {list.length} {list.length === 1 ? 'centro' : 'centros'} con médicos en el directorio en {byCity.length} {byCity.length === 1 ? 'ciudad' : 'ciudades'}{hospitals ? `, ${hospitals} ${hospitals === 1 ? 'hospital' : 'hospitales'}` : ''}.</p>
   </div>
   {byCity.map(({ c, items }) => (
     <section class="wrap" style="padding-bottom:32px" aria-labelledby={`c-${c.slug}`}>
@@ -25,5 +25,5 @@ const hospitals = list.filter((x) => x.f.type === 'Hospital').length;
       <div class="grid fac">{items.map(({ f, docs }) => <FacilityCard f={f} doctors={docs} place={`${f.sector_id ? sectors.get(f.sector_id) + ', ' : ''}${c.name}`} />)}</div>
     </section>
   ))}
-  {list.length === 0 && <div class="wrap section"><p class="muted">Aún no hay clínicas con médicos verificados.</p></div>}
+  {list.length === 0 && <div class="wrap section"><p class="muted">Aún no hay clínicas con médicos en el directorio.</p></div>}
 </Base>
