@@ -93,7 +93,7 @@ test('sitemaps contain only indexable URLs with real lastmod', () => {
 
 test('hub queries only count published doctors', () => {
   const n = queryHub({ specialty: getSpecialtyBySlug('cardiologos')!, city: getCityBySlug('santo-domingo')! }).length;
-  assert.equal(n, 9);
+  assert.equal(n, 11, '9 affiliates + 2 listed in Santo Domingo');
 });
 
 import { botLogLine, classifyBot } from '../src/lib/bots.ts';
@@ -140,4 +140,59 @@ test('pagination: >20 doctors yields pages with self paths, sitemap entries, and
     const ids1 = new Set(p1.status === 'ok' ? p1.items.map((v) => v.doctor.id) : []);
     assert.ok(p2.status === 'ok' && p2.items.every((v) => !ids1.has(v.doctor.id)));
   } finally { setDs(mkSeed()); }
+});
+
+import { groupSchedule } from '../src/lib/format.ts';
+test('fact summary states every schedule block accurately (no mixing hours across days)', () => {
+  const v = structuredClone(getDoctorBySlug('dra-maria-perez-cardiologa')!);
+  v.locations[0].schedule = [1, 2, 3, 4].map((day) => ({ day: day as 1, open: '08:00', close: '12:00' })).concat([{ day: 5 as 1, open: '14:00', close: '18:00' }]);
+  const s = factSummary(v);
+  assert.match(s, /lunes a jueves, de 08:00 a 12:00 y viernes, de 14:00 a 18:00/);
+  assert.ok(!/lunes a viernes/.test(s));
+  assert.equal(groupSchedule(v.locations[0].schedule).length, 2);
+});
+
+test('physician JSON-LD image: relative photo paths become absolute, absolute URLs stay untouched', () => {
+  const v = structuredClone(getDoctorBySlug('dra-maria-perez-cardiologa')!);
+  v.doctor.photo_url = '/img/doctors/x.webp';
+  assert.equal((physicianJsonLd(v) as any).image, 'https://short.do/img/doctors/x.webp');
+  v.doctor.photo_url = 'https://cdn.example.com/a.jpg';
+  assert.equal((physicianJsonLd(v) as any).image, 'https://cdn.example.com/a.jpg');
+  v.doctor.photo_url = null;
+  assert.equal((physicianJsonLd(v) as any).image, undefined);
+});
+
+
+import { isAffiliated, publishedDoctors as allPublished } from '../src/lib/data.ts';
+import { neutralAgent, titleOf, agentNoun } from '../src/lib/facts.ts';
+import { sortDoctors } from '../src/lib/hubs.ts';
+test('listing tiers: drafts hidden, listed profiles are noindex and photo-less, affiliates sort first', () => {
+  assert.equal(getDoctorBySlug('dr-sin-verificar-cardiologo'), null, 'draft is hidden');
+  const listed = allPublished().filter((v) => v.doctor.listing_status === 'listed');
+  assert.ok(listed.length >= 4);
+  for (const v of listed) {
+    assert.equal(profileIndexDecision(v).indexable, false, `${v.doctor.slug} must not be indexed`);
+    assert.equal((physicianJsonLd(v) as any).image, undefined, 'no photo for listed profiles');
+  }
+  assert.ok(listed.some((v) => v.doctor.photo_url), 'fixture has a stored photo that must still be hidden');
+  const hub = queryHub({ specialty: getSpecialtyBySlug('cardiologos')!, city: getCityBySlug('santo-domingo')! });
+  const sorted = sortDoctors(hub, null);
+  const firstListed = sorted.findIndex((v) => !isAffiliated(v.doctor));
+  assert.ok(firstListed > 0 && sorted.slice(firstListed).every((v) => !isAffiliated(v.doctor)), 'all affiliates come before any listed doctor');
+  const byPrice = sortDoctors(hub, 'precio');
+  const fl = byPrice.findIndex((v) => !isAffiliated(v.doctor));
+  assert.ok(byPrice.slice(fl).every((v) => !isAffiliated(v.doctor)), 'tier order also holds when sorting by price');
+});
+
+test('unknown gender gets neutral wording and no title; summary never claims verification for listed doctors', () => {
+  assert.equal(neutralAgent('cardiólogo', 'cardióloga'), 'cardiólogo/a');
+  assert.equal(neutralAgent('médico general', 'médica general'), 'médico/a general');
+  assert.equal(neutralAgent('psiquiatra', 'psiquiatra'), 'psiquiatra');
+  const v = allPublished().find((x) => x.doctor.gender === null && x.specialty.slug === 'cardiologos')!;
+  assert.equal(titleOf(v), '');
+  assert.equal(agentNoun(v), 'cardiólogo/a');
+  const s = factSummary(v);
+  assert.ok(!/verificado el/.test(s) && /no verificado/.test(s), s);
+  assert.ok(s.startsWith(v.doctor.display_name + ' es cardiólogo/a'), s);
+  assert.match(s, /consultorio 405, 4\.º|consultorio 610/);
 });

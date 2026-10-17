@@ -1,0 +1,63 @@
+---
+import AdminShell from '../../../components/AdminShell.astro';
+import { adminCanWrite, withDb } from '../../../lib/admin-run.ts';
+import { getArs, getCities, getSpecialties } from '../../../lib/data.ts';
+import { importDoctors, type Row } from '../../../lib/import.ts';
+
+let message = ''; let error = false; let created: string | null = null;
+const v = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
+if (Astro.request.method === 'POST' && adminCanWrite()) {
+  const f = await Astro.request.formData();
+  const row: Row = {
+    display_name: v(f, 'display_name'), full_legal_name: v(f, 'full_legal_name'), gender: v(f, 'gender'), specialty: v(f, 'specialty'),
+    subspecialties: v(f, 'subspecialties'), cedula: v(f, 'cedula'), exequatur_number: v(f, 'exequatur_number'), exequatur_decree: v(f, 'exequatur_decree'),
+    cmd_member: f.get('cmd_member') ? 'si' : 'no', bio: v(f, 'bio'), education: v(f, 'education'), languages: v(f, 'languages') || 'es',
+    fee_min: v(f, 'fee_min'), fee_max: v(f, 'fee_max'), accepting_new_patients: v(f, 'accepting_new_patients'), whatsapp: v(f, 'whatsapp'), phone: v(f, 'phone'),
+    website: v(f, 'website'), photo_url: v(f, 'photo_url'), address: v(f, 'address'), sector: v(f, 'sector'), city: v(f, 'city'), facility: v(f, 'facility'),
+    schedule: v(f, 'schedule'), ars: f.getAll('ars').map(String).join(';'), slug: '', listing_status: v(f, 'listing_status') || 'draft',
+  };
+  try {
+    const report = await withDb((run) => importDoctors(run, [row], { pepper: process.env.CEDULA_PEPPER }));
+    if (report.errors.length) { message = report.errors[0].messages.join(' · '); error = true; }
+    else { message = 'Médico añadido. Para marcarlo como verificado, comprueba su exequátur en «Verificar exequátur».'; created = row.display_name; }
+    if (report.createdSectors.length) message += ` Sector nuevo creado: ${report.createdSectors.join(', ')}.`;
+    if (report.createdFacilities.length) message += ` Centro nuevo creado: ${report.createdFacilities.join(', ')} (revisa sus datos en Clínicas y hospitales).`;
+  } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
+}
+const cities = getCities(); const specs = getSpecialties(); const ars = getArs();
+---
+<AdminShell title="Añadir médico" message={message} error={error}>
+  <p>Se guarda como borrador (oculto) salvo que elijas «Listado». Para marcarlo <b>verificado</b>, comprueba su exequátur en «Verificar exequátur». Para muchos médicos a la vez, usa <a href="/admin/import">Importar CSV</a>.</p>
+  <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
+    <div class="grid2">
+      <div><label for="dn">Nombre público *</label><input id="dn" name="display_name" required placeholder="Dra. María Pérez" /></div>
+      <div><label for="fl">Nombre legal completo</label><input id="fl" name="full_legal_name" placeholder="María Pérez Almonte (si es igual al público, déjalo vacío)" /></div>
+      <div><label for="sp">Especialidad *</label><select id="sp" name="specialty" required><option value="">Elige…</option>{specs.map((s) => <option value={s.slug}>{s.name_singular}</option>)}</select></div>
+      <div><label for="sub">Subespecialidades (separadas por ;)</label><input id="sub" name="subspecialties" /></div>
+      <div><label for="ex">Nº de exequátur</label><input id="ex" name="exequatur_number" /></div>
+      <div><label for="dec">Decreto del exequátur</label><input id="dec" name="exequatur_decree" /></div>
+      <div><label for="ced">Cédula (solo se guarda un hash)</label><input id="ced" name="cedula" autocomplete="off" placeholder="000-0000000-0" /></div>
+      <div><label for="g">Género (si el nombre no empieza con Dr./Dra.)</label><select id="g" name="gender"><option value="">Automático</option><option value="f">Femenino</option><option value="m">Masculino</option></select></div>
+      <div><label for="city">Ciudad *</label><select id="city" name="city" required><option value="">Elige…</option>{cities.map((c) => <option value={c.slug}>{c.name}</option>)}</select></div>
+      <div><label for="sec">Sector / barrio (opcional)</label><input id="sec" name="sector" placeholder="Piantini" /></div>
+      <div><label for="addr">Dirección *</label><input id="addr" name="address" required /></div>
+      <div><label for="fac">Clínica u hospital (si aplica)</label><input id="fac" name="facility" placeholder="Centro Médico X" /></div>
+      <div><label for="sch">Horario</label><input id="sch" name="schedule" placeholder="lun-jue 08:00-12:00; vie 14:00-18:00" /></div>
+      <div><label for="lang">Idiomas</label><input id="lang" name="languages" value="es" placeholder="es;en" /></div>
+      <div><label for="fmin">Consulta desde (DOP)</label><input id="fmin" name="fee_min" inputmode="numeric" /></div>
+      <div><label for="fmax">Consulta hasta (DOP)</label><input id="fmax" name="fee_max" inputmode="numeric" /></div>
+      <div><label for="wa">WhatsApp</label><input id="wa" name="whatsapp" placeholder="809-555-0100" /></div>
+      <div><label for="ph">Teléfono</label><input id="ph" name="phone" /></div>
+      <div><label for="web">Sitio web</label><input id="web" name="website" placeholder="https://" /></div>
+      <div><label for="photo">Foto (URL)</label><input id="photo" name="photo_url" placeholder="https://" /></div>
+      <div><label for="acc">Acepta nuevos pacientes</label><select id="acc" name="accepting_new_patients"><option value="">Desconocido</option><option value="si">Sí</option><option value="no">No</option></select></div>
+      <div><label for="edu">Formación (separada por ;)</label><input id="edu" name="education" /></div>
+    </div>
+    <label for="bio">Biografía (breve y factual)</label><textarea id="bio" name="bio" rows="3"></textarea>
+    <label>ARS que acepta</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px 16px">{ars.map((a) => <label style="font-weight:400;margin:0"><input type="checkbox" name="ars" value={a.slug} /> {a.name}</label>)}</div>
+    <p><label style="font-weight:400"><input type="checkbox" name="cmd_member" /> Miembro del CMD</label></p>
+    <p><label for="lst">Estado inicial</label><select id="lst" name="listing_status"><option value="draft">Borrador (oculto)</option><option value="listed">Listado (perfil informativo visible, sin verificar)</option></select></p>
+    <p><button type="submit">Añadir médico</button> {created && <a href="/admin/verify">Verificar ahora →</a>}</p>
+  </fieldset></form>
+</AdminShell>

@@ -44,6 +44,17 @@ export function formatScheduleLines(schedule: ScheduleEntry[]): string[] {
   return [...groups.entries()].map(([hours, days]) => `${capitalize(formatDays(days))}, ${hours}`);
 }
 
+/** Groups days that share the same hours: [{days:[1,2,3,4], open:'08:00', close:'12:00'}, ...] */
+export function groupSchedule(schedule: ScheduleEntry[]): { days: number[]; open: string; close: string }[] {
+  const groups = new Map<string, { days: number[]; open: string; close: string }>();
+  for (const e of schedule) {
+    const key = `${e.open}-${e.close}`;
+    const g = groups.get(key) ?? { days: [], open: e.open, close: e.close };
+    g.days.push(e.day); groups.set(key, g);
+  }
+  return [...groups.values()];
+}
+
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export const dayToSchema = (d: number) => DAYS_SCHEMA[d];
 

@@ -1,0 +1,31 @@
+---
+import { getDataset } from '../lib/dataset.ts';
+interface Props { title: string; message?: string; error?: boolean }
+const { title, message, error } = Astro.props;
+const canWrite = getDataset().source === 'postgres';
+Astro.response.headers.set('Cache-Control', 'no-store');
+const nav = [['/admin', 'Panel'], ['/admin/doctors/new', 'Añadir médico'], ['/admin/import', 'Importar CSV'], ['/admin/verify', 'Verificar exequátur'], ['/admin/facilities', 'Clínicas y hospitales']];
+---
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>{title} · Admin</title>
+<style is:global>
+  body{font:15px/1.5 system-ui,sans-serif;margin:0;color:#16283a;background:#f6f8fa}
+  .adm{max-width:74rem;margin:0 auto;padding:16px}
+  .adm nav{display:flex;flex-wrap:wrap;gap:6px 16px;padding:12px 0;border-bottom:1px solid #d9e3ec;margin-bottom:16px}
+  .adm nav a{color:#35607f;text-decoration:none;font-weight:600} .adm nav a[aria-current]{border-bottom:2px solid #e29a85}
+  .adm table{border-collapse:collapse;width:100%;background:#fff} .adm td,.adm th{border-bottom:1px solid #e3eaf0;padding:8px;text-align:left;vertical-align:top}
+  .adm label{display:block;margin:12px 0 4px;font-weight:600} .adm input:not([type=checkbox]):not([type=radio]),.adm textarea,.adm select{width:100%;padding:8px;font:inherit;box-sizing:border-box}
+  .adm button{padding:8px 14px;font:inherit;cursor:pointer;border-radius:8px;border:1px solid #35607f;background:#35607f;color:#fff} .adm button.ghost{background:#fff;color:#35607f}
+  .adm .grid2{display:grid;gap:0 16px;grid-template-columns:1fr} @media(min-width:760px){.adm .grid2{grid-template-columns:1fr 1fr}}
+  .adm .msg{padding:10px 14px;border-radius:8px;background:#e4f4e8;color:#25693a;margin:12px 0} .adm .msg.err{background:#fde8e8;color:#a10000}
+  .adm .warn{color:#a15c00} .adm small{color:#5b6b7a} .adm .chip{display:inline-block;background:#fff3d6;color:#7a5200;border-radius:999px;padding:1px 8px;font-size:12px;margin:0 4px 2px 0}
+  .adm .k{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:12px;margin:16px 0} .adm .k div{border:1px solid #d9e3ec;border-radius:10px;padding:12px;background:#fff} .adm .k b{display:block;font-size:1.6rem}
+  .adm form.inline{display:inline}
+</style></head>
+<body><div class="adm">
+  <nav aria-label="Admin">{nav.map(([href, label]) => <a href={href} aria-current={Astro.url.pathname === href ? 'page' : undefined}>{label}</a>)}<a href="/" style="margin-left:auto">Ver sitio →</a></nav>
+  <h1 style="margin:0 0 8px">{title}</h1>
+  {!canWrite && <p class="warn">Solo lectura: configura DATABASE_URL para guardar cambios.</p>}
+  {message && <p class:list={['msg', { err: error }]} role="status">{message}</p>}
+  <slot />
+</div></body></html>

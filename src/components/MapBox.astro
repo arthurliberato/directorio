@@ -1,0 +1,19 @@
+---
+// Static placeholder first; the interactive map (OpenStreetMap embed) loads only on click (SPEC §9).
+interface Props { lat: number | null; lng: number | null; address: string; event?: string; slug?: string; id?: string }
+const { lat, lng, address, event = 'map_open', slug, id = 'map' } = Astro.props;
+const src = lat != null && lng != null ? `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.004},${lat - 0.0025},${lng + 0.004},${lat + 0.0025}&layer=mapnik&marker=${lat},${lng}` : null;
+---
+{lat != null && lng != null && (<>
+<div class="map" id={`${id}-box`}>
+  <img src="/img/map-placeholder.svg" width="640" height="320" loading="lazy" alt={`Mapa: ${address}`} />
+  {src && <button type="button" class="btn ghost" id={`${id}-open`} data-event={event} data-doctor={slug} data-src={src}>Ver mapa interactivo</button>}
+</div>
+<script is:inline define:vars={{ id }}>
+  var b = document.getElementById(id + '-open');
+  if (b) b.addEventListener('click', function () {
+    var f = document.createElement('iframe'); f.src = b.getAttribute('data-src'); f.title = 'Mapa'; f.loading = 'lazy';
+    var box = document.getElementById(id + '-box'); box.innerHTML = ''; box.appendChild(f);
+  });
+</script>
+</>)}

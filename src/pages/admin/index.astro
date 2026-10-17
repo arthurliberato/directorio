@@ -1,68 +1,69 @@
 ---
-import { ensureDataset, getDataset } from '../../lib/dataset.ts';
-import { allDoctors, getSpecialties, isPublished, publishedDoctors } from '../../lib/data.ts';
-import { INDEX_STATUSES, markExequaturVerified, setIndexStatus, type Run } from '../../lib/admin-db.ts';
-import { profileIndexDecision } from '../../lib/indexing.ts';
-import { computeState, overdueReverification } from '../../lib/nightly.ts';
-import { createHash } from 'node:crypto';
+import AdminShell from '../../components/AdminShell.astro';
+import { INDEX_STATUSES, setIndexStatus } from '../../lib/admin-db.ts';
+import { adminCanWrite, withDb } from '../../lib/admin-run.ts';
+import { allDoctors, isAffiliated, publishedDoctors } from '../../lib/data.ts';
+import { getDataset } from '../../lib/dataset.ts';
+import { missingPoints, profileIndexDecision, type MissingKey } from '../../lib/indexing.ts';
+import { overdueReverification } from '../../lib/nightly.ts';
+import { doctorUrls, hubUrls } from '../../lib/sitemap.ts';
 
-const canWrite = getDataset().source === 'postgres';
-let message = '';
-if (Astro.request.method === 'POST' && canWrite) {
-  const form = await Astro.request.formData();
-  const id = Number(form.get('id'));
-  const { default: postgres } = await import('postgres');
-  const sql = postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} });
-  const run: Run = (q, params) => sql.unsafe(q, params as any[]) as unknown as Promise<any[]>;
-  try {
-    if (form.get('action') === 'index_status') await setIndexStatus(run, id, String(form.get('status')));
-    else if (form.get('action') === 'verify') {
-      const evidence = String(form.get('evidence') ?? '');
-      await markExequaturVerified(run, id, { checkedBy: String(form.get('by') ?? 'admin'), method: 'pgr-consultar-exequatur', result: 'valid', evidenceHash: createHash('sha256').update(evidence).digest('hex') });
-    }
-    await ensureDataset(true);
-    if (process.env.PURGE_WEBHOOK_URL) await fetch(process.env.PURGE_WEBHOOK_URL, { method: 'POST' }).catch(() => {});
-    message = 'Guardado.';
-  } catch (e) { message = `Error: ${(e as Error).message}`; }
-  await sql.end();
+let message = ''; let error = false;
+if (Astro.request.method === 'POST' && adminCanWrite()) {
+  const f = await Astro.request.formData();
+  try { await withDb((run) => setIndexStatus(run, Number(f.get('id')), String(f.get('status')))); message = 'Guardado.'; }
+  catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
 }
-
+const falta = Astro.url.searchParams.get('falta') as MissingKey | 'cualquiera' | null;
+const estado = Astro.url.searchParams.get('estado'); // no-indexables
+const tipo = Astro.url.searchParams.get('tipo'); // verificados | listados
 const docs = allDoctors();
 const published = publishedDoctors();
-const state = computeState();
-const byType = (re: RegExp) => [...state].filter(([u, s]) => s.status === 'index' && re.test(new URL(u).pathname)).length;
-const overdue = overdueReverification();
 const claimedPct = published.length ? Math.round((100 * published.filter((v) => v.doctor.claimed).length) / published.length) : 0;
-const rows = published.slice(0, 200);
-Astro.response.headers.set('Cache-Control', 'no-store');
+const all = getDataset().doctors.map((d) => ({ d, v: published.find((p) => p.doctor.id === d.id) ?? null }));
+const rows = published
+  .map((v) => ({ v, missing: missingPoints(v), dec: profileIndexDecision(v) }))
+  .filter((r) => (!falta ? true : falta === 'cualquiera' ? r.missing.length > 0 : r.missing.includes(falta)))
+  .filter((r) => (estado === 'no-indexables' ? !r.dec.indexable : true))
+  .filter((r) => (tipo === 'verificados' ? isAffiliated(r.v.doctor) : tipo === 'listados' ? !isAffiliated(r.v.doctor) : true))
+  .slice(0, 300);
+const MISSING_LABEL: Record<MissingKey, string> = { foto: 'foto', ars: 'ARS', horario: 'horario', bio: 'biografía', direccion: 'dirección' };
+const drafts = all.filter((x) => !x.v).length;
+const affiliatedN = published.filter((v) => isAffiliated(v.doctor)).length;
+const listedN = published.length - affiliatedN;
 ---
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>Admin</title>
-<style>body{font:15px/1.5 system-ui;margin:0;padding:16px;max-width:72rem;margin-inline:auto}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:12px;margin:16px 0}.k div{border:1px solid #ddd;border-radius:10px;padding:12px}.k b{display:block;font-size:1.6rem}form{display:inline}.warn{color:#a15c00}</style></head>
-<body>
-  <h1>Panel interno</h1>
-  <p>Fuente de datos: <b>{getDataset().source}</b> {!canWrite && <span class="warn">(solo lectura: configura DATABASE_URL para editar)</span>} {message && <b>· {message}</b>}</p>
+<AdminShell title="Panel interno" message={message} error={error}>
+  <p>Fuente de datos: <b>{getDataset().source}</b></p>
   <div class="k">
-    <div>Médicos verificados<b>{published.length}</b>de {docs.length}</div>
-    <div>Perfiles reclamados<b>{claimedPct}%</b></div>
-    <div>Perfiles indexables<b>{byType(/^\/(dra?-)/)}</b></div>
-    <div>Hubs indexables<b>{byType(/^\/[^/]+(\/.*)?$/) - byType(/^\/(dra?-)/) - byType(/^\/(guia|centro)/)}</b></div>
-    <div>Re-verificaciones vencidas<b>{overdue.length}</b></div>
+    <div>Verificados (afiliados)<b>{affiliatedN}</b>foto + primeros en los listados</div>
+    <div>Listados (perfil informativo)<b>{listedN}</b>sin verificar, sin foto</div>
+    <div>Borradores (ocultos)<b>{drafts}</b><a href="/admin/verify">verificar →</a></div>
+    <div>Confirmados con el médico<b>{claimedPct}%</b></div>
+    <div>Perfiles indexables<b>{doctorUrls().length}</b></div>
+    <div>Páginas de listado indexables<b>{hubUrls().length}</b></div>
+    <div>Re-verificaciones vencidas<b>{overdueReverification().length}</b></div>
   </div>
-  <h2>Médicos</h2>
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:16px 0">
+    <div><label for="falta">Falta</label><select id="falta" name="falta"><option value="">(todos)</option><option value="cualquiera" selected={falta === 'cualquiera'}>cualquier dato</option>{Object.entries(MISSING_LABEL).map(([k, l]) => <option value={k} selected={falta === k}>{l}</option>)}</select></div>
+    <div><label for="tipo">Tipo</label><select id="tipo" name="tipo"><option value="">(todos)</option><option value="verificados" selected={tipo === 'verificados'}>verificados</option><option value="listados" selected={tipo === 'listados'}>listados</option></select></div>
+    <div><label for="estado">Indexación</label><select id="estado" name="estado"><option value="">(todos)</option><option value="no-indexables" selected={estado === 'no-indexables'}>no indexables</option></select></div>
+    <button type="submit" class="ghost">Filtrar</button> <a href="/admin">limpiar</a>
+  </form>
+  <p><small>Un perfil verificado se indexa con exequátur comprobado y al menos 3 datos (dirección, ARS, horario, foto, biografía), o si está confirmado con el médico. Los perfiles listados nunca se indexan.</small></p>
   <table>
-    <thead><tr><th>Médico</th><th>Exequátur</th><th>Indexación</th><th>Override</th><th>Verificar</th></tr></thead>
+    <thead><tr><th>Médico</th><th>Tipo</th><th>Exequátur</th><th>Indexación</th><th>Datos que faltan</th><th>Override</th></tr></thead>
     <tbody>
-      {rows.map((v) => { const d = profileIndexDecision(v); return (
+      {rows.map(({ v, missing, dec }) => (
         <tr>
-          <td><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a> · <a href={`/admin/doctors/${v.doctor.id}`}>editar</a><br /><small>{v.specialty.name_singular}</small></td>
+          <td><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a> · <a href={`/admin/doctors/${v.doctor.id}`}>editar</a><br /><small>{v.specialty.name_singular}{v.locations[0] ? ` · ${v.locations[0].city.name}` : ''}</small></td>
+          <td>{isAffiliated(v.doctor) ? 'Verificado' : 'Listado'}</td>
           <td>{v.doctor.exequatur_verified_at ?? '—'}</td>
-          <td>{d.robots}<br /><small>{d.reason}</small></td>
-          <td>{canWrite ? <form method="post"><input type="hidden" name="action" value="index_status" /><input type="hidden" name="id" value={v.doctor.id} /><select name="status">{INDEX_STATUSES.map((s) => <option value={s} selected={s === v.doctor.index_status}>{s}</option>)}</select> <button>Guardar</button></form> : v.doctor.index_status}</td>
-          <td>{canWrite ? <form method="post"><input type="hidden" name="action" value="verify" /><input type="hidden" name="id" value={v.doctor.id} /><input name="evidence" placeholder="evidencia / nº de consulta" required /> <input name="by" placeholder="tu nombre" required /> <button>Marcar verificado hoy</button></form> : '—'}</td>
-        </tr>); })}
+          <td>{dec.robots}<br /><small>{dec.reason}</small></td>
+          <td>{missing.length ? missing.map((m) => <span class="chip">{MISSING_LABEL[m]}</span>) : <small>completo</small>}</td>
+          <td>{adminCanWrite() ? <form method="post" class="inline"><input type="hidden" name="id" value={v.doctor.id} /><select name="status" style="width:auto">{INDEX_STATUSES.map((s) => <option value={s} selected={s === v.doctor.index_status}>{s}</option>)}</select> <button class="ghost">Guardar</button></form> : v.doctor.index_status}</td>
+        </tr>
+      ))}
     </tbody>
   </table>
-  <h2>No publicados</h2>
-  <ul>{docs.filter((d) => !isPublished(d)).map((d) => <li>{d.display_name} ({d.slug})</li>)}</ul>
-</body></html>
+  {rows.length === 0 && <p class="muted">No hay médicos publicados con ese filtro.</p>}
+</AdminShell>

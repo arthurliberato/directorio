@@ -25,8 +25,8 @@ export function datasetToSql(ds: Dataset): string[] {
   out.push(...insert('doctors', ['id', 'slug', 'full_legal_name', 'display_name', 'gender', 'specialty_id', 'subspecialties', 'exequatur_number', 'exequatur_decree',
     'exequatur_verified_at', 'cmd_member', 'cmd_verified_at', 'specialty_verified_at', 'claimed', 'claimed_at', 'bio', 'education', 'languages', 'photo_url',
     'consultation_fee_min', 'consultation_fee_max', 'currency', 'accepting_new_patients', 'whatsapp', 'phone', 'website', 'gbp_url', 'sameas_urls',
-    'data_verified_at', 'updated_at', 'index_status', 'sponsored'], ds.doctors as any));
-  out.push(...insert('locations', ['id', 'doctor_id', 'facility_id', 'address', 'sector_id', 'city_id', 'lat', 'lng', 'schedule', 'phone'], ds.locations as any));
+    'data_verified_at', 'updated_at', 'index_status', 'sponsored', 'listing_status', 'source_name', 'source_url', 'source_retrieved_at'], ds.doctors as any));
+  out.push(...insert('locations', ['id', 'doctor_id', 'facility_id', 'address', 'sector_id', 'city_id', 'lat', 'lng', 'schedule', 'phone', 'suite', 'phone_ext'], ds.locations as any));
   out.push(...insert('doctor_ars', ['doctor_id', 'ars_id', 'verified_at'], ds.doctorArs as any));
   out.push(...insert('guides', ['id', 'slug', 'title', 'category', 'icon', 'read_minutes', 'answer_summary', 'body', 'reviewer_doctor_id', 'reviewed_at', 'sources', 'related_specialty_ids'],
     ds.guides.map((g) => ({ ...g, related_specialty_ids: g.related_specialty_slugs.map((s) => specId.get(s)) })) as any));

@@ -1,0 +1,36 @@
+---
+import AdminShell from '../../../components/AdminShell.astro';
+import { updateFacility, type FacilityEdit } from '../../../lib/admin-db.ts';
+import { adminCanWrite, withDb } from '../../../lib/admin-run.ts';
+import { doctorsForFacility, getFacilities } from '../../../lib/data.ts';
+
+const id = Number(Astro.params.id);
+if (!getFacilities().some((f) => f.id === id)) return new Response('Not found', { status: 404 });
+let message = ''; let error = false;
+if (Astro.request.method === 'POST' && adminCanWrite()) {
+  const f = await Astro.request.formData();
+  const str = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v === '' ? null : v; };
+  const num = (k: string) => { const v = str(k); return v == null ? null : Number(v.replace(',', '.')); };
+  const edit: FacilityEdit = { name: String(f.get('name') ?? ''), type: String(f.get('type') ?? ''), address: String(f.get('address') ?? ''), phone: str('phone'), website: str('website'), lat: num('lat'), lng: num('lng') };
+  try { await withDb((run) => updateFacility(run, id, edit)); message = 'Guardado.'; } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
+}
+const f = getFacilities().find((x) => x.id === id)!;
+const n = doctorsForFacility(id).length;
+---
+<AdminShell title={f.name} message={message} error={error}>
+  <p><small>{n} médico{n === 1 ? '' : 's'} publicado{n === 1 ? '' : 's'} · {n > 0 ? <a href={`/centro/${f.slug}`}>ver página pública</a> : 'no aparece en el sitio hasta que tenga médicos verificados'}</small></p>
+  <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
+    <div class="grid2">
+      <div><label for="name">Nombre</label><input id="name" name="name" value={f.name} /></div>
+      <div><label for="type">Tipo</label><select id="type" name="type"><option value="MedicalClinic" selected={f.type === 'MedicalClinic'}>Clínica / centro médico</option><option value="Hospital" selected={f.type === 'Hospital'}>Hospital</option></select></div>
+      <div><label for="addr">Dirección</label><input id="addr" name="address" value={f.address} /></div>
+      <div><label for="ph">Teléfono</label><input id="ph" name="phone" value={f.phone ?? ''} /></div>
+      <div><label for="web">Sitio web</label><input id="web" name="website" value={f.website ?? ''} /></div>
+      <div></div>
+      <div><label for="lat">Latitud (ej. 18.4716)</label><input id="lat" name="lat" value={f.lat ?? ''} /></div>
+      <div><label for="lng">Longitud (ej. -69.9402)</label><input id="lng" name="lng" value={f.lng ?? ''} /></div>
+    </div>
+    <p><small>Para sacar las coordenadas: en Google Maps haz clic derecho sobre el lugar y copia los dos números.</small></p>
+    <p><button type="submit">Guardar</button></p>
+  </fieldset></form>
+</AdminShell>

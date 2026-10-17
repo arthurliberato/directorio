@@ -2,11 +2,12 @@
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import DoctorCard from './DoctorCard.astro';
+import MapBox from './MapBox.astro';
 import Icon from './Icon.astro';
 import { BRAND } from '../config.ts';
-import { nearbyDoctors, type DoctorView } from '../lib/data.ts';
-import { agentNoun, doctorHubLinks, factSummary, profileMetaDescription, profilePath, profileTitle, titleOf } from '../lib/facts.ts';
-import { formatDate, formatDOP, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
+import { isAffiliated, nearbyDoctors, type DoctorView } from '../lib/data.ts';
+import { agentNoun, doctorHubLinks, factSummary, initialsOf, isListedOnly, profileMetaDescription, profilePath, profileTitle, titleOf } from '../lib/facts.ts';
+import { formatDate, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
 import { profileIndexDecision } from '../lib/indexing.ts';
 import { breadcrumbJsonLd, physicianJsonLd } from '../lib/schema.ts';
 import { hubPath } from '../lib/hubs.ts';
@@ -16,25 +17,37 @@ const { v } = Astro.props;
 const d = v.doctor;
 const decision = profileIndexDecision(v);
 const loc = v.locations[0];
+const affiliated = isAffiliated(d);
+const showPhoto = affiliated && !!d.photo_url; // photos only for verified affiliates
 const nearby = nearbyDoctors(v, 4);
 const crumbs = [{ name: 'Inicio', path: '/' }, { name: v.specialty.name_plural, path: hubPath({ specialty: v.specialty }) }];
 if (loc) crumbs.push({ name: loc.city.name, path: hubPath({ specialty: v.specialty, city: loc.city }) });
 crumbs.push({ name: d.display_name, path: profilePath(v) });
 const jsonLd = [physicianJsonLd(v), breadcrumbJsonLd(crumbs)];
 const waNumber = d.whatsapp?.replace(/\D/g, '');
-const mapQuery = loc?.lat != null && loc.lng != null ? { lat: loc.lat, lng: loc.lng } : null;
-const mapSrc = mapQuery ? `https://www.openstreetmap.org/export/embed.html?bbox=${mapQuery.lng - 0.004},${mapQuery.lat - 0.0025},${mapQuery.lng + 0.004},${mapQuery.lat + 0.0025}&layer=mapnik&marker=${mapQuery.lat},${mapQuery.lng}` : null;
-const verified = d.data_verified_at;
+const verified = affiliated ? d.data_verified_at : null;
+const contactPhone = d.phone ?? loc?.phone ?? null;
+const ext = d.phone ? null : loc?.phone_ext ?? null; // an extension only makes sense on the clinic switchboard
+const fullAddress = loc ? `${loc.suite ? loc.suite + ', ' : ''}${loc.address}${loc.sector && !loc.address.toLowerCase().includes(loc.sector.name.toLowerCase()) ? ', ' + loc.sector.name : ''}, ${loc.city.name}` : '';
+const initials = initialsOf(d.display_name);
 ---
 <Base title={profileTitle(v, BRAND)} description={profileMetaDescription(v)} robots={decision.robots} jsonLd={jsonLd} canonicalPath={profilePath(v)}>
   <Breadcrumbs items={crumbs} />
   <div class="wrap page-head">
-    <h1>{titleOf(v)} {d.full_legal_name}, {agentNoun(v)}</h1>
-    <p>
-      {d.exequatur_verified_at && <span class="badge"><Icon name="shield" size={16} /> Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span>}
-      {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px">Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span>}
-      {d.claimed && <span class="badge" style="margin-left:8px">Perfil reclamado por el profesional</span>}
+    <div class="profile-head">
+      <div class="portrait" aria-hidden={d.photo_url ? undefined : 'true'}>
+        {showPhoto ? <img src={d.photo_url!} width="148" height="148" fetchpriority="high" alt={`Foto de ${d.display_name}`} /> : initials}
+      </div>
+      <div>
+    <h1>{[titleOf(v), d.full_legal_name].filter(Boolean).join(' ')}, {agentNoun(v)}</h1>
+    <p style="margin:0">
+      {affiliated ? <span class="badge"><Icon name="shield" size={16} /> <span>Médico verificado en {BRAND}</span></span> : <span class="badge type">Perfil informativo · no verificado</span>}
+      {d.exequatur_verified_at && <span class="badge" style="margin-left:8px"><Icon name="shield" size={16} /> <span>Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span></span>}
+      {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px"><span>Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span></span>}
+      {d.claimed && affiliated && <span class="badge" style="margin-left:8px">Confirmado con el médico</span>}
     </p>
+      </div>
+    </div>
     <p class="summary">{factSummary(v)}</p>
   </div>
 
@@ -48,7 +61,7 @@ const verified = d.data_verified_at;
             {d.subspecialties.length > 0 && <tr><th scope="row">Subespecialidades</th><td>{d.subspecialties.join(', ')}</td></tr>}
             {v.locations.map((l) => (
               <tr><th scope="row">Consultorio</th><td>
-                {l.facility ? <a href={`/centro/${l.facility.slug}`}>{l.facility.name}</a> : null}{l.facility ? ' — ' : ''}{l.address}, <a href={hubPath({ specialty: v.specialty, city: l.city, sector: l.sector })}>{l.sector.name}</a>, <a href={hubPath({ specialty: v.specialty, city: l.city })}>{l.city.name}</a>
+                {l.facility ? <a href={`/centro/${l.facility.slug}`}>{l.facility.name}</a> : null}{l.facility ? ' — ' : ''}{l.suite ? `${l.suite}, ` : ''}{l.address}, {l.sector && <><a href={hubPath({ specialty: v.specialty, city: l.city, sector: l.sector })}>{l.sector.name}</a>, </>}<a href={hubPath({ specialty: v.specialty, city: l.city })}>{l.city.name}</a>
               </td></tr>
             ))}
             {loc && loc.schedule.length > 0 && <tr><th scope="row">Horario</th><td>{formatScheduleLines(loc.schedule).map((line) => <div>{line}</div>)}</td></tr>}
@@ -74,17 +87,13 @@ const verified = d.data_verified_at;
 
     <aside aria-label="Contacto y ubicación">
       <div class="panel contact">
-        <h2 style="font-size:1.3rem">Contacto</h2>
+        <h2 style="font-size:1.3rem">{waNumber || contactPhone || d.website ? 'Contacto' : 'Ubicación'}</h2>
         {waNumber && <a class="btn wa" href={`https://wa.me/${waNumber}`} data-event="whatsapp_click" data-doctor={d.slug} rel="noopener"><Icon name="whatsapp" size={20} /> Escribir por WhatsApp</a>}
-        {d.phone && <a class="btn ghost" href={`tel:${d.phone.replace(/[^+\d]/g, '')}`} data-event="phone_click" data-doctor={d.slug}><Icon name="phone" size={20} /> {d.phone}</a>}
+        {contactPhone && <a class="btn ghost" href={`tel:${contactPhone.replace(/[^+\d]/g, '')}${ext ? `,${ext.replace(/\D/g, '')}` : ''}`} data-event="phone_click" data-doctor={d.slug}><Icon name="phone" size={20} /> {contactPhone}{ext ? ` ext. ${ext}` : ''}</a>}
+        {!d.phone && contactPhone && loc?.facility && <p class="muted" style="margin:0;font-size:.9rem">Central de {loc.facility.name}</p>}
         {d.website && <a class="btn ghost" href={d.website} data-event="website_click" data-doctor={d.slug} rel="noopener nofollow">Sitio web</a>}
-        {loc && (
-          <div class="map" id="map-box">
-            <img src="/img/map-placeholder.svg" width="640" height="320" loading="lazy" alt={`Mapa: ${loc.address}, ${loc.sector.name}, ${loc.city.name}`} />
-            {mapSrc && <button type="button" class="btn ghost" id="map-open" data-event="map_open" data-doctor={d.slug} data-src={mapSrc}>Ver mapa interactivo</button>}
-          </div>
-        )}
-        {loc && <p class="muted" style="margin:0">{loc.address}, {loc.sector.name}, {loc.city.name}</p>}
+        {loc && <MapBox lat={loc.lat} lng={loc.lng} address={fullAddress} slug={d.slug} />}
+        {loc && <p class="muted" style="margin:0">{fullAddress}</p>}
       </div>
     </aside>
   </div>
@@ -98,13 +107,11 @@ const verified = d.data_verified_at;
 
   <div class="wrap" style="padding-bottom:32px">
     {verified && <p class="muted">Datos verificados el <time datetime={verified}>{formatDate(verified)}</time>. <a href="/como-verificamos">Cómo verificamos</a>.</p>}
+    {!affiliated && (
+      <div class="panel" style="margin-top:16px;max-width:46rem">
+        <p style="margin:0 0 6px"><b>Perfil informativo.</b> Estos datos provienen de fuentes públicas{d.source_name ? <> ({d.source_url ? <a href={d.source_url} rel="noopener nofollow">{d.source_name}</a> : d.source_name})</> : ''}{d.source_retrieved_at ? <>, consultadas el <time datetime={d.source_retrieved_at}>{formatDate(d.source_retrieved_at)}</time></> : ''}, y no han sido verificados por {BRAND}. Pueden estar desactualizados.</p>
+        <p style="margin:0">¿Eres este médico? <a href="/contacto">Solicita verificación, corrección o retiro de tu perfil</a>.</p>
+      </div>
+    )}
   </div>
-  <script is:inline>
-    // Interactive map loads only on click (SPEC §9). Everything above works without JS.
-    var b = document.getElementById('map-open');
-    if (b) b.addEventListener('click', function () {
-      var f = document.createElement('iframe'); f.src = b.getAttribute('data-src'); f.title = 'Mapa'; f.loading = 'lazy';
-      var box = document.getElementById('map-box'); box.innerHTML = ''; box.appendChild(f);
-    });
-  </script>
 </Base>

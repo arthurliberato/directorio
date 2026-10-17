@@ -63,10 +63,12 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   <main id="main"><slot /></main>
   <footer class="footer">
     <div class="wrap">
-      <a class="logo" href="/"><img src="/logo.svg" alt="" width="36" height="36" />{BRAND}<i>.</i></a>
-      <p class="muted" style="margin-top:12px">Más claridad. Más confianza.<br />Tu salud, más cerca.</p>
-      <p class="muted">Hecho para República Dominicana</p>
-      <div class="cols">
+      <div class="footer-grid">
+        <div class="brand">
+          <a class="logo" href="/"><img src="/logo.svg" alt="" width="36" height="36" />{BRAND}<i>.</i></a>
+          <p class="muted" style="margin-top:12px">Más claridad. Más confianza.<br />Tu salud, más cerca.</p>
+          <p class="muted">Hecho para República Dominicana</p>
+        </div>
         <div>
           <h2>El directorio</h2>
           <ul>
@@ -87,13 +89,15 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
             <li><a href="/privacidad">Privacidad</a></li>
           </ul>
         </div>
+        <div>
+          <h2>Hablemos</h2>
+          <address>
+            <a href="/contacto">Contacto</a><br />
+            <a href={`mailto:${NAP.email}`}>{NAP.email}</a><br />
+            {NAP.street}<br />{NAP.locality}, {NAP.countryName}
+          </address>
+        </div>
       </div>
-      <h2>Hablemos</h2>
-      <address>
-        <a href="/contacto">Contacto</a><br />
-        <a href={`mailto:${NAP.email}`}>{NAP.email}</a><br />
-        {NAP.street}<br />{NAP.locality}, {NAP.countryName}
-      </address>
       <div class="legal">
         <p>© 2026 {BRAND}. Todos los derechos reservados.</p>
         {SITE_MODE === 'prototype' && <p>Prototipo · Perfiles, dirección y correo de ejemplo.</p>}

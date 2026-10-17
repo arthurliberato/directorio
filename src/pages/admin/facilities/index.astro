@@ -1,0 +1,17 @@
+---
+import AdminShell from '../../../components/AdminShell.astro';
+import { doctorsForFacility, getCities, getFacilities } from '../../../lib/data.ts';
+const cities = new Map(getCities().map((c) => [c.id, c.name]));
+const rows = getFacilities().map((f) => ({ f, n: doctorsForFacility(f.id).length }));
+---
+<AdminShell title="Clínicas y hospitales">
+  <p>Las clínicas y hospitales se crean al añadir médicos (campo «Clínica u hospital»). Aquí corriges el tipo, dirección, teléfono, coordenadas y sitio web. Una clínica sin médicos verificados no aparece en el sitio.</p>
+  <table>
+    <thead><tr><th>Nombre</th><th>Tipo</th><th>Ciudad</th><th>Médicos publicados</th><th>Datos</th></tr></thead>
+    <tbody>{rows.map(({ f, n }) => (
+      <tr><td><a href={`/admin/facilities/${f.id}`}>{f.name}</a></td><td>{f.type === 'Hospital' ? 'Hospital' : 'Clínica'}</td><td>{cities.get(f.city_id)}</td><td>{n}</td>
+      <td>{[!f.phone && 'teléfono', f.lat == null && 'mapa', !f.website && 'web'].filter(Boolean).map((m) => <span class="chip">{m}</span>)}</td></tr>
+    ))}</tbody>
+  </table>
+  {rows.length === 0 && <p>Aún no hay clínicas.</p>}
+</AdminShell>

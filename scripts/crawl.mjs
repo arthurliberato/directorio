@@ -1,11 +1,9 @@
 // Site crawl: every sitemap URL must be 200, self-canonical, indexable, with valid JSON-LD; every internal link must resolve.
 // Usage: BASE=http://127.0.0.1:4321 node scripts/crawl.mjs   (server must run with SITE_MODE=production)
 const BASE = process.env.BASE ?? 'http://127.0.0.1:4321';
-const SITE = process.env.PUBLIC_SITE_URL ?? 'https://short.do';
 const UA = { 'User-Agent': 'OAI-SearchBot' };
 let problems = 0;
 const bad = (m) => { problems++; console.error('PROBLEM', m); };
-const local = (u) => u.replace(SITE, BASE);
 const txt = async (p) => (await fetch(BASE + p, { headers: UA, redirect: 'manual' }));
 
 const index = await (await txt('/sitemap-index.xml')).text();

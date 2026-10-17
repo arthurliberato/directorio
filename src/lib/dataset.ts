@@ -29,7 +29,7 @@ async function reload(): Promise<void> {
   if (!url) return;
   if (!sqlClient) {
     const { default: postgres } = await import('postgres');
-    sqlClient = postgres(url, { max: 2, idle_timeout: 20, onnotice: () => {} }) as any;
+    sqlClient = postgres(url, { max: Number(process.env.DATABASE_POOL_MAX ?? 2), idle_timeout: 20, onnotice: () => {} }) as any;
   }
   const { loadFromSql } = await import('./db-loader.ts');
   current = await loadFromSql((q) => sqlClient!.unsafe(q));
