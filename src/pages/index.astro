@@ -21,12 +21,12 @@ const verifiedDocs = publishedDoctors().filter((v) => isAffiliated(v.doctor));
 const featured = [...verifiedDocs.filter((v) => v.doctor.sponsored), ...verifiedDocs.filter((v) => !v.doctor.sponsored && v.doctor.claimed)].slice(0, 3);
 const guides = getGuides().slice(0, 3);
 ---
-<Base title={`${BRAND} — Directorio de médicos verificados en República Dominicana`} description="Encuentra médicos y especialistas en República Dominicana con exequátur verificado, ARS aceptadas, precios de consulta y horarios." jsonLd={siteJsonLd()}>
+<Base title={`${BRAND} — Directorio de médicos en República Dominicana`} description="Encuentra médicos y especialistas en República Dominicana: perfiles verificados con exequátur comprobado, clínicas y hospitales, ARS aceptadas y precios de consulta." jsonLd={siteJsonLd()}>
   <section class="hero">
     <div class="wrap">
       <span class="pill"><Icon name="sparkle" size={16} /> Tu directorio médico en República Dominicana</span>
       <h1>Encuentra el médico adecuado. <span class="accent">Cuida lo que más importa.</span></h1>
-      <p class="lead">Especialistas cerca de ti, información verificada y la tranquilidad de elegir con confianza.</p>
+      <p class="lead">Especialistas cerca de ti, información clara y la tranquilidad de elegir con confianza.</p>
       <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub URL. -->
       <form class="search-card" action="/buscar" method="get" role="search" data-event="search">
         <div class="field"><Icon name="stethoscope" size={28} /><div style="flex:1"><label for="q-esp">Especialidad</label>
@@ -38,7 +38,7 @@ const guides = getGuides().slice(0, 3);
         <button class="btn block" type="submit"><Icon name="search" size={20} /> Buscar médico</button>
       </form>
       {quick.length > 0 && <div class="quick">{quick.map((s) => <a href={hubPath({ specialty: s, city: sd })}>{s.name_singular} en Santo Domingo</a>)}</div>}
-      <div class="ticks"><span><Icon name="check" size={20} /> Exequátur verificado</span><span><Icon name="check" size={20} /> Información transparente</span></div>
+      <div class="ticks"><span><Icon name="check" size={20} /> Perfiles verificados</span><span><Icon name="check" size={20} /> Información transparente</span></div>
     </div>
   </section>
 
@@ -58,7 +58,7 @@ const guides = getGuides().slice(0, 3);
   </section>
 
   <section class="banner" aria-label="Verificación">
-    <div class="wrap"><span class="tile"><Icon name="shield" size={32} /></span><div><h2>Tu tranquilidad empieza con información verificada.</h2><p class="muted">Revisamos exequátur, especialidad y datos de contacto.</p><a class="more" href="/como-verificamos">Cómo verificamos a los médicos <Icon name="arrow" size={20} /></a></div></div>
+    <div class="wrap"><span class="tile"><Icon name="shield" size={32} /></span><div><h2>Tu tranquilidad empieza con información clara.</h2><p class="muted">Los médicos verificados tienen el exequátur comprobado por nosotros. Los perfiles informativos usan datos públicos y lo indican.</p><a class="more" href="/como-verificamos">Cómo verificamos <Icon name="arrow" size={20} /></a></div></div>
   </section>
 
   {featured.length > 0 && (

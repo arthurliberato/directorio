@@ -18,9 +18,11 @@ Full-page captures of every page type, generated from the running site with **il
 | 11 | Guide | `/guia/cuanto-cuesta-consulta-cardiologo` | `src/pages/guia/[slug].astro` |
 | 12 | Trust page | `/como-verificamos` | `src/pages/[slug].astro` + `src/data/trust.ts` |
 | 13 | 404 | any unknown URL | `src/components/NotFound.astro` |
+| 14 | Listed (informational) profile | `/marcos-tejeda-liriano-cardiologia` | `ProfilePage.astro` (listed tier) |
 
 Behaviour worth knowing when reviewing:
 - Clinic pages and the clinics index only list centers that have at least one verified doctor; specialties with no verified doctors are not shown.
 - Hub pages with fewer than 5 doctors render but are `noindex`; with 0 doctors they are a real 404.
 - Sponsored doctors appear in their own labeled block, never inside the ordered table/list.
+- Verified doctors show a photo and a "Médico verificado" badge and sort first; listed doctors show "Perfil informativo", no photo, and their source.
 - On phones the contact / clinic-data panel is moved above the long content.

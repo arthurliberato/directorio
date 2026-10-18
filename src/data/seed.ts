@@ -170,7 +170,7 @@ export const guides: Guide[] = [
     category: 'Costos', icon: 'heart', read_minutes: 4, reviewer_doctor_id: reviewer.id, reviewed_at: '2026-10-01',
     answer_summary: 'El precio de la consulta depende de la ciudad, el centro médico y la experiencia del especialista. Abajo mostramos el rango real de los perfiles verificados del directorio, con su fecha y tamaño de muestra.',
     body: [
-      'Los precios que ves en [BRAND] son los que cada médico o centro declara y que verificamos al momento de la revisión. Pueden cambiar; confirma siempre con el consultorio antes de tu cita.',
+      'Los precios que ves en dir.do son los que cada médico o centro declara y que verificamos al momento de la revisión. Pueden cambiar; confirma siempre con el consultorio antes de tu cita.',
       'Si tienes seguro (ARS), la consulta puede estar cubierta total o parcialmente según tu plan. Pregunta por el copago antes de agendar.',
     ],
     sources: [{ title: 'Ministerio de Salud Pública de la República Dominicana', url: 'https://www.msp.gob.do' }],

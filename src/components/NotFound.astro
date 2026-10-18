@@ -1,9 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
+import { BRAND } from '../config.ts';
 import { getSpecialties } from '../lib/data.ts';
 const specs = getSpecialties();
 ---
-<Base title="Página no encontrada | [BRAND]" description="La página que buscas no existe o cambió de lugar." robots="noindex,follow">
+<Base title={`Página no encontrada | ${BRAND}`} description="La página que buscas no existe o cambió de lugar." robots="noindex,follow">
   <div class="wrap narrow section">
     <h1>No encontramos esta página</h1>
     <p class="muted">Puede que el enlace haya cambiado o que aún no tengamos médicos verificados para esta búsqueda.</p>

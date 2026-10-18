@@ -1,4 +1,4 @@
-# [BRAND] — Doctor directory (DR)
+# dir.do — Doctor directory (DR)
 
 Astro (SSR, CDN-cached) + Postgres. Full requirements: [`SPEC.md`](SPEC.md). Aesthetic reference: [`docs/design/`](docs/design/README.md).
 
