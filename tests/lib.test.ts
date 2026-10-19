@@ -213,3 +213,12 @@ test('booking links: cal.com shorthand and https only; WhatsApp message names th
   assert.equal(canBook({ ...listed, whatsapp: '+18095550100', booking_url: 'https://cal.com/x/y' }), false, 'listed doctors never get booking buttons');
   assert.equal(canBook({ ...verified, whatsapp: null, booking_url: null }), false);
 });
+
+import { calLinkOf } from '../src/lib/booking.ts';
+test('calLinkOf extracts the Cal.com link (user names may contain dots) and ignores other hosts', () => {
+  assert.equal(calLinkOf('https://cal.com/dr.ortega/consulta-psikids'), 'dr.ortega/consulta-psikids');
+  assert.equal(calLinkOf('https://app.cal.com/usuario/evento/'), 'usuario/evento');
+  assert.equal(calLinkOf('https://calendly.com/dr-x/30min'), null);
+  assert.equal(calLinkOf('https://cal.com/usuario'), null, 'a profile without an event is not an embeddable link');
+  assert.equal(calLinkOf(null), null);
+});

@@ -26,3 +26,14 @@ export function whatsappBookingLink(d: Doctor, profilePath: string, siteUrl = SI
   const text = `Hola, quisiera programar una cita con ${d.display_name}. Vi su perfil en dir.do: ${siteUrl}${profilePath}`;
   return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
 }
+
+/** "https://cal.com/dr.ortega/consulta-psikids" -> "dr.ortega/consulta-psikids" (the popup embed needs the Cal link); null for non-Cal.com URLs. */
+export function calLinkOf(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (!['cal.com', 'www.cal.com', 'app.cal.com'].includes(u.hostname)) return null;
+    const path = u.pathname.replace(/^\/+|\/+$/g, '');
+    return /^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._/-]*$/i.test(path) ? path : null;
+  } catch { return null; }
+}

@@ -10,7 +10,7 @@ import { agentNoun, doctorHubLinks, factSummary, initialsOf, isListedOnly, profi
 import { formatDate, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
 import { profileIndexDecision } from '../lib/indexing.ts';
 import { breadcrumbJsonLd, physicianJsonLd } from '../lib/schema.ts';
-import { canBook, whatsappBookingLink } from '../lib/booking.ts';
+import { calLinkOf, canBook, whatsappBookingLink } from '../lib/booking.ts';
 import { hubPath } from '../lib/hubs.ts';
 
 interface Props { v: DoctorView }
@@ -29,6 +29,7 @@ const waNumber = d.whatsapp?.replace(/\D/g, '');
 const showBooking = canBook(d); // verified affiliates only
 const waBooking = showBooking ? whatsappBookingLink(d, profilePath(v)) : null;
 const webBooking = showBooking ? d.booking_url : null;
+const calLink = calLinkOf(webBooking);
 const verified = affiliated ? d.data_verified_at : null;
 const contactPhone = d.phone ?? loc?.phone ?? null;
 const ext = d.phone ? null : loc?.phone_ext ?? null; // an extension only makes sense on the clinic switchboard
@@ -94,7 +95,7 @@ const initials = initialsOf(d.display_name);
         <div class="panel book" id="cita">
           <h2 style="font-size:1.3rem;margin-bottom:12px">Programar cita</h2>
           <div class="contact">
-            {webBooking && <a class="btn" href={webBooking} target="_blank" rel="noopener" data-event="booking_click" data-doctor={d.slug}><Icon name="clock" size={20} /> Reservar en línea</a>}
+            {webBooking && <a class="btn" id="book-online" href={webBooking} target="_blank" rel="noopener" data-booking-cal={calLink ?? undefined} data-event="booking_click" data-doctor={d.slug}><Icon name="clock" size={20} /> Reservar en línea</a>}
             {waBooking && <a class="btn wa" href={waBooking} target="_blank" rel="noopener" data-event="whatsapp_booking_click" data-doctor={d.slug}><Icon name="whatsapp" size={20} /> Agendar por WhatsApp</a>}
           </div>
           <p class="muted" style="margin:10px 0 0;font-size:.85rem">La cita la confirma el consultorio de {d.display_name}.</p>
@@ -128,4 +129,27 @@ const initials = initialsOf(d.display_name);
       </div>
     )}
   </div>
+  {calLink && (
+    <script is:inline>
+      // Cal.com popup: the third-party script loads only when the visitor shows intent (hover, focus, touch). Without JS, or if it fails, the link opens the booking page in a new tab.
+      (function () {
+        var a = document.getElementById('book-online'); if (!a) return;
+        var calLink = a.getAttribute("data-booking-cal"); if (!calLink) return;
+        var started = false;
+        function load() {
+          if (started) return; started = true;
+          (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var d = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, 'https://app.cal.com/embed/embed.js', 'init');
+          window.Cal('init', { origin: 'https://app.cal.com' });
+        }
+        ['pointerenter', 'focus', 'touchstart'].forEach(function (ev) { a.addEventListener(ev, load, { once: true, passive: true }); });
+        a.addEventListener('click', function (e) {
+          load();
+          e.preventDefault();
+          window.Cal('modal', { calLink: calLink, config: { layout: 'month_view', theme: 'light' } });
+          // if the popup never shows up (blocked script, offline), fall back to the plain page
+          setTimeout(function () { if (!document.querySelector('cal-modal-box')) window.open(a.href, '_blank', 'noopener'); }, 8000);
+        });
+      })();
+    </script>
+  )}
 </Base>
