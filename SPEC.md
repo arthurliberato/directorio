@@ -170,6 +170,7 @@ Otherwise `noindex,follow` (still reachable through internal links).
 - **Fact table** as a real HTML `<table>` (or `<dl>`): specialty, sub-specialties, locations, schedule, ARS, fee, languages, hospitals, education, accepting new patients.
 - Verification badge with date; footer line "Datos verificados el [fecha]" (`<time datetime>`).
 - Contact: WhatsApp link (`https://wa.me/...` with UTM-free tracking via data attributes), `tel:` link.
+- **"Programar cita" panel (verified doctors only):** "Agendar por WhatsApp" (wa.me click-to-chat with a prefilled message naming the doctor and the profile URL) and/or "Reservar en línea" (the doctor's `booking_url`: Cal.com or any https booking page, opened in a new tab; a Cal.com embed can be added later). Never shown for listed doctors. Events: `whatsapp_booking_click`, `booking_click`.
 - Map: static image first (`<img>` with address alt), interactive map loads on click.
 - Internal links: specialty hub, city hub, sector hub, facility pages, ARS hubs, 3–5 nearby same-specialty doctors.
 - Reserved, hidden reviews section (no markup until §12 is live).

@@ -22,6 +22,7 @@ for (const ua of BOTS) {
   ok(/<link rel="canonical" href="[^"?]+dra-maria-perez-cardiologa">/.test(html), 'profile self-canonical');
   ok(/<time datetime="\d{4}-\d{2}-\d{2}">/.test(html), 'profile has <time> verification dates');
   ok(!/aggregateRating|"review"/.test(html), 'no review markup in v1');
+  ok(/Programar cita/.test(html) && /wa\.me\/\d+\?text=/.test(html), 'verified profile has the "Programar cita" panel with a prefilled WhatsApp link');
 }
 {
   const html = await (await get('/cardiologos/santo-domingo')).text();
@@ -46,6 +47,10 @@ ok((await get('/cardiologos/piantini')).status === 404, 'wrong facet order is 40
 {
   const r = await get('/dr-datos-minimos-pediatra'); const html = await r.text();
   ok(r.status === 200 && (meta(html, 'robots') ?? '').startsWith('noindex'), 'thin profile is noindex,follow');
+}
+{
+  const html = await (await get('/marcos-tejeda-liriano-cardiologia')).text();
+  ok(!/Programar cita/.test(html), 'listed (unverified) profiles have no booking buttons');
 }
 for (const [from, to] of [['/cardiologos/', '/cardiologos'], ['/Cardiologos', '/cardiologos'], ['/dr-rafael-santos', null]]) {
   const r = await get(from); const loc = new URL(r.headers.get('location') ?? BASE, BASE).pathname;

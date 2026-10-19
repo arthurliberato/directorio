@@ -2,7 +2,7 @@
 
 Everything else is automated (see README). In order:
 
-1. **Supabase**: create a project; run `db/migrations/001_core.sql`, `003_ai_visibility.sql` and `004_listing_tiers.sql` (not `002_reviews_reserved.sql`). Set `DATABASE_URL` on the host and as a GitHub secret.
+1. **Supabase**: create a project; run `db/migrations/001_core.sql`, `003_ai_visibility.sql`, `004_listing_tiers.sql` and `005_booking_url.sql` (not `002_reviews_reserved.sql`). Set `DATABASE_URL` on the host and as a GitHub secret.
 2. **Reference data + real doctors**: run `db/reference/001_reference_data.sql` (specialties, cities, sectors, ARS; review ARS names), then import doctors with `scripts/import-doctors.ts` (see `docs/import.md`). Imports are unverified/unpublished until each exequátur is verified in `/admin`.
    **Real data**: import doctors (verified exequátur only). Until then keep `SITE_MODE=prototype`. Replace seed copy: trust pages (`src/data/trust.ts`), guides (need a real physician reviewer), footer NAP (`src/config.ts`) — identical to `/contacto`.
 3. **Domain**: the site is **dir.do** (brand and domain are set in `src/config.ts`). Point the DNS of `dir.do` at your host, set `PUBLIC_SITE_URL=https://dir.do`, create the `contacto@dir.do` mailbox (or change `NAP.email` in `src/config.ts`), put the real street address in `NAP`, and add real social links in `siteJsonLd()`.

@@ -1,4 +1,5 @@
 // Admin writes (SPEC §1: edit doctors, mark verification, toggle index status). Parameterized SQL only.
+import { normalizeBookingUrl } from './booking.ts';
 export type Run = (sql: string, params?: unknown[]) => Promise<any[]>;
 export const INDEX_STATUSES = ['auto', 'force_index', 'force_noindex'] as const;
 
@@ -20,7 +21,7 @@ export async function markExequaturVerified(run: Run, doctorId: number, o: { che
 export interface DoctorEdit {
   slug?: string; display_name?: string; bio?: string | null; consultation_fee_min?: number | null; consultation_fee_max?: number | null;
   accepting_new_patients?: boolean | null; whatsapp?: string | null; phone?: string | null; website?: string | null;
-  languages?: string[]; photo_url?: string | null;
+  languages?: string[]; photo_url?: string | null; booking_url?: string | null;
 }
 const phoneRe = /^\+?[0-9][0-9\- ]{6,18}$/;
 
@@ -35,15 +36,17 @@ export function validateEdit(e: DoctorEdit): string[] {
   for (const k of ['whatsapp', 'phone'] as const) if (e[k] && !phoneRe.test(e[k]!)) errs.push(`${k}: invalid phone number`);
   for (const k of ['website', 'photo_url'] as const) if (e[k] && !/^https?:\/\/|^\//.test(e[k]!)) errs.push(`${k}: must be an http(s) URL or a /path`);
   if (e.languages && e.languages.some((l) => !/^[a-z]{2}$/.test(l))) errs.push('languages: two-letter codes (es, en, fr)');
+  if (e.booking_url) { try { normalizeBookingUrl(e.booking_url); } catch (err) { errs.push((err as Error).message); } }
   return errs;
 }
 
-const EDITABLE = ['slug', 'display_name', 'bio', 'consultation_fee_min', 'consultation_fee_max', 'accepting_new_patients', 'whatsapp', 'phone', 'website', 'languages', 'photo_url'] as const;
+const EDITABLE = ['slug', 'display_name', 'bio', 'consultation_fee_min', 'consultation_fee_max', 'accepting_new_patients', 'whatsapp', 'phone', 'website', 'languages', 'photo_url', 'booking_url'] as const;
 
 /** Whitelisted, parameterized update. A slug change auto-creates a 301 (DB trigger); reserved slugs are rejected by the DB. */
 export async function updateDoctor(run: Run, id: number, edit: DoctorEdit): Promise<void> {
   const errs = validateEdit(edit);
   if (errs.length) throw new Error(errs.join('; '));
+  if ('booking_url' in edit) edit = { ...edit, booking_url: normalizeBookingUrl(edit.booking_url) }; // stored in canonical form
   const keys = EDITABLE.filter((k) => k in edit);
   if (!keys.length) return;
   const sets = keys.map((k, i) => `${k} = $${i + 1}`);

@@ -115,3 +115,18 @@ test('listing status: affiliated requires a verified exequátur; verifying a dra
   assert.equal((await run('select listing_status::text s from doctors where id = 900'))[0].s, 'draft');
   await db.close();
 });
+
+test('doctor edit stores the booking link in canonical form and rejects unsafe links', async () => {
+  assert.ok(validateEdit({ booking_url: 'javascript:alert(1)' }).length);
+  assert.ok(validateEdit({ booking_url: 'http://insecure.example/x' }).length);
+  assert.deepEqual(validateEdit({ booking_url: 'usuario/consulta' }), []);
+  const db = new PGlite();
+  await db.exec(schemaSql());
+  for (const st of datasetToSql(seedDataset())) await db.exec(st);
+  const run: Run = async (q, p) => (await db.query(q, p as any[])).rows as any[];
+  await updateDoctor(run, 1, { booking_url: 'usuario/consulta' });
+  assert.equal((await run('select booking_url from doctors where id = 1'))[0].booking_url, 'https://cal.com/usuario/consulta');
+  await updateDoctor(run, 1, { booking_url: '' });
+  assert.equal((await run('select booking_url from doctors where id = 1'))[0].booking_url, null, 'empty clears the link');
+  await db.close();
+});

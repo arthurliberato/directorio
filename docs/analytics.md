@@ -2,7 +2,7 @@
 
 ## Google Analytics 4
 Set `PUBLIC_GA4_ID=G-XXXXXXX` (loads only with `SITE_MODE=production`). Events are declarative: any element with
-`data-event="…"` reports on click (forms on submit): `whatsapp_click`, `phone_click`, `map_open`, `website_click`,
+`data-event="…"` reports on click (forms on submit): `whatsapp_click`, `whatsapp_booking_click`, `booking_click`, `phone_click`, `map_open`, `website_click`,
 `filter_use`, `search`. Consent banner: not included — decide with Dominican counsel (Ley 172-13) before launch.
 
 **AI Assistants channel group** (GA4 Admin → Data display → Channel groups → new channel, condition *Source matches regex*):

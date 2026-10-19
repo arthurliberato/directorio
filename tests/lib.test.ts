@@ -196,3 +196,20 @@ test('unknown gender gets neutral wording and no title; summary never claims ver
   assert.ok(s.startsWith(v.doctor.display_name + ' es cardiólogo/a'), s);
   assert.match(s, /consultorio 405, 4\.º|consultorio 610/);
 });
+
+import { canBook, normalizeBookingUrl, whatsappBookingLink } from '../src/lib/booking.ts';
+test('booking links: cal.com shorthand and https only; WhatsApp message names the doctor; only verified doctors can book', () => {
+  assert.equal(normalizeBookingUrl('usuario/consulta'), 'https://cal.com/usuario/consulta');
+  assert.equal(normalizeBookingUrl('cal.com/usuario/consulta-30'), 'https://cal.com/usuario/consulta-30');
+  assert.equal(normalizeBookingUrl('https://calendly.com/dr-x/30min'), 'https://calendly.com/dr-x/30min');
+  assert.equal(normalizeBookingUrl('  '), null);
+  for (const bad of ['http://cal.com/x/y', 'javascript:alert(1)', 'ftp://x.do/a', 'no es un enlace']) assert.throws(() => normalizeBookingUrl(bad), /enlace de reserva|https/);
+  const verified = getDoctorBySlug('dra-maria-perez-cardiologa')!.doctor;
+  const link = whatsappBookingLink(verified, '/dra-maria-perez-cardiologa', 'https://dir.do')!;
+  assert.match(link, /^https:\/\/wa\.me\/\d+\?text=/);
+  assert.match(decodeURIComponent(link), /programar una cita con Dra\. María Pérez.*https:\/\/dir\.do\/dra-maria-perez-cardiologa/);
+  assert.ok(canBook(verified));
+  const listed = allPublished().find((v) => v.doctor.listing_status === 'listed')!.doctor;
+  assert.equal(canBook({ ...listed, whatsapp: '+18095550100', booking_url: 'https://cal.com/x/y' }), false, 'listed doctors never get booking buttons');
+  assert.equal(canBook({ ...verified, whatsapp: null, booking_url: null }), false);
+});

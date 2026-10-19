@@ -10,6 +10,7 @@ import { agentNoun, doctorHubLinks, factSummary, initialsOf, isListedOnly, profi
 import { formatDate, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
 import { profileIndexDecision } from '../lib/indexing.ts';
 import { breadcrumbJsonLd, physicianJsonLd } from '../lib/schema.ts';
+import { canBook, whatsappBookingLink } from '../lib/booking.ts';
 import { hubPath } from '../lib/hubs.ts';
 
 interface Props { v: DoctorView }
@@ -25,6 +26,9 @@ if (loc) crumbs.push({ name: loc.city.name, path: hubPath({ specialty: v.special
 crumbs.push({ name: d.display_name, path: profilePath(v) });
 const jsonLd = [physicianJsonLd(v), breadcrumbJsonLd(crumbs)];
 const waNumber = d.whatsapp?.replace(/\D/g, '');
+const showBooking = canBook(d); // verified affiliates only
+const waBooking = showBooking ? whatsappBookingLink(d, profilePath(v)) : null;
+const webBooking = showBooking ? d.booking_url : null;
 const verified = affiliated ? d.data_verified_at : null;
 const contactPhone = d.phone ?? loc?.phone ?? null;
 const ext = d.phone ? null : loc?.phone_ext ?? null; // an extension only makes sense on the clinic switchboard
@@ -86,9 +90,19 @@ const initials = initialsOf(d.display_name);
     </div>
 
     <aside aria-label="Contacto y ubicación">
+      {(waBooking || webBooking) && (
+        <div class="panel book" id="cita">
+          <h2 style="font-size:1.3rem;margin-bottom:12px">Programar cita</h2>
+          <div class="contact">
+            {webBooking && <a class="btn" href={webBooking} target="_blank" rel="noopener" data-event="booking_click" data-doctor={d.slug}><Icon name="clock" size={20} /> Reservar en línea</a>}
+            {waBooking && <a class="btn wa" href={waBooking} target="_blank" rel="noopener" data-event="whatsapp_booking_click" data-doctor={d.slug}><Icon name="whatsapp" size={20} /> Agendar por WhatsApp</a>}
+          </div>
+          <p class="muted" style="margin:10px 0 0;font-size:.85rem">La cita la confirma el consultorio de {d.display_name}.</p>
+        </div>
+      )}
       <div class="panel contact">
         <h2 style="font-size:1.3rem">{waNumber || contactPhone || d.website ? 'Contacto' : 'Ubicación'}</h2>
-        {waNumber && <a class="btn wa" href={`https://wa.me/${waNumber}`} data-event="whatsapp_click" data-doctor={d.slug} rel="noopener"><Icon name="whatsapp" size={20} /> Escribir por WhatsApp</a>}
+        {waNumber && !waBooking && <a class="btn wa" href={`https://wa.me/${waNumber}`} data-event="whatsapp_click" data-doctor={d.slug} rel="noopener"><Icon name="whatsapp" size={20} /> Escribir por WhatsApp</a>}
         {contactPhone && <a class="btn ghost" href={`tel:${contactPhone.replace(/[^+\d]/g, '')}${ext ? `,${ext.replace(/\D/g, '')}` : ''}`} data-event="phone_click" data-doctor={d.slug}><Icon name="phone" size={20} /> {contactPhone}{ext ? ` ext. ${ext}` : ''}</a>}
         {!d.phone && contactPhone && loc?.facility && <p class="muted" style="margin:0;font-size:.9rem">Central de {loc.facility.name}</p>}
         {d.website && <a class="btn ghost" href={d.website} data-event="website_click" data-doctor={d.slug} rel="noopener nofollow">Sitio web</a>}

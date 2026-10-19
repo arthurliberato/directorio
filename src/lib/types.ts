@@ -40,6 +40,7 @@ export interface Doctor {
   index_status: IndexStatus;
   sponsored: boolean;
   listing_status: ListingStatus;
+  booking_url: string | null;
   source_name: string | null; source_url: string | null; source_retrieved_at: string | null;
 }
 export interface DoctorArs { doctor_id: number; ars_id: number; verified_at: string; }
