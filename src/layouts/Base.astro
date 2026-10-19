@@ -2,6 +2,7 @@
 import '@fontsource-variable/outfit';
 import '@fontsource-variable/inter';
 import '../styles/global.css';
+import BrandMark from '../components/BrandMark.astro';
 import Icon from '../components/Icon.astro';
 import JsonLd from '../components/JsonLd.astro';
 import { BRAND, GA4_ID, NAP, SITE_MODE, SITE_URL } from '../config.ts';
@@ -48,7 +49,7 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   {SITE_MODE === 'prototype' && <div class="proto-banner">Prototipo · perfiles y datos ilustrativos · sitio no indexable</div>}
   <header class="site-header">
     <div class="wrap">
-      <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><img src="/logo.svg" alt="" width="36" height="36" />{BRAND}<i>.</i></a>
+      <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><img src="/logo.svg" alt="" width="36" height="36" /><BrandMark /></a>
       <nav class="nav-desktop" aria-label="Principal">
         <a href="/especialidad">Especialidades</a><a href="/centro">Clínicas y hospitales</a><a href="/guia">Guías de salud</a><a href="/como-verificamos">Cómo verificamos</a>
       </nav>
@@ -63,10 +64,12 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   <main id="main"><slot /></main>
   <footer class="footer">
     <div class="wrap">
-      <a class="logo" href="/"><img src="/logo.svg" alt="" width="36" height="36" />{BRAND}<i>.</i></a>
-      <p class="muted" style="margin-top:12px">Más claridad. Más confianza.<br />Tu salud, más cerca.</p>
-      <p class="muted">Hecho para República Dominicana</p>
-      <div class="cols">
+      <div class="footer-grid">
+        <div class="brand">
+          <a class="logo" href="/"><img src="/logo.svg" alt="" width="36" height="36" /><BrandMark /></a>
+          <p class="muted" style="margin-top:12px">Más claridad. Más confianza.<br />Tu salud, más cerca.</p>
+          <p class="muted">Hecho para República Dominicana</p>
+        </div>
         <div>
           <h2>El directorio</h2>
           <ul>
@@ -87,13 +90,15 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
             <li><a href="/privacidad">Privacidad</a></li>
           </ul>
         </div>
+        <div>
+          <h2>Hablemos</h2>
+          <address>
+            <a href="/contacto">Contacto</a><br />
+            <a href={`mailto:${NAP.email}`}>{NAP.email}</a><br />
+            {NAP.street}<br />{NAP.locality}, {NAP.countryName}
+          </address>
+        </div>
       </div>
-      <h2>Hablemos</h2>
-      <address>
-        <a href="/contacto">Contacto</a><br />
-        <a href={`mailto:${NAP.email}`}>{NAP.email}</a><br />
-        {NAP.street}<br />{NAP.locality}, {NAP.countryName}
-      </address>
       <div class="legal">
         <p>© 2026 {BRAND}. Todos los derechos reservados.</p>
         {SITE_MODE === 'prototype' && <p>Prototipo · Perfiles, dirección y correo de ejemplo.</p>}

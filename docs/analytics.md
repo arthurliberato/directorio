@@ -13,7 +13,7 @@ chatgpt\.com|chat\.openai\.com|perplexity\.ai|gemini\.google\.com|claude\.ai|cop
 Place it above "Referral".
 
 ## Search consoles (day 1, manual)
-Verify Google Search Console (Generative AI performance report) and Bing Webmaster Tools (AI Performance report); submit `https://[short.do]/sitemap-index.xml`.
+Verify Google Search Console (Generative AI performance report) and Bing Webmaster Tools (AI Performance report); submit `https://dir.do/sitemap-index.xml`.
 
 ## Crawler logs
 The server prints one JSON line per crawler hit (`{"type":"bot_hit","bot":"OAI-SearchBot","status":200,…}`).

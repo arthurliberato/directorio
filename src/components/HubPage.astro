@@ -3,11 +3,11 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import DoctorCard from './DoctorCard.astro';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
-import { getArs, getCities, getSectors, getSpecialties, queryHub } from '../lib/data.ts';
+import { getArs, getCities, getSectors, getSpecialties, isAffiliated, queryHub } from '../lib/data.ts';
 import { formatDOP, formatDateLong, formatScheduleLines, joinList } from '../lib/format.ts';
-import { agentNoun, profilePath } from '../lib/facts.ts';
+import { profilePath } from '../lib/facts.ts';
 import { hubHeading, hubPath, hubPlace, type HubResolution } from '../lib/hubs.ts';
-import { abs, breadcrumbJsonLd, hubJsonLd } from '../lib/schema.ts';
+import { hubJsonLd } from '../lib/schema.ts';
 import { PAGE_SIZE } from '../config.ts';
 
 interface Props { r: Extract<HubResolution, { status: 'ok' }>; orden: string | null }
@@ -22,9 +22,14 @@ if (q.sector) crumbs.push({ name: q.sector.name, path: hubPath({ specialty: q.sp
 if (q.ars) crumbs.push({ name: q.ars.name, path: hubPath({ specialty: q.specialty, city: q.city, ars: q.ars }) });
 if (r.page > 1) crumbs.push({ name: `Página ${r.page}`, path: r.path });
 
-const title = `${heading} (${r.total} verificado${r.total === 1 ? '' : 's'})${r.page > 1 ? ` · Página ${r.page}` : ''} | ${BRAND}`;
+const title = `${heading} (${r.total} ${r.total === 1 ? 'médico' : 'médicos'})${r.page > 1 ? ` · Página ${r.page}` : ''} | ${BRAND}`;
 const description = r.intro.slice(0, 155).replace(/\s+\S*$/, r.intro.length > 155 ? '…' : '');
 const startPos = (r.page - 1) * PAGE_SIZE + 1;
+// Sponsored placements are shown in their own labeled block and never inside the ordered list/table (SPEC §5.6).
+const sponsored = r.page === 1 ? queryHub(q).filter((v) => v.doctor.sponsored) : [];
+const organic = r.items.filter((v) => !v.doctor.sponsored);
+const hasArs = organic.some((v) => v.ars.length > 0), hasFee = organic.some((v) => v.doctor.consultation_fee_min != null), hasHours = organic.some((v) => v.locations[0]?.schedule.length);
+const hasSub = organic.some((v) => v.doctor.subspecialties.length > 0);
 
 // Child hubs: only indexable ones (>= 5 doctors) are linked from navigation blocks.
 const childLinks: { label: string; href: string; n: number }[] = [];
@@ -50,10 +55,10 @@ if (s.arsCounts.length) qa.push({
   q: `¿Qué ARS aceptan los ${q.specialty.name_plural.toLowerCase()} en ${place}?`,
   a: `Las más frecuentes son ${joinList(s.arsCounts.slice(0, 4).map((a) => `${a.name} (${a.count} de ${s.n})`))}. Confirma siempre tu plan con el consultorio.`,
 });
-qa.push({ q: `¿Cuántos ${q.specialty.name_plural.toLowerCase()} verificados hay en ${place}?`, a: `Hay ${s.n} con exequátur verificado en nuestro directorio${s.asOf ? ` (datos al ${formatDateLong(s.asOf)})` : ''}.` });
+qa.push({ q: `¿Cuántos ${q.specialty.name_plural.toLowerCase()} hay en ${place}?`, a: `Hay ${s.n} en nuestro directorio, ${s.affiliated === 0 ? 'ninguno verificado todavía' : `${s.affiliated} de ellos verificados`}${s.asOf ? ` (datos al ${formatDateLong(s.asOf)})` : ''}. Los médicos verificados son afiliados con exequátur comprobado; el resto son perfiles informativos con datos públicos.` });
 
 const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa.map((x) => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) };
-const jsonLd = [...hubJsonLd(q, r.items, r.total, r.path, crumbs, startPos), faqLd];
+const jsonLd = [...hubJsonLd(q, organic, r.total, r.path, crumbs, startPos), faqLd];
 const sortHref = (o: string) => `${r.path}?orden=${o}`; // non-indexable: blocked in robots.txt, canonical stays clean
 const pageHref = (p: number) => hubPath(q, p);
 ---
@@ -74,16 +79,17 @@ const pageHref = (p: number) => hubPath(q, p);
     </div>
     <div class="table-scroll">
       <table class="compare">
-        <thead><tr><th scope="col">Médico</th><th scope="col">Subespecialidad</th><th scope="col">Sector</th><th scope="col">ARS</th><th scope="col">Consulta desde</th><th scope="col">Horario</th></tr></thead>
+        <thead><tr><th scope="col">Médico</th>{hasSub && <th scope="col">Subespecialidad</th>}<th scope="col">Zona</th><th scope="col">Centro</th>{hasArs && <th scope="col">ARS</th>}{hasFee && <th scope="col">Consulta desde</th>}{hasHours && <th scope="col">Horario</th>}</tr></thead>
         <tbody>
-          {r.items.map((v) => (
+          {organic.map((v) => (
             <tr>
-              <th scope="row"><a href={profilePath(v)}>{v.doctor.display_name}</a></th>
-              <td>{v.doctor.subspecialties.join(', ') || v.specialty.field_name}</td>
-              <td>{v.locations[0]?.sector.name}</td>
-              <td>{v.ars.map((a) => a.name).join(', ') || '—'}</td>
-              <td>{v.doctor.consultation_fee_min != null ? formatDOP(v.doctor.consultation_fee_min) : '—'}</td>
-              <td>{v.locations[0] && v.locations[0].schedule.length ? formatScheduleLines(v.locations[0].schedule).join('; ') : '—'}</td>
+              <th scope="row"><a href={profilePath(v)}>{v.doctor.display_name}</a>{isAffiliated(v.doctor) && <span class="badge" style="margin-left:8px;font-size:.75rem">Verificado</span>}</th>
+              {hasSub && <td>{v.doctor.subspecialties.join(', ') || v.specialty.field_name}</td>}
+              <td>{v.locations[0]?.sector?.name ?? v.locations[0]?.city.name ?? '—'}</td>
+              <td>{v.locations[0]?.facility ? <a href={`/centro/${v.locations[0].facility.slug}`}>{v.locations[0].facility.name}</a> : '—'}</td>
+              {hasArs && <td>{v.ars.map((a) => a.name).join(', ') || '—'}</td>}
+              {hasFee && <td>{v.doctor.consultation_fee_min != null ? formatDOP(v.doctor.consultation_fee_min) : '—'}</td>}
+              {hasHours && <td>{v.locations[0] && v.locations[0].schedule.length ? formatScheduleLines(v.locations[0].schedule).join('; ') : '—'}</td>}
             </tr>
           ))}
         </tbody>
@@ -92,9 +98,11 @@ const pageHref = (p: number) => hubPath(q, p);
   </section>
 
   <section class="wrap section" aria-labelledby="medicos">
-    <h2 id="medicos">Médicos verificados</h2>
+    <h2 id="medicos">Médicos</h2>
+    <p class="muted" style="margin-top:-4px"><b>Verificado</b>: afiliado a {BRAND} con exequátur comprobado. <b>Perfil informativo</b>: datos de fuentes públicas, sin verificar.</p>
+    {sponsored.length > 0 && <div class="sponsored-block"><p class="label">Profesional patrocinado · <a href="/publicidad-y-patrocinios">qué significa</a></p><div class="grid cards">{sponsored.map((v) => <DoctorCard v={v} />)}</div></div>}
     <div class="grid cards">
-      {r.items.map((v) => <DoctorCard v={v} />)}
+      {organic.map((v) => <DoctorCard v={v} />)}
     </div>
     {r.totalPages > 1 && (
       <nav class="pager" aria-label="Paginación">

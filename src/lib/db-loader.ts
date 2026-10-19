@@ -19,12 +19,13 @@ export async function loadFromSql(q: Query): Promise<Dataset> {
     specialties: specialties as Specialty[], cities: cities as City[], sectors: sectors as Sector[], ars: ars as Ars[],
     facilities: facilities.map((f: any): Facility => ({ ...f, updated_at: day(f.updated_at)! })),
     doctors: doctors.map((d: any): Doctor => ({
-      ...d, gender: String(d.gender).trim() as 'f' | 'm', currency: 'DOP',
+      ...d, gender: d.gender == null ? null : (String(d.gender).trim() as 'f' | 'm'), currency: 'DOP',
+      source_retrieved_at: day(d.source_retrieved_at),
       exequatur_verified_at: day(d.exequatur_verified_at), cmd_verified_at: day(d.cmd_verified_at), specialty_verified_at: day(d.specialty_verified_at),
       claimed_at: day(d.claimed_at), data_verified_at: day(d.data_verified_at), updated_at: day(d.updated_at)!,
       subspecialties: d.subspecialties ?? [], education: d.education ?? [], languages: d.languages ?? [], sameas_urls: d.sameas_urls ?? [],
     })),
-    locations: locations.map((l: any): Location => ({ ...l, schedule: typeof l.schedule === 'string' ? JSON.parse(l.schedule) : l.schedule ?? [] })),
+    locations: locations.map((l: any): Location => ({ ...l, suite: l.suite ?? null, phone_ext: l.phone_ext ?? null, schedule: typeof l.schedule === 'string' ? JSON.parse(l.schedule) : l.schedule ?? [] })),
     doctorArs: doctorArs.map((a: any): DoctorArs => ({ ...a, verified_at: day(a.verified_at)! })),
     guides: guides.map((g: any): Guide => ({
       id: g.id, slug: g.slug, title: g.title, category: g.category ?? '', icon: g.icon ?? 'heart', answer_summary: g.answer_summary,

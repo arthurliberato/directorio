@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { schemaSql } from './schema-sql.ts';
 import { PGlite } from '@electric-sql/pglite';
 import { datasetToSql } from '../src/lib/db-seed.ts';
 import { loadFromSql } from '../src/lib/db-loader.ts';
@@ -8,7 +9,7 @@ import { seedDataset, setDataset } from '../src/lib/dataset.ts';
 import { publishedDoctors, queryHub, getSpecialtyBySlug, getCityBySlug } from '../src/lib/data.ts';
 import { resolveHub } from '../src/lib/hubs.ts';
 
-const migration = readFileSync(new URL('../db/migrations/001_core.sql', import.meta.url), 'utf8').replace('create extension if not exists pgcrypto;', '');
+const migration = schemaSql();
 
 test('schema migrates, seed round-trips through Postgres, and the app reads identical results', async () => {
   const db = new PGlite();

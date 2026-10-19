@@ -3,24 +3,30 @@ import Base from '../layouts/Base.astro';
 import DoctorCard from '../components/DoctorCard.astro';
 import Icon from '../components/Icon.astro';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
-import { doctorCount, getArs, getCities, getGuides, getSpecialties, publishedDoctors, queryHub } from '../lib/data.ts';
+import { doctorCount, getArs, getCities, getGuides, getSpecialties, isAffiliated, publishedDoctors, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 import { siteJsonLd } from '../lib/schema.ts';
 
 const specs = getSpecialties().map((s) => ({ s, n: doctorCount(s.id) })).filter((x) => x.n > 0);
-const cities = getCities().map((c) => ({ c, n: doctorCount(undefined, c.id) })).filter((x) => x.n > 0);
+// each city links to the hub of its best-represented specialty (always a page that exists)
+const cities = getCities().map((c) => {
+  const best = getSpecialties().map((sp) => ({ sp, k: queryHub({ specialty: sp, city: c }).length })).sort((a, b) => b.k - a.k)[0];
+  return { c, n: doctorCount(undefined, c.id), href: best && best.k > 0 ? hubPath({ specialty: best.sp, city: c }) : null };
+}).filter((x) => x.n > 0 && x.href);
 const arsList = getArs();
 const sd = getCities().find((c) => c.slug === 'santo-domingo')!;
 const quick = specs.map((x) => x.s).filter((s) => queryHub({ specialty: s, city: sd }).length >= MIN_DOCTORS_FOR_HUB_INDEX).slice(0, 3);
-const featured = [...publishedDoctors().filter((v) => v.doctor.sponsored), ...publishedDoctors().filter((v) => !v.doctor.sponsored && v.specialty.slug === 'cardiologos' && v.doctor.claimed)].slice(0, 3);
+// Home features verified affiliates only (sponsored first, labeled), never public-source listings.
+const verifiedDocs = publishedDoctors().filter((v) => isAffiliated(v.doctor));
+const featured = [...verifiedDocs.filter((v) => v.doctor.sponsored), ...verifiedDocs.filter((v) => !v.doctor.sponsored && v.doctor.claimed)].slice(0, 3);
 const guides = getGuides().slice(0, 3);
 ---
-<Base title={`${BRAND} — Directorio de médicos verificados en República Dominicana`} description="Encuentra médicos y especialistas en República Dominicana con exequátur verificado, ARS aceptadas, precios de consulta y horarios." jsonLd={siteJsonLd()}>
+<Base title={`${BRAND} — Directorio de médicos en República Dominicana`} description="Encuentra médicos y especialistas en República Dominicana: perfiles verificados con exequátur comprobado, clínicas y hospitales, ARS aceptadas y precios de consulta." jsonLd={siteJsonLd()}>
   <section class="hero">
     <div class="wrap">
       <span class="pill"><Icon name="sparkle" size={16} /> Tu directorio médico en República Dominicana</span>
       <h1>Encuentra el médico adecuado. <span class="accent">Cuida lo que más importa.</span></h1>
-      <p class="lead">Especialistas cerca de ti, información verificada y la tranquilidad de elegir con confianza.</p>
+      <p class="lead">Especialistas cerca de ti, información clara y la tranquilidad de elegir con confianza.</p>
       <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub URL. -->
       <form class="search-card" action="/buscar" method="get" role="search" data-event="search">
         <div class="field"><Icon name="stethoscope" size={28} /><div style="flex:1"><label for="q-esp">Especialidad</label>
@@ -32,7 +38,7 @@ const guides = getGuides().slice(0, 3);
         <button class="btn block" type="submit"><Icon name="search" size={20} /> Buscar médico</button>
       </form>
       {quick.length > 0 && <div class="quick">{quick.map((s) => <a href={hubPath({ specialty: s, city: sd })}>{s.name_singular} en Santo Domingo</a>)}</div>}
-      <div class="ticks"><span><Icon name="check" size={20} /> Exequátur verificado</span><span><Icon name="check" size={20} /> Información transparente</span></div>
+      <div class="ticks"><span><Icon name="check" size={20} /> Perfiles verificados</span><span><Icon name="check" size={20} /> Información transparente</span></div>
     </div>
   </section>
 
@@ -47,12 +53,12 @@ const guides = getGuides().slice(0, 3);
     <h2 id="ciudades">Tu salud, cerca de ti</h2>
     <p class="muted">Encuentra atención médica en las principales ciudades del país.</p>
     <div class="grid cities">
-      {cities.map(({ c, n }) => <a class="city-row" href={`/${(specs[0]?.s.slug) ?? 'cardiologos'}/${c.slug}`}><Icon name="pin" size={24} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span><Icon name="arrow" size={20} /></a>)}
+      {cities.map(({ c, n, href }) => <a class="city-row" href={href!}><Icon name="pin" size={24} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span><Icon name="arrow" size={20} /></a>)}
     </div>
   </section>
 
   <section class="banner" aria-label="Verificación">
-    <div class="wrap"><span class="tile"><Icon name="shield" size={32} /></span><div><h2>Tu tranquilidad empieza con información verificada.</h2><p class="muted">Revisamos exequátur, especialidad y datos de contacto.</p><a class="more" href="/como-verificamos">Cómo verificamos a los médicos <Icon name="arrow" size={20} /></a></div></div>
+    <div class="wrap"><span class="tile"><Icon name="shield" size={32} /></span><div><h2>Tu tranquilidad empieza con información clara.</h2><p class="muted">Los médicos verificados tienen el exequátur comprobado por nosotros. Los perfiles informativos usan datos públicos y lo indican.</p><a class="more" href="/como-verificamos">Cómo verificamos <Icon name="arrow" size={20} /></a></div></div>
   </section>
 
   {featured.length > 0 && (

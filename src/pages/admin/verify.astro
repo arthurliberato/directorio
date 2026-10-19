@@ -1,0 +1,45 @@
+---
+import { createHash } from 'node:crypto';
+import AdminShell from '../../components/AdminShell.astro';
+import { adminUser } from '../../lib/admin-auth.ts';
+import { markExequaturVerified, setListingStatus } from '../../lib/admin-db.ts';
+import { adminCanWrite, withDb } from '../../lib/admin-run.ts';
+import { allDoctors, getSpecialties } from '../../lib/data.ts';
+
+const LOOKUP = process.env.EXEQUATUR_LOOKUP_URL ?? 'https://pgr.gob.do/';
+let message = ''; let error = false;
+if (Astro.request.method === 'POST' && adminCanWrite()) {
+  const f = await Astro.request.formData();
+  const evidence = String(f.get('evidence') ?? '').trim();
+  try {
+    if (!evidence) throw new Error('Escribe la evidencia (nº de consulta o nota de la verificación).');
+    const id = Number(f.get('id')); const affiliate = f.get('affiliate') === 'on';
+    await withDb(async (run) => {
+      await markExequaturVerified(run, id, { checkedBy: adminUser(Astro.request.headers.get('authorization')), method: 'pgr-consultar-exequatur', result: 'valid', evidenceHash: createHash('sha256').update(evidence).digest('hex') });
+      if (affiliate) await setListingStatus(run, id, 'affiliated');
+    });
+    message = affiliate ? 'Exequátur verificado y médico marcado como verificado (afiliado).' : 'Exequátur verificado (el médico queda como listado).';
+  } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
+}
+const spec = new Map(getSpecialties().map((s) => [s.id, s.name_singular]));
+const q = (Astro.url.searchParams.get('q') ?? '').trim().toLowerCase();
+const pending = allDoctors().filter((d) => !d.exequatur_verified_at && (!q || d.display_name.toLowerCase().includes(q))).sort((a, b) => a.display_name.localeCompare(b.display_name, 'es'));
+---
+<AdminShell title="Verificar exequátur" message={message} error={error}>
+  <p>1) Consulta el exequátur en el <a href={LOOKUP} target="_blank" rel="noopener">servicio oficial</a> con la cédula del profesional. 2) Pega el número de consulta o una nota como evidencia. 3) Marca verificado. Si es un médico afiliado, marca también «verificado (afiliado)»: así muestra foto y aparece primero. Queda registrado quién verificó y cuándo (se guarda un hash de la evidencia).</p>
+  <form method="get" style="margin:8px 0"><input name="q" value={q} placeholder="Buscar por nombre" style="max-width:18rem" /> <button class="ghost">Buscar</button></form>
+  <p><small>{pending.length} pendiente{pending.length === 1 ? '' : 's'}. La cédula no se muestra ni se guarda: consúltala en tu archivo de origen.</small></p>
+  <table>
+    <thead><tr><th>Médico</th><th>Nº de exequátur</th><th>Decreto</th><th>Evidencia y verificación</th></tr></thead>
+    <tbody>
+      {pending.map((d) => (
+        <tr>
+          <td><a href={`/admin/doctors/${d.id}`}>{d.display_name}</a><br /><small>{spec.get(d.specialty_id)} · {d.listing_status === 'draft' ? 'borrador' : 'listado'}</small></td>
+          <td>{d.exequatur_number ?? '—'}</td><td>{d.exequatur_decree ?? '—'}</td>
+          <td>{adminCanWrite() ? <form method="post" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><input type="hidden" name="id" value={d.id} /><input name="evidence" placeholder="nº de consulta / nota" required style="max-width:15rem" /><label style="font-weight:400;margin:0"><input type="checkbox" name="affiliate" /> afiliado</label><button>Marcar verificado</button></form> : '—'}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  {pending.length === 0 && <p>No hay médicos pendientes. 🎉</p>}
+</AdminShell>

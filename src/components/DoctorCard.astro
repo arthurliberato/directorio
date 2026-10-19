@@ -1,27 +1,29 @@
 ---
 import Icon from './Icon.astro';
-import type { DoctorView } from '../lib/data.ts';
-import { agentNoun, profilePath } from '../lib/facts.ts';
+import { isAffiliated, type DoctorView } from '../lib/data.ts';
+import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
 import { formatDOP } from '../lib/format.ts';
 interface Props { v: DoctorView; heading?: 'h2' | 'h3' }
 const { v, heading = 'h3' } = Astro.props;
 const H = heading;
 const d = v.doctor; const loc = v.locations[0];
-const initials = d.display_name.replace(/^(Dra?\.)\s*/, '').split(' ').map((p) => p[0]).slice(0, 2).join('');
+const initials = initialsOf(d.display_name);
+const affiliated = isAffiliated(d);
+const showPhoto = affiliated && !!d.photo_url; // photos are a verified-affiliate benefit
 const arsText = v.ars.length ? `${v.ars[0].name}${v.ars.length > 1 ? ' y otras ARS' : ''}` : null;
 ---
 <article class:list={['dcard', { sponsored: d.sponsored }]}>
   <div class="top">
-    <div class="avatar" aria-hidden="true">{d.photo_url ? <img src={d.photo_url} alt="" width="80" height="88" loading="lazy" /> : initials}</div>
+    <div class="avatar" aria-hidden="true">{showPhoto ? <img src={d.photo_url!} alt="" width="80" height="88" loading="lazy" /> : initials}</div>
     <div>
       {d.sponsored && <div class="tag-sponsor">Patrocinado</div>}
       <H><a href={profilePath(v)}>{d.display_name}</a></H>
       <div class="spec">{v.specialty.field_name}</div>
-      {d.exequatur_verified_at && <span class="badge"><Icon name="shield" size={16} /> Exequátur verificado</span>}
+      {affiliated ? <span class="badge"><Icon name="shield" size={16} /> Médico verificado</span> : <span class="badge type">Perfil informativo</span>}
     </div>
   </div>
   <ul class="meta">
-    {loc && <li><Icon name="pin" size={20} /> {loc.sector.name}, {loc.city.name}</li>}
+    {loc && <li><Icon name="pin" size={20} /> {loc.sector ? `${loc.sector.name}, ` : ''}{loc.city.name}</li>}
     {arsText && <li><Icon name="shield" size={20} /> {arsText}</li>}
     {loc?.facility && <li><Icon name="building" size={20} /> {loc.facility.name}</li>}
   </ul>

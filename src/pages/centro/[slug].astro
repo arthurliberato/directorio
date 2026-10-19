@@ -2,26 +2,68 @@
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import DoctorCard from '../../components/DoctorCard.astro';
+import Icon from '../../components/Icon.astro';
+import MapBox from '../../components/MapBox.astro';
 import NotFound from '../../components/NotFound.astro';
-import { doctorsForFacility, getCities, getFacilityBySlug } from '../../lib/data.ts';
+import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../../config.ts';
+import { byTierThenName, doctorsForFacility, isAffiliated, getCities, getFacilityBySlug, getSectors, queryHub, getSpecialtyBySlug } from '../../lib/data.ts';
+import { facilityKind, facilitySpecialtyCounts, facilitySummary } from '../../lib/facts.ts';
+import { hubPath } from '../../lib/hubs.ts';
 import { breadcrumbJsonLd, facilityJsonLd } from '../../lib/schema.ts';
+
 const f = getFacilityBySlug(Astro.params.slug!);
 const doctors = f ? doctorsForFacility(f.id) : [];
 if (!f || doctors.length === 0) Astro.response.status = 404;
 const city = f ? getCities().find((c) => c.id === f.city_id)! : null;
+const sector = f?.sector_id ? getSectors().find((s) => s.id === f.sector_id) : null;
+const place = city ? `${sector ? sector.name + ', ' : ''}${city.name}` : '';
+// don't repeat the sector when the stored address already names it
+const fullAddress = f && city ? (sector && f.address.toLowerCase().includes(sector.name.toLowerCase()) ? `${f.address}, ${city.name}` : `${f.address}, ${place}`) : '';
 const crumbs = f ? [{ name: 'Inicio', path: '/' }, { name: 'Clínicas y hospitales', path: '/centro' }, { name: f.name, path: `/centro/${f.slug}` }] : [];
+const specs = f ? facilitySpecialtyCounts(doctors) : [];
+const sections = specs.map((s) => ({ s, docs: doctors.filter((v) => v.specialty.slug === s.slug).sort(byTierThenName) }));
+const affiliates = doctors.filter((v) => isAffiliated(v.doctor)).sort(byTierThenName);
+const listedBySpec = sections.map(({ s, docs }) => ({ s, docs: docs.filter((v) => !isAffiliated(v.doctor)) })).filter((x) => x.docs.length > 0);
+const hubFor = (slug: string) => { const sp = getSpecialtyBySlug(slug)!; return city && queryHub({ specialty: sp, city }).length >= MIN_DOCTORS_FOR_HUB_INDEX ? hubPath({ specialty: sp, city }) : null; };
 ---
 {f && doctors.length > 0 && city ? (
-  <Base title={`${f.name}, ${city.name} | [BRAND]`} description={`${f.name} en ${city.name}: ${f.address}. ${doctors.length} médicos verificados.`} jsonLd={[facilityJsonLd(f, doctors, city.name, city.province), breadcrumbJsonLd(crumbs)]}>
+  <Base title={`${f.name}, ${city.name} | ${BRAND}`} description={`${f.name} en ${place}: ${doctors.length} médicos en ${specs.length} especialidades.`} jsonLd={[facilityJsonLd(f, doctors, city.name, city.province), breadcrumbJsonLd(crumbs)]}>
     <Breadcrumbs items={crumbs} />
     <div class="wrap page-head">
+      <p><span class="badge type">{f.type === 'Hospital' ? 'Hospital' : 'Clínica / centro médico'}</span> <span class="badge"><Icon name="shield" size={16} /> {doctors.length} {doctors.length === 1 ? 'médico' : 'médicos'} en el directorio</span></p>
       <h1>{f.name}</h1>
-      <table class="facts"><tbody>
-        <tr><th scope="row">Tipo</th><td>{f.type === 'Hospital' ? 'Hospital' : 'Clínica / centro médico'}</td></tr>
-        <tr><th scope="row">Dirección</th><td>{f.address}, {city.name}</td></tr>
-        {f.phone && <tr><th scope="row">Teléfono</th><td><a href={`tel:${f.phone}`}>{f.phone}</a></td></tr>}
-      </tbody></table>
+      <p class="summary">{facilitySummary(f, doctors, place)}</p>
     </div>
-    <section class="wrap section"><h2>Médicos en {f.name}</h2><div class="grid cards">{doctors.map((v) => <DoctorCard v={v} />)}</div></section>
+    <div class="wrap layout sidebar">
+      <div>
+        <h2 id="especialidades">Especialidades en {f.name}</h2>
+        <ul class="linklist">{specs.map((s) => <li><a href={`#${s.slug}`}>{s.plural} ({s.count})</a></li>)}</ul>
+        {affiliates.length > 0 && (
+          <section id="verificados" style="margin-top:2em" aria-labelledby="h-verificados">
+            <h2 id="h-verificados" style="font-size:1.5rem">Médicos verificados</h2>
+            <div class="grid cards" style="grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))">{affiliates.map((v) => <DoctorCard v={v} />)}</div>
+          </section>
+        )}
+        {listedBySpec.map(({ s, docs }) => (
+          <section id={s.slug} style="margin-top:2em" aria-labelledby={`h-${s.slug}`}>
+            <h2 id={`h-${s.slug}`} style="font-size:1.4rem">{s.plural} en {f.name}</h2>
+            <ul class="doclist">{docs.map((v) => <li><a href={`/${v.doctor.slug}`}>{v.doctor.display_name}</a><small>{[v.locations.find((l) => l.facility_id === f.id)?.suite, v.locations.find((l) => l.facility_id === f.id)?.phone_ext ? `ext. ${v.locations.find((l) => l.facility_id === f.id)!.phone_ext}` : null].filter(Boolean).join(' · ') || 'Perfil informativo'}</small></li>)}</ul>
+            {hubFor(s.slug) && <p style="margin-top:12px"><a class="more" href={hubFor(s.slug)!}>Todos los {s.plural.toLowerCase()} en {city.name} <Icon name="arrow" size={18} /></a></p>}
+          </section>
+        ))}
+      </div>
+      <aside aria-label="Datos del centro">
+        <div class="panel contact">
+          <h2 style="font-size:1.3rem">Datos del centro</h2>
+          <table class="facts"><tbody>
+            <tr><th scope="row">Tipo</th><td>{facilityKind(f).replace(/^./, (c) => c.toUpperCase())}</td></tr>
+            <tr><th scope="row">Dirección</th><td>{fullAddress}</td></tr>
+            {f.phone && <tr><th scope="row">Teléfono</th><td><a href={`tel:${f.phone.replace(/[^+\d]/g, '')}`} data-event="phone_click">{f.phone}</a></td></tr>}
+            {f.website && <tr><th scope="row">Web</th><td><a href={f.website} rel="noopener nofollow" data-event="website_click">{f.website.replace(/^https?:\/\//, '')}</a></td></tr>}
+          </tbody></table>
+          <MapBox lat={f.lat} lng={f.lng} address={fullAddress} id="fmap" />
+        </div>
+      </aside>
+    </div>
   </Base>
 ) : <NotFound />}

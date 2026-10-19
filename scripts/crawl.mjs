@@ -1,11 +1,9 @@
 // Site crawl: every sitemap URL must be 200, self-canonical, indexable, with valid JSON-LD; every internal link must resolve.
 // Usage: BASE=http://127.0.0.1:4321 node scripts/crawl.mjs   (server must run with SITE_MODE=production)
 const BASE = process.env.BASE ?? 'http://127.0.0.1:4321';
-const SITE = process.env.PUBLIC_SITE_URL ?? 'https://short.do';
 const UA = { 'User-Agent': 'OAI-SearchBot' };
 let problems = 0;
 const bad = (m) => { problems++; console.error('PROBLEM', m); };
-const local = (u) => u.replace(SITE, BASE);
 const txt = async (p) => (await fetch(BASE + p, { headers: UA, redirect: 'manual' }));
 
 const index = await (await txt('/sitemap-index.xml')).text();
@@ -34,7 +32,7 @@ for (const u of urls) {
   for (const m of html.matchAll(/<img\b[^>]*>/g)) if (!/\balt=/.test(m[0])) bad(`${path}: <img> without alt`);
   for (const m of html.matchAll(/<a\b[^>]*\shref="([^"#]+)"/g)) {
     const href = m[1];
-    if (/^(mailto:|tel:|https?:\/\/(?!short\.do))/.test(href) || href.startsWith('//')) continue;
+    if (/^(mailto:|tel:|https?:\/\/(?!dir\.do))/.test(href) || href.startsWith('//')) continue;
     const p = href.startsWith('http') ? new URL(href).pathname : href.split('?')[0];
     if (!links.has(p)) links.set(p, path);
   }
