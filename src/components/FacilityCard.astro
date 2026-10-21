@@ -12,5 +12,4 @@ const specs = facilitySpecialtyCounts(doctors);
   <h3>{f.name}</h3>
   <ul class="meta"><li><Icon name="pin" size={20} /> {place}</li></ul>
   {specs.length > 0 && <p class="muted" style="margin:0">{specs.slice(0, 4).map((s) => s.name).join(' · ')}{specs.length > 4 ? ` · +${specs.length - 4}` : ''}</p>}
-  <span class="count"><span>Médicos en el directorio</span><strong>{doctors.length}</strong></span>
 </a>

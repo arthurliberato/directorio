@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import DoctorCard from './DoctorCard.astro';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
-import { getArs, getCities, getSectors, getSpecialties, isAffiliated, queryHub } from '../lib/data.ts';
+import { doctorsForFacility, getArs, getCities, getFacilities, getSectors, getSpecialties, isAffiliated, queryHub } from '../lib/data.ts';
 import { formatDOP, formatDateLong, formatScheduleLines, joinList } from '../lib/format.ts';
 import { profilePath } from '../lib/facts.ts';
 import { hubHeading, hubPath, hubPlace, type HubResolution } from '../lib/hubs.ts';
@@ -22,7 +22,7 @@ if (q.sector) crumbs.push({ name: q.sector.name, path: hubPath({ specialty: q.sp
 if (q.ars) crumbs.push({ name: q.ars.name, path: hubPath({ specialty: q.specialty, city: q.city, ars: q.ars }) });
 if (r.page > 1) crumbs.push({ name: `Página ${r.page}`, path: r.path });
 
-const title = `${heading} (${r.total} ${r.total === 1 ? 'médico' : 'médicos'})${r.page > 1 ? ` · Página ${r.page}` : ''} | ${BRAND}`;
+const title = `${heading}${r.page > 1 ? ` · Página ${r.page}` : ''} | ${BRAND}`;
 const description = r.intro.slice(0, 155).replace(/\s+\S*$/, r.intro.length > 155 ? '…' : '');
 const startPos = (r.page - 1) * PAGE_SIZE + 1;
 // Sponsored placements are shown in their own labeled block and never inside the ordered list/table (SPEC §5.6).
@@ -48,17 +48,22 @@ const qa: { q: string; a: string }[] = [];
 if (s.feeMin != null) qa.push({
   q: `¿Cuánto cuesta una consulta con ${q.specialty.agent_m} en ${place}?`,
   a: s.feeMin === s.feeMax
-    ? `La consulta cuesta desde ${formatDOP(s.feeMin)} (n=${s.feeN} perfiles con precio declarado, datos al ${formatDateLong(s.asOf)}).`
-    : `Entre ${formatDOP(s.feeMin)} y ${formatDOP(s.feeMax!)}, con una mediana de ${formatDOP(s.feeMedian!)} (n=${s.feeN} perfiles con precio declarado, datos al ${formatDateLong(s.asOf)}).`,
+    ? `La consulta cuesta desde ${formatDOP(s.feeMin)} (precios declarados, datos al ${formatDateLong(s.asOf)}).`
+    : `Entre ${formatDOP(s.feeMin)} y ${formatDOP(s.feeMax!)}, con una mediana de ${formatDOP(s.feeMedian!)} (precios declarados, datos al ${formatDateLong(s.asOf)}).`,
 });
 if (s.arsCounts.length) qa.push({
   q: `¿Qué ARS aceptan los ${q.specialty.name_plural.toLowerCase()} en ${place}?`,
-  a: `Las más frecuentes son ${joinList(s.arsCounts.slice(0, 4).map((a) => `${a.name} (${a.count} de ${s.n})`))}. Confirma siempre tu plan con el consultorio.`,
+  a: `Las más frecuentes son ${joinList(s.arsCounts.slice(0, 4).map((a) => a.name))}. Confirma siempre tu plan con el consultorio.`,
 });
-qa.push({ q: `¿Cuántos ${q.specialty.name_plural.toLowerCase()} hay en ${place}?`, a: `Hay ${s.n} en nuestro directorio, ${s.affiliated === 0 ? 'ninguno verificado todavía' : `${s.affiliated} de ellos verificados`}${s.asOf ? ` (datos al ${formatDateLong(s.asOf)})` : ''}. Los médicos verificados son afiliados con exequátur comprobado; el resto son perfiles informativos con datos públicos.` });
+qa.push({ q: `¿Cómo sé si un ${q.specialty.agent_m} en ${place} es de confianza?`, a: 'Busca la insignia «Verificado»: son profesionales afiliados con exequátur comprobado por nosotros, y aparecen primero. El resto son perfiles informativos con datos públicos, sin verificar.' });
 
 const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: qa.map((x) => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) };
 const jsonLd = [...hubJsonLd(q, organic, r.total, r.path, crumbs, startPos), faqLd];
+// Refine form (no JS): the specialty stays fixed; province, insurer (needs a province: ARS hubs are per city) and center are optional.
+const refineCities = getCities().filter((c) => queryHub({ specialty: q.specialty, city: c }).length > 0);
+const refineCenters = getFacilities().filter((f) => doctorsForFacility(f.id).some((v) => v.specialty.id === q.specialty.id)).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+const refineArs = q.city ? getArs().filter((a) => queryHub({ specialty: q.specialty, city: q.city, ars: a }).length > 0) : [];
+const showRefine = refineCities.length > 0 || refineCenters.length > 0 || refineArs.length > 0;
 const sortHref = (o: string) => `${r.path}?orden=${o}`; // non-indexable: blocked in robots.txt, canonical stays clean
 const pageHref = (p: number) => hubPath(q, p);
 ---
@@ -69,6 +74,16 @@ const pageHref = (p: number) => hubPath(q, p);
     <p class="summary">{r.intro}</p>
     {r.decision.robots === 'noindex,follow' && <p class="muted">Aún estamos verificando más profesionales en esta búsqueda.</p>}
   </div>
+
+  {showRefine && (
+    <form class="wrap refine" action="/buscar" method="get" aria-label="Afinar la búsqueda" data-event="filter_use">
+      <input type="hidden" name="especialidad" value={q.specialty.slug} />
+      {refineCities.length > 0 && <div><label for="f-ciu">Provincia</label><select id="f-ciu" name="ciudad"><option value="">Todas las provincias</option>{refineCities.map((c) => <option value={c.slug} selected={q.city?.id === c.id}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select></div>}
+      {refineArs.length > 0 && <div><label for="f-ars">Seguro (ARS)</label><select id="f-ars" name="ars"><option value="">Cualquier seguro</option>{refineArs.map((a) => <option value={a.slug} selected={q.ars?.id === a.id}>{a.name}</option>)}</select></div>}
+      {refineCenters.length > 0 && <div><label for="f-cen">Centro médico</label><select id="f-cen" name="centro"><option value="">Cualquier centro</option>{refineCenters.map((f) => <option value={f.slug}>{f.name}</option>)}</select></div>}
+      <button class="btn" type="submit">Aplicar</button>
+    </form>
+  )}
 
   <section class="wrap" aria-labelledby="comparar">
     <h2 id="comparar">Compara {q.specialty.name_plural.toLowerCase()} en {place}</h2>
@@ -123,7 +138,7 @@ const pageHref = (p: number) => hubPath(q, p);
     <section class="wrap section" aria-labelledby="explora">
       <h2 id="explora">Sigue explorando</h2>
       <ul class="linklist">
-        {childLinks.map((l) => <li><a href={l.href}>{l.label} ({l.n})</a></li>)}
+        {childLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
         {otherSpecs.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
       </ul>
     </section>

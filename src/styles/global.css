@@ -181,3 +181,8 @@ address { font-style: normal; color: var(--muted); }
 .gd-sign__hint { opacity: .85; }
 .gd-rx__data dt { opacity: 1; color: var(--muted); }
 .footer address a { display: inline-block; padding: 3px 0; }
+
+/* Refine bar on hub pages */
+.refine { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin-block: 8px 18px; }
+.refine > div { flex: 1 1 11rem; max-width: 18rem; } .refine label { display: block; font: 500 11px var(--gd-font-mono); text-transform: uppercase; letter-spacing: .2px; margin-bottom: 4px; }
+.refine select { width: 100%; padding: 10px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); font: inherit; color: var(--ink); }

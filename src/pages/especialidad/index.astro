@@ -1,4 +1,5 @@
 ---
+import { SPECIALTY_HINTS } from '../../data/hints.ts';
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
@@ -10,13 +11,13 @@ const total = specs.reduce((n, x) => n + x.n, 0);
 const crumbs = [{ name: 'Inicio', path: '/' }, { name: 'Especialidades', path: '/especialidad' }];
 const itemList = { '@context': 'https://schema.org', '@type': 'ItemList', numberOfItems: specs.length, itemListElement: specs.map((x, i) => ({ '@type': 'ListItem', position: i + 1, name: x.s.name_plural, url: abs(`/${x.s.slug}`) })) };
 ---
-<Base title={`Todas las especialidades médicas en República Dominicana | ${BRAND}`} description={`${specs.length} especialidades con médicos en el directorio, República Dominicana. Elige una para ver médicos, precios y ARS.`} jsonLd={[breadcrumbJsonLd(crumbs)]}>
+<Base title={`Todas las especialidades médicas en República Dominicana | ${BRAND}`} description={`Especialidades médicas en República Dominicana. Elige una para ver médicos, precios y ARS.`} jsonLd={[breadcrumbJsonLd(crumbs)]}>
   <Breadcrumbs items={crumbs} />
   <div class="wrap page-head">
     <h1>Especialidades médicas</h1>
-    <p class="summary">{specs.length} especialidades y {total} médicos en el directorio. Elige una especialidad para comparar médicos, precios de consulta y ARS aceptadas.</p>
+    <p class="summary">Elige una especialidad para comparar médicos, precios de consulta y ARS aceptadas.</p>
   </div>
   <div class="wrap section" style="padding-top:8px">
-    <div class="grid specs">{specs.map(({ s, n }) => <a class="spec-row" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={22} /></span><span><strong>{s.name_singular}</strong><small>{n} {n === 1 ? 'médico' : 'médicos'}</small></span></a>)}</div>
+    <div class="grid specs">{specs.map(({ s, n }) => <a class="spec-row" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={22} /></span><span><strong>{s.name_singular}</strong>{SPECIALTY_HINTS[s.slug] && <small>{SPECIALTY_HINTS[s.slug]}</small>}</span></a>)}</div>
   </div>
 </Base>

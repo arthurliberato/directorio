@@ -1,7 +1,8 @@
 ---
 // Non-indexable search entry (robots.txt Disallow). Redirects to the canonical page. Only `especialidad` is required;
-// `ciudad` narrows to a hub, `centro` goes to that center's page (anchored to the specialty) when it has that specialty.
-import { doctorsForFacility, getCityBySlug, getFacilityBySlug, getSpecialtyBySlug, queryHub } from '../lib/data.ts';
+// `ciudad` narrows to a hub (and `ars` to a per-city ARS hub), `centro` goes to that center's page, anchored to the specialty,
+// when it has doctors of that specialty.
+import { doctorsForFacility, getArsBySlug, getCityBySlug, getFacilityBySlug, getSpecialtyBySlug, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 const p = Astro.url.searchParams;
 const specialty = getSpecialtyBySlug(p.get('especialidad') ?? '');
@@ -9,7 +10,8 @@ if (!specialty) return Astro.redirect('/especialidad', 302);
 const center = getFacilityBySlug(p.get('centro') ?? '');
 if (center && doctorsForFacility(center.id).some((v) => v.specialty.id === specialty.id)) return Astro.redirect(`/centro/${center.slug}#${specialty.slug}`, 302);
 const city = getCityBySlug(p.get('ciudad') ?? '') ?? undefined;
+const ars = city ? getArsBySlug(p.get('ars') ?? '') ?? undefined : undefined;
 // most specific page that actually has doctors: never send a visitor to a 404
-const hit = [{ specialty, city }, { specialty }].find((q) => queryHub(q).length > 0);
+const hit = [{ specialty, city, ars }, { specialty, city }, { specialty }].find((q) => queryHub(q).length > 0);
 return Astro.redirect(hit ? hubPath(hit) : '/especialidad', 302);
 ---

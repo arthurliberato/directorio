@@ -48,7 +48,7 @@ const guides = getGuides().slice(0, 3);
     <div class="section-head"><h2 class="gd-h2" id="esp">¿Hacia dónde vas?</h2><a class="more" href="/especialidad">Todas las especialidades →</a></div>
     <nav class="gd-signs cols" aria-label="Especialidades">
       {signs.map(({ s, n }, i) => (
-        <a class={`gd-sign gd-sign--${SIGN_TONES[i % 4]}`} href={`/${s.slug}`}><span><span class="gd-sign__name">{s.name_singular}</span>{SPECIALTY_HINTS[s.slug] && <span class="gd-sign__hint">{SPECIALTY_HINTS[s.slug]}</span>}</span><span class="gd-mono">{n} →</span></a>
+        <a class={`gd-sign gd-sign--${SIGN_TONES[i % 4]}`} href={`/${s.slug}`}><span><span class="gd-sign__name">{s.name_singular}</span>{SPECIALTY_HINTS[s.slug] && <span class="gd-sign__hint">{SPECIALTY_HINTS[s.slug]}</span>}</span><span class="gd-mono">→</span></a>
       ))}
     </nav>
   </section>
@@ -65,7 +65,7 @@ const guides = getGuides().slice(0, 3);
     <div class="gd-label soft">Ciudades</div>
     <h2 class="gd-h2" id="ciudades" style="margin-bottom:8px">Tu salud, cerca de ti</h2>
     <div class="grid cities">
-      {cities.map(({ c, n, href }) => <a class="city-row" href={href!}><Icon name="pin" size={22} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'doctor' : 'doctores'}</small></span><Icon name="arrow" size={18} /></a>)}
+      {cities.map(({ c, n, href }) => <a class="city-row" href={href!}><Icon name="pin" size={22} /><span><strong>{c.name}</strong></span><Icon name="arrow" size={18} /></a>)}
     </div>
   </section>
 

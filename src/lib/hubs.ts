@@ -99,16 +99,14 @@ export function hubStats(doctors: DoctorView[]): HubStats {
 /** Data-driven intro: unique per hub because it is built from that hub's own numbers. */
 export function hubIntro(q: HubQuery, s: HubStats, langName: (c: string) => string): string {
   const parts: string[] = [];
-  const what = s.n === 1 ? `1 ${q.specialty.agent_m}` : `${s.n} ${q.specialty.name_plural.toLowerCase()}`;
-  const verified = s.affiliated === 0 ? 'ninguno verificado todavía' : s.affiliated === s.n && s.n > 1 ? 'todos verificados' : s.affiliated === 1 ? '1 verificado' : `${s.affiliated} verificados`;
-  parts.push(`Hay ${what} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''} (${verified}).`);
+  parts.push(`Compara ${q.specialty.name_plural.toLowerCase()} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''}: precio de consulta, ARS aceptadas y centros médicos.${s.affiliated > 0 ? ' Los perfiles verificados aparecen primero.' : ''}`);
   if (s.feeMin != null && s.feeMax != null) {
     parts.push(s.feeMin === s.feeMax
       ? `La consulta cuesta desde ${formatDOP(s.feeMin)}.`
       : `El precio de consulta va de ${formatDOP(s.feeMin)} a ${formatDOP(s.feeMax)}, con una mediana de ${formatDOP(s.feeMedian!)}.`);
   }
   if (s.arsCounts.length) {
-    const top = s.arsCounts.slice(0, 3).map((a) => `${a.name} (${a.count})`);
+    const top = s.arsCounts.slice(0, 3).map((a) => a.name);
     parts.push(`Las ARS más aceptadas son ${joinList(top)}.`);
   }
   if (s.facilities.length) parts.push(`Atienden principalmente en ${joinList(s.facilities.slice(0, 3).map((f) => f.name))}.`);
