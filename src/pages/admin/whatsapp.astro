@@ -1,0 +1,28 @@
+---
+import AdminShell from '../../components/AdminShell.astro';
+import { BOT_NAME } from '../../config.ts';
+import { respond } from '../../lib/whatsapp/bot.ts';
+import { waConfigured } from '../../lib/whatsapp/client.ts';
+
+// Simulator: runs the same bot as the webhook against the live catalog; nothing is sent to WhatsApp.
+const q = Astro.url.searchParams.get('q');
+const id = Astro.url.searchParams.get('id');
+const reply = id ? respond({ kind: 'reply', replyId: id }) : respond({ kind: 'text', text: q ?? 'hola' });
+const env = ['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID', 'WHATSAPP_APP_SECRET', 'WHATSAPP_VERIFY_TOKEN'].map((k) => [k, !!process.env[k]] as const);
+const href = (rid: string) => `/admin/whatsapp?id=${encodeURIComponent(rid)}`;
+---
+<AdminShell title={`Simulador de WhatsApp · ${BOT_NAME}`}>
+  <p>Webhook: <code>/api/whatsapp</code> · {waConfigured() ? 'envío configurado' : 'sin credenciales: solo simulador'}. Variables: {env.map(([k, ok]) => <span class="chip" style={ok ? 'background:#e4f4e8;color:#25693a' : ''}>{k} {ok ? '✓' : '✗'}</span>)}</p>
+  <form method="get" action="/admin/whatsapp"><label for="q">Escribe como un paciente</label><input id="q" name="q" value={q ?? ''} placeholder="cardiólogo en Santo Domingo" /><p><button>Enviar</button> <a href="/admin/whatsapp">Reiniciar</a></p></form>
+  <div style="max-width:28rem;background:#e9efe6;border-radius:12px;padding:12px;display:grid;gap:8px">
+    {reply.out.map((m) => (
+      <div style="background:#fff;border-radius:10px;padding:10px;white-space:pre-wrap;word-break:break-word">
+        {m.type === 'text' && m.body}
+        {m.type === 'image' && <><img src={m.link} alt="" style="max-width:100%;border-radius:8px" />{'\n'}{m.caption}</>}
+        {m.type === 'buttons' && <>{m.body}<div style="display:grid;gap:6px;margin-top:8px">{m.buttons.map((b) => <a href={href(b.id)} style="text-align:center;border:1px solid #35607f;border-radius:8px;padding:6px;text-decoration:none">{b.title}</a>)}</div></>}
+        {m.type === 'list' && <>{m.body}<ul style="list-style:none;padding:0;margin:8px 0 0;display:grid;gap:4px">{m.rows.map((r) => <li><a href={href(r.id)} style="text-decoration:none"><b>{r.title}</b>{r.description && <><br /><small>{r.description}</small></>}</a></li>)}</ul><small>Botón: «{m.button}»</small></>}
+      </div>
+    ))}
+  </div>
+  <p><small>Intención registrada: {reply.intent} (el log del servidor guarda solo la intención y un id anónimo, nunca el número ni el texto).</small></p>
+</AdminShell>
