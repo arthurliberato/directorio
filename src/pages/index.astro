@@ -5,7 +5,7 @@ import GuiddoPattern from '../components/GuiddoPattern.astro';
 import Icon from '../components/Icon.astro';
 import { SPECIALTY_HINTS } from '../data/hints.ts';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
-import { doctorCount, getArs, getCities, getGuides, getSpecialties, isAffiliated, publishedDoctors, queryHub } from '../lib/data.ts';
+import { doctorCount, doctorsForFacility, getCities, getFacilities, getGuides, getSpecialties, isAffiliated, publishedDoctors, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 import { siteJsonLd } from '../lib/schema.ts';
 
@@ -15,11 +15,9 @@ const cities = getCities().map((c) => {
   const best = getSpecialties().map((sp) => ({ sp, k: queryHub({ specialty: sp, city: c }).length })).sort((a, b) => b.k - a.k)[0];
   return { c, n: doctorCount(undefined, c.id), href: best && best.k > 0 ? hubPath({ specialty: best.sp, city: c }) : null };
 }).filter((x) => x.n > 0 && x.href);
-const arsList = getArs();
+const centers = getFacilities().filter((f) => doctorsForFacility(f.id).length > 0).sort((x, y) => x.name.localeCompare(y.name, 'es'));
 const SIGN_TONES = ['ink', 'blue', 'pale', 'pale'] as const; // Ink -> Guiddo Blue -> Pale Blue -> Pale Blue, repeating (kit §6.3)
 const signs = [...specs].sort((a, b) => b.n - a.n).slice(0, 8);
-const sd = getCities().find((c) => c.slug === 'santo-domingo')!;
-const quick = specs.map((x) => x.s).filter((s) => queryHub({ specialty: s, city: sd }).length >= MIN_DOCTORS_FOR_HUB_INDEX).slice(0, 3);
 // Home features verified affiliates only (sponsored first, labeled), never public-source listings.
 const verifiedDocs = publishedDoctors().filter((v) => isAffiliated(v.doctor));
 const featured = [...verifiedDocs.filter((v) => v.doctor.sponsored), ...verifiedDocs.filter((v) => !v.doctor.sponsored && v.doctor.claimed)].slice(0, 3);
@@ -30,26 +28,17 @@ const guides = getGuides().slice(0, 3);
     <GuiddoPattern />
     <div class="wrap">
       <div class="gd-label">La guía de doctores dominicanos</div>
-      <h1 class="gd-h1">El doctor que buscas, <span class="accent">con datos claros</span></h1>
-      <p class="lead">Especialidad, zona, seguro y precio de consulta en un solo lugar. Los perfiles verificados van primero.</p>
-      <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub URL. -->
-      <form class="gd-search" action="/buscar" method="get" role="search" data-event="search">
-        <input type="search" name="q" placeholder="¿Qué te duele?" aria-label="Buscar doctor o especialidad" autocomplete="off" />
-        <button class="gd-btn" type="submit">Buscar</button>
+      <h1 class="gd-h1">Encuentra al doctor que <span class="accent">buscas</span></h1>
+      <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub / center URL. Only the specialty is required. -->
+      <form class="finder" action="/buscar" method="get" data-event="search">
+        <div class="field"><Icon name="stethoscope" size={24} /><div><label for="q-esp">Especialidad <small>Obligatoria</small></label>
+          <select id="q-esp" name="especialidad" required><option value="">Elige una especialidad</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
+        <div class="field"><Icon name="pin" size={24} /><div><label for="q-ciu">Provincia <small>Recomendado</small></label>
+          <select id="q-ciu" name="ciudad"><option value="">Todas las provincias</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select></div></div>
+        <div class="field"><Icon name="building" size={24} /><div><label for="q-cen">Centro médico <small>Opcional</small></label>
+          <select id="q-cen" name="centro"><option value="">Cualquier centro</option>{centers.map((f) => <option value={f.slug}>{f.name}</option>)}</select></div></div>
+        <button class="gd-btn" type="submit">Buscar doctor</button>
       </form>
-      <details>
-        <summary>Buscar por especialidad, ciudad y seguro</summary>
-        <form class="search-card" action="/buscar" method="get" data-event="search">
-          <div class="field"><Icon name="stethoscope" size={24} /><div style="flex:1"><label for="q-esp">Especialidad</label>
-            <select id="q-esp" name="especialidad" required><option value="">¿Qué doctor necesitas?</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
-          <div class="field"><Icon name="pin" size={24} /><div style="flex:1"><label for="q-ciu">Ciudad</label>
-            <select id="q-ciu" name="ciudad"><option value="">¿Dónde buscas?</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}</option>)}</select></div></div>
-          <div class="field" style="border-bottom:0"><Icon name="shield" size={24} /><div style="flex:1"><label for="q-ars">Tu seguro <small>Opcional</small></label>
-            <select id="q-ars" name="ars"><option value="">Selecciona tu ARS</option>{arsList.map((a) => <option value={a.slug}>{a.name}</option>)}</select></div></div>
-          <button class="btn block" type="submit">Buscar doctor</button>
-        </form>
-      </details>
-      {quick.length > 0 && <div class="quick">{quick.map((s) => <a href={hubPath({ specialty: s, city: sd })}>{s.name_singular} en Santo Domingo</a>)}</div>}
       <div class="ticks"><span><Icon name="check" size={18} /> Exequátur verificado</span><span><Icon name="check" size={18} /> Información transparente</span></div>
     </div>
   </section>
