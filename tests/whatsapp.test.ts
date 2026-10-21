@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { test } from 'node:test';
 import { getDoctorBySlug } from '../src/lib/data.ts';
+import { submitRequest, type Deps } from '../src/lib/whatsapp/appointments.ts';
 import { respond } from '../src/lib/whatsapp/bot.ts';
 import { alreadySeen, parseWebhook, verifySignature } from '../src/lib/whatsapp/client.ts';
 import { toApiPayload, type Out } from '../src/lib/whatsapp/messages.ts';
@@ -53,8 +54,9 @@ test('verified doctor: photo, booking; listed doctor: no photo, no booking, no d
   dv.photo_url = prev;
   assert.ok(v.some((m) => m.type === 'image' && m.link.startsWith('http')), 'verified doctors get their photo');
   assert.match(all(v), /bk:dra-maria-perez-cardiologa/);
-  const bk = reply('bk:dra-maria-perez-cardiologa').out[0];
-  assert.match(all([bk]), /wa\.me\/\d+\?text=/);
+  const bk = respond({ kind: 'reply', replyId: 'bk:dra-maria-perez-cardiologa', from: '18095550001' }).out;
+  assert.match(all(bk), /un solo mensaje/);
+  assert.doesNotMatch(all(bk), /wa\.me\/1809555100/, 'the patient is not sent to the doctor directly');
 
   const listedSlug = text('Yudelka Brito').out;
   const listed = reply('d:yudelka-brito-paulino-cardiologia').out;
@@ -94,4 +96,34 @@ test('webhook signature and parsing', () => {
   assert.equal(msgs[1].replyId, 'm:doc');
   assert.equal(alreadySeen('dup-1'), false); assert.equal(alreadySeen('dup-1'), true);
   assert.deepEqual(parseWebhook({ entry: [{ changes: [{ value: { statuses: [{}] } }] }] }), []);
+});
+
+test('appointment request: patient writes once, guiddo saves it and forwards it to the verified doctor', async () => {
+  const from = '18095557777'; const slug = 'dra-maria-perez-cardiologa';
+  respond({ kind: 'reply', replyId: `bk:${slug}`, from });
+  const res = respond({ kind: 'text', text: 'María Pérez, martes en la tarde', from });
+  assert.equal(res.intent, 'appt'); assert.deepEqual(res.request, { slug, message: 'María Pérez, martes en la tarde' });
+  // the next message is a normal message again
+  assert.equal(respond({ kind: 'text', text: 'hola', from }).request, undefined);
+
+  const calls: string[] = [];
+  const deps: Deps = {
+    save: async (_d, phone, msg) => { calls.push(`save:${phone}:${msg}`); return 7; },
+    mark: async (id, status) => { calls.push(`mark:${id}:${status}`); },
+    notify: async (to, body) => { calls.push(`notify:${to}`); assert.match(body, /wa\.me\/18095557777/); },
+  };
+  const out = await submitRequest({ slug, from, message: res.request!.message }, deps);
+  assert.deepEqual(calls.map((c) => c.split(':')[0]), ['save', 'notify', 'mark']);
+  assert.match(all(out), /Enviamos tu solicitud/);
+
+  // forwarding fails but it was saved: the team follows up from the admin panel
+  const failing: Deps = { ...deps, notify: async () => { throw new Error('boom'); } };
+  assert.match(all(await submitRequest({ slug, from: '18095558888', message: 'x' }, failing)), /Recibimos tu solicitud/);
+  // nothing saved and not forwarded: give the patient the doctor's direct link
+  const none: Deps = { save: async () => null, mark: async () => {}, notify: async () => { throw new Error('boom'); } };
+  assert.match(all(await submitRequest({ slug, from: '18095559999', message: 'x' }, none)), /wa\.me\//);
+  // listed doctors never receive requests; hourly limit applies
+  assert.match(all(await submitRequest({ slug: 'yudelka-brito-paulino-cardiologia', from, message: 'x' }, deps)), /no recibe citas/);
+  for (let i = 0; i < 3; i++) await submitRequest({ slug, from: '18095550003', message: 'x' }, deps);
+  assert.match(all(await submitRequest({ slug, from: '18095550003', message: 'x' }, deps)), /varias solicitudes/);
 });

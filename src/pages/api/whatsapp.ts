@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { productionDeps, submitRequest } from '../../lib/whatsapp/appointments.ts';
 import { respond } from '../../lib/whatsapp/bot.ts';
 import { alreadySeen, hashSender, markRead, parseWebhook, sendMessages, verifySignature, waConfigured } from '../../lib/whatsapp/client.ts';
 
@@ -30,9 +31,10 @@ export const POST: APIRoute = async ({ request }) => {
       if (alreadySeen(m.id)) continue;
       void (async () => {
         try {
-          const { out, intent } = respond(m);
-          console.log(`[wa] user=${hashSender(m.from)} intent=${intent} replies=${out.length}`);
+          const res = respond(m);
+          console.log(`[wa] user=${hashSender(m.from)} intent=${res.intent}`);
           await markRead(m.id).catch(() => {});
+          const out = res.request ? await submitRequest({ ...res.request, from: m.from }, await productionDeps()) : res.out;
           await sendMessages(m.from, out);
         } catch (e) { console.error('[wa] failed', hashSender(m.from), (e as Error).message); }
       })();

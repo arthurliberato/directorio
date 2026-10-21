@@ -46,3 +46,18 @@ test('DB rejects reserved doctor slugs and records 301s on slug change', async (
   assert.ok(overdue.rows.length === 1);
   await db.close();
 });
+
+test('appointment requests: insert, mark forwarded, list (migration 006)', async () => {
+  const { insertRequest, markRequest, listRequests } = await import('../src/lib/whatsapp/appointments.ts');
+  const db = new PGlite();
+  await db.exec(migration);
+  for (const stmt of datasetToSql(seedDataset())) await db.exec(stmt);
+  const run = async (q: string, p?: unknown[]) => (await db.query(q, p as any[])).rows as any[];
+  const doctorId = seedDataset().doctors.find((d) => d.listing_status === 'affiliated')!.id;
+  const id = await insertRequest(run, { doctorId, phone: '18095557777', message: 'María, martes' });
+  await markRequest(run, id, 'forwarded');
+  const rows = await listRequests(run);
+  assert.equal(rows.length, 1); assert.equal(rows[0].status, 'forwarded'); assert.ok(rows[0].forwarded_at);
+  await markRequest(run, id, 'failed', 'boom');
+  assert.equal((await listRequests(run))[0].error, 'boom');
+});

@@ -55,4 +55,9 @@ async function graph(body: unknown, env = process.env): Promise<void> {
 export async function sendMessages(to: string, msgs: Out[], env = process.env): Promise<void> {
   for (const m of msgs) await graph(toApiPayload(to, m), env); // sequential: WhatsApp shows them in send order
 }
+/** Template message (needed to write first to someone outside the 24 h window). Body variables {{1}}..{{n}} in order. */
+export const sendTemplate = (to: string, name: string, lang: string, params: string[], env = process.env) => graph({
+  messaging_product: 'whatsapp', to: to.replace(/\D/g, ''), type: 'template',
+  template: { name, language: { code: lang }, components: [{ type: 'body', parameters: params.map((t) => ({ type: 'text', text: t.replace(/\s+/g, ' ').slice(0, 500) })) }] },
+}, env);
 export const markRead = (messageId: string, env = process.env) => graph({ messaging_product: 'whatsapp', status: 'read', message_id: messageId }, env);

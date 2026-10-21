@@ -14,6 +14,7 @@ import { hubPath, sortDoctors } from '../hubs.ts';
 import { hasPhrase, norm, parseQuery } from '../search.ts';
 import { buttons, clip, image, list, text, type Out, type Row } from './messages.ts';
 import type { Inbound } from './client.ts';
+import { cancelRequest, pendingFor, startRequest } from './appointments.ts';
 
 const PAGE = 8; // rows per list page; leaves room for "more" / "filter" rows (WhatsApp lists max 10)
 const abs = (p: string) => `${SITE_URL}${p}`;
@@ -145,18 +146,17 @@ function doctorReply(slug: string): Out[] {
   return photo && /^https:/.test(photo) ? [image(photo, card), buttons('¿Qué quieres hacer?', actions)] : [buttons(card, actions)];
 }
 
-function bookingReply(slug: string): Out[] {
+function bookingReply(slug: string, from: string): Out[] {
   const v = getDoctorBySlug(slug); if (!v) return [menu()];
   const d = v.doctor;
   if (!canBook(d)) {
     const phone = v.locations[0]?.facility?.phone ?? v.locations[0]?.phone;
     return [text(`${d.display_name} tiene un perfil informativo y todavía no recibe citas por ${BOT_NAME}.${phone ? ` Puedes llamar a la central: ${phone}.` : ''}`), menuButton()];
   }
-  const parts = [`Para programar tu cita con *${d.display_name}*:`];
-  const wa = whatsappBookingLink(d, profilePath(v)); if (wa) parts.push(`💬 Escríbele por WhatsApp (el mensaje ya va escrito):\n${wa}`);
-  if (d.booking_url) parts.push(`🗓️ Reserva en línea:\n${d.booking_url}`);
-  parts.push('La cita se coordina directamente con el consultorio; no pidas ni envíes información médica por este chat.');
-  return [text(parts.join('\n\n')), menuButton()];
+  if (!d.whatsapp) return [text(`Reserva en línea con ${d.display_name}:\n${d.booking_url}`), menuButton()];
+  if (from) startRequest(from, d.slug);
+  const online = d.booking_url ? `\n\nTambién puedes reservar en línea: ${d.booking_url}` : '';
+  return [buttons(`Para pedir tu cita con *${d.display_name}*, escribe en *un solo mensaje* tu nombre y el día u horario que prefieres. Ejemplo: «María Pérez, martes en la tarde».\n\nNo incluyas información médica. Al enviarlo, compartimos tu nombre y número con el consultorio para coordinar la cita.${online}`, [{ id: 'menu', title: 'Cancelar' }])];
 }
 
 // ---- Facilities & guides -----------------------------------------------------------------------
@@ -221,7 +221,11 @@ function freeText(raw: string): Out[] {
 
 // ---- Entry point -------------------------------------------------------------------------------
 /** Handles an inbound message. Returns the replies and a coarse intent label for logs (never the text). */
-export function respond(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'>): { out: Out[]; intent: string } {
+export interface BotResult { out: Out[]; intent: string; /** The patient wrote an appointment request: the caller must run submitRequest() and send its result instead of `out`. */ request?: { slug: string; message: string } }
+export function respond(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'> & { from?: string }): BotResult {
+  const waiting = msg.from ? pendingFor(msg.from) : null;
+  if (waiting && msg.kind === 'text' && (msg.text ?? '').trim()) { cancelRequest(msg.from!); return { out: [], intent: 'appt', request: { slug: waiting, message: msg.text!.trim() } }; }
+  if (waiting && msg.from) cancelRequest(msg.from); // any other tap or message abandons the request
   if (msg.kind === 'other') return { out: [text('Por ahora solo puedo leer mensajes de texto. Elige una opción:'), menu()], intent: 'unsupported' };
   if (msg.kind === 'text') {
     const out = freeText(msg.text ?? '');
@@ -236,7 +240,7 @@ export function respond(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'>): { out:
     case 'r': return { intent, out: results(a, b === 'all' ? undefined : b, c === 'all' ? undefined : c, Number(d) || 0) };
     case 'ar': return { intent, out: arsStep(a, b === 'all' ? undefined : b) };
     case 'd': return { intent, out: doctorReply(a) };
-    case 'bk': return { intent, out: bookingReply(a) };
+    case 'bk': return { intent, out: bookingReply(a, msg.from ?? '') };
     case 'f': return { intent, out: facilityReply(a) };
     case 'fd': return { intent, out: facilityDoctors(a) };
     case 'fl': return { intent, out: facilityList(Number(a) || 0) };
