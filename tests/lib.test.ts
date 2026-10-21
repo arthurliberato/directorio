@@ -78,7 +78,7 @@ test('robots.txt: prototype blocks all; production allows named bots and repeats
   assert.match(buildRobotsTxt('prototype'), /Disallow: \/\n/);
   const r = buildRobotsTxt('production', 'https://guiddo.io');
   for (const b of [...SEARCH_BOTS, ...AI_SEARCH_BOTS, ...AI_TRAINING_BOTS]) assert.match(r, new RegExp(`User-agent: ${b}\\nAllow: /\\nDisallow: /buscar`));
-  assert.match(r, /Sitemap: https:\/\/dir\.do\/sitemap-index\.xml/);
+  assert.match(r, /Sitemap: https:\/\/guiddo\.io\/sitemap-index\.xml/);
 });
 
 test('sitemaps contain only indexable URLs with real lastmod', () => {
@@ -207,7 +207,7 @@ test('booking links: cal.com shorthand and https only; WhatsApp message names th
   const verified = getDoctorBySlug('dra-maria-perez-cardiologa')!.doctor;
   const link = whatsappBookingLink(verified, '/dra-maria-perez-cardiologa', 'https://guiddo.io')!;
   assert.match(link, /^https:\/\/wa\.me\/\d+\?text=/);
-  assert.match(decodeURIComponent(link), /programar una cita con Dra\. María Pérez.*https:\/\/dir\.do\/dra-maria-perez-cardiologa/);
+  assert.match(decodeURIComponent(link), /programar una cita con Dra\. María Pérez.*https:\/\/guiddo\.io\/dra-maria-perez-cardiologa/);
   assert.ok(canBook(verified));
   const listed = allPublished().find((v) => v.doctor.listing_status === 'listed')!.doctor;
   assert.equal(canBook({ ...listed, whatsapp: '+18095550100', booking_url: 'https://cal.com/x/y' }), false, 'listed doctors never get booking buttons');
