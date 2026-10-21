@@ -4,7 +4,7 @@ const env = (k: string): string | undefined => (typeof process !== 'undefined' ?
 export const BRAND = 'guiddo';
 /** Name of the WhatsApp channel / platform as users see it in chat. */
 export const BOT_NAME = env('WHATSAPP_BOT_NAME') ?? 'guiddo';
-export const SITE_URL = (env('PUBLIC_SITE_URL') ?? 'https://guiddo.io').replace(/\/$/, '');
+export const SITE_URL = (env('PUBLIC_SITE_URL') ?? 'https://guiddo.net').replace(/\/$/, '');
 // prototype => seed data: whole site noindex + robots Disallow:/ (never let illustrative data get indexed)
 export const SITE_MODE: 'prototype' | 'production' = env('SITE_MODE') === 'production' ? 'production' : 'prototype';
 export const PUBLISH_EXEQUATUR_IDENTIFIER = env('PUBLISH_EXEQUATUR_IDENTIFIER') === 'true';
@@ -17,7 +17,7 @@ export const SITEMAP_URLS_PER_FILE = 50000;
 
 export const NAP = {
   name: BRAND,
-  email: 'contacto@guiddo.io',
+  email: 'contacto@guiddo.net',
   street: 'Av. de la Salud 123',
   locality: 'Santo Domingo',
   country: 'DO',

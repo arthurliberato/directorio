@@ -32,7 +32,7 @@ for (const u of urls) {
   for (const m of html.matchAll(/<img\b[^>]*>/g)) if (!/\balt=/.test(m[0])) bad(`${path}: <img> without alt`);
   for (const m of html.matchAll(/<a\b[^>]*\shref="([^"#]+)"/g)) {
     const href = m[1];
-    if (/^(mailto:|tel:|https?:\/\/(?!guiddo\.io))/.test(href) || href.startsWith('//')) continue;
+    if (/^(mailto:|tel:|https?:\/\/(?!guiddo\.net))/.test(href) || href.startsWith('//')) continue;
     const p = href.startsWith('http') ? new URL(href).pathname : href.split('?')[0];
     if (!links.has(p)) links.set(p, path);
   }
