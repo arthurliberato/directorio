@@ -10,25 +10,29 @@ const d = v.doctor; const loc = v.locations[0];
 const initials = initialsOf(d.display_name);
 const affiliated = isAffiliated(d);
 const showPhoto = affiliated && !!d.photo_url; // photos are a verified-affiliate benefit
-const arsText = v.ars.length ? `${v.ars[0].name}${v.ars.length > 1 ? ' y otras ARS' : ''}` : null;
+const arsText = v.ars.length ? `${v.ars.slice(0, 2).map((a) => a.name).join(' · ')}${v.ars.length > 2 ? ' · …' : ''}` : null;
+const zone = loc ? `${loc.sector ? `${loc.sector.name}, ` : ''}${loc.city.name}` : null;
 ---
-<article class:list={['dcard', { sponsored: d.sponsored }]}>
-  <div class="top">
-    <div class="avatar" aria-hidden="true">{showPhoto ? <img src={d.photo_url!} alt="" width="80" height="88" loading="lazy" /> : initials}</div>
+<article class:list={['gd-rx', { sponsored: d.sponsored }]}>
+  <div class="gd-rx__top">
+    <span class="gd-rx__rx">Rx</span>
+    {affiliated ? <span class="gd-rx__tier ok"><Icon name="shield" size={14} /> Verificado</span> : <span class="gd-rx__tier info">Informativo</span>}
+  </div>
+  <div class="gd-rx__who">
+    <div class="gd-avatar" aria-hidden="true">{showPhoto ? <img src={d.photo_url!} alt="" width="46" height="46" loading="lazy" /> : initials}</div>
     <div>
       {d.sponsored && <div class="tag-sponsor">Patrocinado</div>}
-      <H><a href={profilePath(v)}>{d.display_name}</a></H>
-      <div class="spec">{v.specialty.field_name}</div>
-      {affiliated ? <span class="badge"><Icon name="shield" size={16} /> Médico verificado</span> : <span class="badge type">Perfil informativo</span>}
+      <H class="gd-rx__name"><a href={profilePath(v)}>{d.display_name}</a></H>
+      <div class="gd-rx__spec">{v.specialty.field_name}</div>
     </div>
   </div>
-  <ul class="meta">
-    {loc && <li><Icon name="pin" size={20} /> {loc.sector ? `${loc.sector.name}, ` : ''}{loc.city.name}</li>}
-    {arsText && <li><Icon name="shield" size={20} /> {arsText}</li>}
-    {loc?.facility && <li><Icon name="building" size={20} /> {loc.facility.name}</li>}
-  </ul>
-  <div class="foot">
-    <div>{d.consultation_fee_min != null && <><small>Consulta desde</small><strong>{formatDOP(d.consultation_fee_min)}</strong></>}</div>
-    <a class="btn ghost" href={profilePath(v)} rel={undefined} aria-label={`Ver perfil de ${d.display_name}, ${agentNoun(v)}`}>Ver perfil <Icon name="external" size={16} /></a>
+  <dl class="gd-rx__data gd-mono">
+    {zone && <><dt>ZONA</dt><dd>{zone}</dd></>}
+    {arsText && <><dt>ARS</dt><dd>{arsText}</dd></>}
+    {loc?.facility && <><dt>CENTRO</dt><dd>{loc.facility.name}</dd></>}
+  </dl>
+  <div class="gd-rx__foot">
+    <span class="gd-rx__fee">{d.consultation_fee_min != null && <>Consulta desde <b>{formatDOP(d.consultation_fee_min)}</b></>}</span>
+    <a class="gd-rx__go" href={profilePath(v)} aria-label={`Ver perfil de ${d.display_name}, ${agentNoun(v)}`}>Ver perfil →</a>
   </div>
 </article>

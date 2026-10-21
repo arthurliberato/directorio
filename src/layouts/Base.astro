@@ -1,6 +1,13 @@
 ---
-import '@fontsource-variable/outfit';
-import '@fontsource-variable/inter';
+import '@fontsource/nunito/900.css';
+import '@fontsource/nunito-sans/400.css';
+import '@fontsource/nunito-sans/700.css';
+import '@fontsource/nunito-sans/800.css';
+import '@fontsource/jetbrains-mono/500.css';
+import nunito900 from '@fontsource/nunito/files/nunito-latin-900-normal.woff2?url';
+import nunitoSans400 from '@fontsource/nunito-sans/files/nunito-sans-latin-400-normal.woff2?url';
+import nunitoSans800 from '@fontsource/nunito-sans/files/nunito-sans-latin-800-normal.woff2?url';
+import '../styles/tokens.css';
 import '../styles/global.css';
 import BrandMark from '../components/BrandMark.astro';
 import Icon from '../components/Icon.astro';
@@ -28,9 +35,10 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  {[nunito900, nunitoSans400, nunitoSans800].map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
   <link rel="canonical" href={canonical} />
   <meta name="robots" content={effectiveRobots} />
-  <meta name="theme-color" content="#35607f" />
+  <meta name="theme-color" content="#1A2A4C" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content={BRAND} />
@@ -49,16 +57,17 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
   {SITE_MODE === 'prototype' && <div class="proto-banner">Prototipo · perfiles y datos ilustrativos · sitio no indexable</div>}
   <header class="site-header">
     <div class="wrap">
-      <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><img src="/logo.svg" alt="" width="36" height="36" /><BrandMark /></a>
+      <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><BrandMark /></a>
       <nav class="nav-desktop" aria-label="Principal">
         <a href="/especialidad">Especialidades</a><a href="/centro">Clínicas y hospitales</a><a href="/guia">Guías de salud</a><a href="/como-verificamos">Cómo verificamos</a>
       </nav>
+      <div class="head-right"><a class="head-cta" href="/doctores">Para doctores</a>
       <details class="nav-mobile">
         <summary aria-label="Abrir menú"><Icon name="menu" size={28} /></summary>
         <nav aria-label="Principal móvil">
           <a href="/especialidad">Especialidades</a><a href="/centro">Clínicas y hospitales</a><a href="/guia">Guías de salud</a><a href="/como-verificamos">Cómo verificamos</a><a href="/contacto">Contacto</a>
         </nav>
-      </details>
+      </details></div>
     </div>
   </header>
   <main id="main"><slot /></main>
@@ -66,9 +75,9 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
     <div class="wrap">
       <div class="footer-grid">
         <div class="brand">
-          <a class="logo" href="/"><img src="/logo.svg" alt="" width="36" height="36" /><BrandMark /></a>
-          <p class="muted" style="margin-top:12px">Más claridad. Más confianza.<br />Tu salud, más cerca.</p>
-          <p class="muted">Hecho para República Dominicana</p>
+          <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><BrandMark /></a>
+          <p style="margin-top:12px;font-weight:700">La guía de doctores dominicanos.</p>
+          <p class="gd-label soft">Santo Domingo · RD</p>
         </div>
         <div>
           <h2>El directorio</h2>
@@ -76,6 +85,7 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
             <li><a href="/especialidad">Buscar médicos</a></li>
             <li><a href="/centro">Clínicas y hospitales</a></li>
             <li><a href="/guia">Guías de salud</a></li>
+            <li><a href="/doctores">Para doctores</a></li>
             {specs.slice(0, 4).map((s) => <li><a href={`/${s.slug}`}>{s.name_plural}</a></li>)}
           </ul>
         </div>

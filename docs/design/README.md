@@ -1,10 +1,12 @@
+> **Superseded:** the visual identity is now the guiddo design kit in `guiddo/` (`guiddo/DESIGN.md` is the source of truth). The Lovable mockups below are kept only for page-structure reference.
+
 # Visual reference — Home (mobile, from Lovable prototype)
 
 Screenshots of the Lovable prototype (`lovable.dev`), top to bottom. They define the **aesthetics** (look and feel) to match closely; markup and structure are rebuilt for SEO/AI per `SPEC.md`. Where the two conflict, the notes under "Spec alignment" apply.
 
 | File | Section |
 |---|---|
-| `home-01.png` | Header (heart-plus logo + `dir.do.`, hamburger), eyebrow pill "Tu directorio médico en República Dominicana", H1 "Encuentra el médico adecuado. **Cuida lo que más importa.**" (second line in blue with coral underline), subcopy, search card: Especialidad / Ciudad / Tu seguro (opcional, ARS) + "Buscar médico" button |
+| `home-01.png` | Header (heart-plus logo + `guiddo.net.`, hamburger), eyebrow pill "Tu directorio médico en República Dominicana", H1 "Encuentra el médico adecuado. **Cuida lo que más importa.**" (second line in blue with coral underline), subcopy, search card: Especialidad / Ciudad / Tu seguro (opcional, ARS) + "Buscar médico" button |
 | `home-02.png` | Quick links ("Cardiología en Santo Domingo", "Pediatría…", "Ginecología…"), trust ticks ("Exequátur verificado", "Información transparente"), "¿Qué especialista necesitas?" grid of 8 specialty cards with icon + doctor count + "Todas las especialidades" link |
 | `home-03.png` | "Tu salud, cerca de ti" city list (Santo Domingo, Santiago, La Romana, San Pedro de Macorís, Punta Cana, Puerto Plata, each with doctor count), trust banner "Tu tranquilidad empieza con información verificada" → "Cómo verificamos a los médicos", "Conoce a nuestros médicos" start (doctor card) |
 | `home-04.png` | Doctor card anatomy: photo, name, specialty, green "Exequátur verificado" badge, sector, ARS ("Humano y otras ARS"), facility, "Consulta desde RD$", "Ver perfil" button. **Sponsored card**: coral border + tint, "Patrocinado" label |

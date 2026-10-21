@@ -14,7 +14,8 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   const url = new URL(ctx.request.url);
   let path = url.pathname;
 
-  if (/^\/(admin|api)(\/|$)/.test(path)) {
+  // /api/whatsapp is called by Meta: it authenticates itself (verify token on GET, HMAC signature on POST).
+  if (/^\/(admin|api)(\/|$)/.test(path) && path !== '/api/whatsapp') {
     const denied = checkAdminAuth(ctx.request.headers.get('authorization'));
     if (denied) return denied;
   }

@@ -118,7 +118,7 @@ for (const [specSlug, cityId, count] of PLAN) {
       data_verified_at: `2026-10-${String(verifiedDay).padStart(2, '0')}`,
       updated_at: `2026-10-${String(verifiedDay).padStart(2, '0')}`,
       index_status: 'auto', sponsored: false,
-      listing_status: 'affiliated', source_name: null, source_url: null, source_retrieved_at: null,
+      listing_status: 'affiliated', booking_url: n % 3 === 0 ? 'https://cal.com/demo-no-existe/consulta' : null, source_name: null, source_url: null, source_retrieved_at: null,
     };
     doctors.push(d);
     locations.push({
@@ -151,7 +151,7 @@ LISTED.forEach(([name, specSlug, cityId, clinic, suite, ext], i) => {
     specialty_id: spec.id, subspecialties: [], exequatur_number: null, exequatur_decree: null, exequatur_verified_at: null, cmd_member: false, cmd_verified_at: null,
     specialty_verified_at: null, claimed: false, claimed_at: null, bio: null, education: ['MD UASD; posgrado en ' + spec.field_name], languages: ['es'], photo_url: '/img/never-shown.jpg',
     consultation_fee_min: null, consultation_fee_max: null, accepting_new_patients: null, whatsapp: null, phone: null, website: null, data_verified_at: null,
-    updated_at: '2026-10-10', listing_status: 'listed', source_name: clinic, source_url: 'https://clinica-ejemplo.example/directorio', source_retrieved_at: '2026-10-10' });
+    updated_at: '2026-10-10', listing_status: 'listed', booking_url: null, source_name: clinic, source_url: 'https://clinica-ejemplo.example/directorio', source_retrieved_at: '2026-10-10' });
   locations.push({ id: id2, doctor_id: id2, facility_id: cityId === 1 ? 1 : 4, address: cityId === 1 ? facilities[0].address : facilities[3].address, sector_id: null, city_id: cityId,
     lat: null, lng: null, schedule: [], phone: cityId === 1 ? '+1-809-555-0101' : '+1-809-555-0104', suite, phone_ext: ext });
 });
@@ -170,7 +170,7 @@ export const guides: Guide[] = [
     category: 'Costos', icon: 'heart', read_minutes: 4, reviewer_doctor_id: reviewer.id, reviewed_at: '2026-10-01',
     answer_summary: 'El precio de la consulta depende de la ciudad, el centro médico y la experiencia del especialista. Abajo mostramos el rango real de los perfiles verificados del directorio, con su fecha y tamaño de muestra.',
     body: [
-      'Los precios que ves en dir.do son los que cada médico o centro declara y que verificamos al momento de la revisión. Pueden cambiar; confirma siempre con el consultorio antes de tu cita.',
+      'Los precios que ves en guiddo son los que cada médico o centro declara y que verificamos al momento de la revisión. Pueden cambiar; confirma siempre con el consultorio antes de tu cita.',
       'Si tienes seguro (ARS), la consulta puede estar cubierta total o parcialmente según tu plan. Pregunta por el copago antes de agendar.',
     ],
     sources: [{ title: 'Ministerio de Salud Pública de la República Dominicana', url: 'https://www.msp.gob.do' }],

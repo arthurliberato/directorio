@@ -19,6 +19,7 @@ if (Astro.request.method === 'POST' && adminCanWrite()) {
     accepting_new_patients: f.get('accepting') === 'unknown' ? null : f.get('accepting') === 'yes',
     whatsapp: str('whatsapp'), phone: str('phone'), website: str('website'), photo_url: str('photo_url'),
     languages: String(f.get('languages') ?? '').split(',').map((l) => l.trim()).filter(Boolean),
+    booking_url: str('booking_url'),
   };
   try {
     await withDb(async (run) => {
@@ -47,6 +48,7 @@ const specName = getSpecialties().find((s) => s.id === d.specialty_id)?.name_sin
       <div><label for="wa">WhatsApp</label><input id="wa" name="whatsapp" value={d.whatsapp ?? ''} /></div>
       <div><label for="ph">Teléfono</label><input id="ph" name="phone" value={d.phone ?? ''} /></div>
       <div><label for="web">Sitio web</label><input id="web" name="website" value={d.website ?? ''} /></div>
+      <div><label for="book">Enlace de reserva en línea (Cal.com u otro) — solo médicos verificados</label><input id="book" name="booking_url" value={d.booking_url ?? ''} placeholder="usuario/consulta  o  https://cal.com/usuario/consulta" /></div>
       <div><label for="photo">Foto (URL) — solo se muestra a médicos verificados</label><input id="photo" name="photo_url" value={d.photo_url ?? ''} /></div>
     </div>
     <label for="bio">Biografía</label><textarea id="bio" name="bio" rows="4">{d.bio ?? ''}</textarea>

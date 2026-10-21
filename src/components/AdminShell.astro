@@ -4,7 +4,7 @@ interface Props { title: string; message?: string; error?: boolean }
 const { title, message, error } = Astro.props;
 const canWrite = getDataset().source === 'postgres';
 Astro.response.headers.set('Cache-Control', 'no-store');
-const nav = [['/admin', 'Panel'], ['/admin/doctors/new', 'Añadir médico'], ['/admin/import', 'Importar CSV'], ['/admin/verify', 'Verificar exequátur'], ['/admin/facilities', 'Clínicas y hospitales']];
+const nav = [['/admin', 'Panel'], ['/admin/doctors/new', 'Añadir médico'], ['/admin/import', 'Importar CSV'], ['/admin/verify', 'Verificar exequátur'], ['/admin/facilities', 'Clínicas y hospitales'], ['/admin/whatsapp', 'WhatsApp']];
 ---
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex,nofollow" /><title>{title} · Admin</title>

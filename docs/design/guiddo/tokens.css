@@ -1,0 +1,113 @@
+/* Guiddo design tokens + base component classes (v1)
+   Fonts: Nunito 900, Nunito Sans 400/700/800, JetBrains Mono 500 (see DESIGN.md §4) */
+
+:root {
+  /* Color — core */
+  --gd-paper: #FFF7F0;
+  --gd-ink: #1A2A4C;
+  --gd-blue: #5E9BD6;
+  --gd-blue-pale: #DDE8F4;
+
+  /* Color — derived */
+  --gd-blue-ink: #2F6DAB;      /* small blue text on paper (AA) */
+  --gd-blue-pattern: #C6D7EA;
+  --gd-card: #FFFDF9;
+  --gd-line: #E7DED6;
+  --gd-navy-tone: #24375F;
+  --gd-navy-pattern: #2A3C61;
+
+  /* Type */
+  --gd-font-logo: 'Nunito', system-ui, sans-serif;
+  --gd-font-display: 'Nunito', system-ui, sans-serif;
+  --gd-font-sans: 'Nunito Sans', system-ui, sans-serif;
+  --gd-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --gd-lh-body: 1.25;
+  --gd-lh-long: 1.35;
+  --gd-lh-display: 1.02;
+
+  /* Shape & space */
+  --gd-radius: 6px;
+  --gd-radius-sm: 4px;
+  --gd-gutter: 16px;
+  --gd-section: 22px;
+}
+
+body {
+  margin: 0;
+  background: var(--gd-paper);
+  color: var(--gd-ink);
+  font-family: var(--gd-font-sans);
+  line-height: var(--gd-lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Logo */
+.gd-logo { font-family: var(--gd-font-logo); font-weight: 900; letter-spacing: -0.05em; line-height: 1; color: var(--gd-ink); }
+.gd-logo__d { color: var(--gd-blue); }
+.gd-dark .gd-logo { color: var(--gd-paper); }
+
+/* Type */
+.gd-h1 { font-family: var(--gd-font-display); font-weight: 900; font-size: 33px; line-height: var(--gd-lh-display); letter-spacing: -1.2px; margin: 0; }
+.gd-h2 { font-family: var(--gd-font-display); font-weight: 900; font-size: 20px; line-height: 1.05; letter-spacing: -0.4px; margin: 0; }
+.gd-hl { color: var(--gd-blue); }               /* display-size highlight only */
+.gd-label { font-family: var(--gd-font-mono); font-size: 11px; letter-spacing: .2px; text-transform: uppercase; }
+.gd-mono { font-family: var(--gd-font-mono); font-size: 11px; letter-spacing: .2px; }
+.gd-link { color: var(--gd-blue-ink); font-weight: 800; font-size: 12px; text-decoration: none; }
+.gd-long { font-size: 16px; line-height: var(--gd-lh-long); }
+@media (min-width: 768px) { .gd-h1 { font-size: 52px; } .gd-h2 { font-size: 26px; } }
+
+/* Buttons */
+.gd-btn { display: inline-block; background: var(--gd-ink); color: var(--gd-paper); border: 0; border-radius: var(--gd-radius); padding: 9px 16px; font: 800 13px/1.2 var(--gd-font-sans); cursor: pointer; text-decoration: none; }
+.gd-btn--blue { background: var(--gd-blue); color: var(--gd-paper); }
+
+/* Header */
+.gd-header { display: flex; justify-content: space-between; align-items: center; padding: 14px var(--gd-gutter); border-bottom: 1px solid var(--gd-line); }
+
+/* Hero */
+.gd-hero { position: relative; overflow: hidden; background: var(--gd-blue-pale); padding: 22px var(--gd-gutter) 20px; }
+.gd-hero > *:not(.gd-pattern) { position: relative; }
+.gd-pattern { position: absolute; pointer-events: none; }
+
+/* Search */
+.gd-search { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--gd-paper); border-radius: var(--gd-radius); padding: 6px 6px 6px 12px; }
+.gd-search input { flex: 1; min-width: 0; border: 0; background: transparent; font: 400 14px var(--gd-font-sans); color: var(--gd-ink); outline: none; }
+.gd-search input::placeholder { color: var(--gd-ink); opacity: .6; }
+
+/* Section */
+.gd-section { padding: var(--gd-section) var(--gd-gutter); }
+.gd-section__head { display: flex; justify-content: space-between; align-items: baseline; margin: 2px 0 12px; gap: 8px; }
+
+/* Señalización */
+.gd-signs { display: grid; gap: 6px; }
+.gd-sign { display: flex; justify-content: space-between; align-items: center; padding: 11px 30px 11px 12px; border-radius: var(--gd-radius-sm) 0 0 var(--gd-radius-sm); text-decoration: none;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%); }
+.gd-sign__name { font: 900 16px var(--gd-font-display); }
+.gd-sign__hint { font-size: 12px; font-weight: 700; opacity: .7; margin-left: 8px; }
+.gd-sign--ink  { background: var(--gd-ink);  color: var(--gd-paper); }
+.gd-sign--blue { background: var(--gd-blue); color: var(--gd-paper); }
+.gd-sign--pale { background: var(--gd-blue-pale); color: var(--gd-ink); }
+
+/* Receta card */
+.gd-rx { background: var(--gd-card); border: 1px solid var(--gd-line); border-radius: var(--gd-radius); padding: 12px; }
+.gd-rx__top { display: flex; justify-content: space-between; align-items: baseline; }
+.gd-rx__rx { font: 900 15px var(--gd-font-display); }
+.gd-rx__who { display: flex; gap: 12px; align-items: center; margin-top: 6px; }
+.gd-avatar { width: 46px; height: 46px; border-radius: var(--gd-radius); background: var(--gd-blue-pale); display: flex; align-items: center; justify-content: center; font-weight: 800; overflow: hidden; flex: 0 0 auto; }
+.gd-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.gd-rx__name { font-size: 16px; font-weight: 800; }
+.gd-rx__spec { font-size: 13px; opacity: .75; }
+.gd-rx__data { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin-top: 10px; }
+.gd-rx__data dt { opacity: .55; margin: 0; }
+.gd-rx__data dd { margin: 0; }
+.gd-rx__foot { border-top: 1.5px dashed var(--gd-blue-pattern); margin-top: 10px; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.gd-confirmed { color: var(--gd-blue-ink); font-size: 12px; font-weight: 800; }
+
+/* Dark section */
+.gd-dark { position: relative; overflow: hidden; background: var(--gd-ink); color: var(--gd-paper); padding: var(--gd-section) var(--gd-gutter); }
+.gd-dark > *:not(.gd-crop) { position: relative; }
+.gd-dark .gd-label { color: var(--gd-blue); }
+.gd-crop { position: absolute; font: 900 220px/1 var(--gd-font-display); letter-spacing: -14px; pointer-events: none; user-select: none; }
+.gd-dark .gd-crop { color: var(--gd-navy-tone); right: -26px; bottom: -78px; }
+
+/* Footer */
+.gd-footer { display: flex; justify-content: space-between; align-items: center; padding: 14px var(--gd-gutter); }

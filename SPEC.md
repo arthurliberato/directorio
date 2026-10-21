@@ -2,7 +2,7 @@
 
 Build spec for a doctor directory in the Dominican Republic, optimized for search engines (Google, Bing) and AI answer engines (Google AI Overviews/AI Mode, ChatGPT, Perplexity, Claude, Gemini, Copilot).
 
-- **Brand:** `dir.do` · **Domain:** `dir.do` (.do ccTLD)
+- **Brand:** `guiddo` (lowercase; see `docs/design/guiddo/DESIGN.md`) · **Domain:** `guiddo.net` (.net)
 - **Language:** Spanish (`es-DO`) first; English (`/en/`) section later
 - **Aesthetics:** the Lovable mockup in `docs/design/` defines the look (palette, typography, cards, spacing, tone) and is matched closely. It is not a code source: markup, structure and stack are built from scratch for SEO and AI-crawler needs
 - **Reviews:** NOT in v1. Reserve the space and data model; spec in §12
@@ -39,7 +39,7 @@ Supporting choices:
 - Image pipeline: AVIF/WebP, responsive `srcset`, explicit width/height.
 - Admin panel (simple, internal, `noindex`): edit doctors, mark verification, toggle index status, publish guides; every save purges affected URLs and queues an IndexNow ping.
 
-**Acceptance test:** `curl -A "OAI-SearchBot" https://dir.do/dra-maria-perez-cardiologa` must return full HTML containing the doctor's name, fact table, contact info and JSON-LD, with zero JS needed.
+**Acceptance test:** `curl -A "OAI-SearchBot" https://guiddo.net/dra-maria-perez-cardiologa` must return full HTML containing the doctor's name, fact table, contact info and JSON-LD, with zero JS needed.
 
 ---
 
@@ -150,7 +150,7 @@ Otherwise `noindex,follow` (still reachable through internal links).
 ### 4.4 Tags on every page
 
 ```html
-<link rel="canonical" href="https://dir.do/[self-path]">   <!-- self-referencing, absolute -->
+<link rel="canonical" href="https://guiddo.net/[self-path]">   <!-- self-referencing, absolute -->
 <meta name="robots" content="index,follow">                     <!-- or noindex,follow per rules -->
 ```
 - Paginated pages: self-canonical (page 2 canonical → page 2). Do NOT canonicalize to page 1.
@@ -161,7 +161,7 @@ Otherwise `noindex,follow` (still reachable through internal links).
 ## 5. Page templates — technical requirements
 
 ### 5.1 Doctor profile
-- `<title>`: `Dra. María Pérez, Cardióloga en Santo Domingo | dir.do`
+- `<title>`: `Dra. María Pérez, Cardióloga en Santo Domingo | guiddo.net`
 - Meta description: built from facts (specialty, sector, ARS, fee), ≤ 155 chars.
 - H1: full legal name + specialty.
 - Breadcrumbs (visible + `BreadcrumbList`).
@@ -170,13 +170,14 @@ Otherwise `noindex,follow` (still reachable through internal links).
 - **Fact table** as a real HTML `<table>` (or `<dl>`): specialty, sub-specialties, locations, schedule, ARS, fee, languages, hospitals, education, accepting new patients.
 - Verification badge with date; footer line "Datos verificados el [fecha]" (`<time datetime>`).
 - Contact: WhatsApp link (`https://wa.me/...` with UTM-free tracking via data attributes), `tel:` link.
+- **"Programar cita" panel (verified doctors only):** "Agendar por WhatsApp" (wa.me click-to-chat with a prefilled message naming the doctor and the profile URL) and/or "Reservar en línea" (the doctor's `booking_url`: a Cal.com link opens as a popup inside the profile, loading Cal.com's script only on hover/focus/touch, with the plain link as no-JS/failure fallback; any other https booking page opens in a new tab). Never shown for listed doctors. Events: `whatsapp_booking_click`, `booking_click`.
 - Map: static image first (`<img>` with address alt), interactive map loads on click.
 - Internal links: specialty hub, city hub, sector hub, facility pages, ARS hubs, 3–5 nearby same-specialty doctors.
 - Reserved, hidden reviews section (no markup until §12 is live).
 - JSON-LD: §6.1.
 
 ### 5.2 Specialty × city (× sector / ARS) hub
-- `<title>`: `Cardiólogos en Santo Domingo (42 médicos) | dir.do`
+- `<title>`: `Cardiólogos en Santo Domingo (42 médicos) | guiddo.net`
 - H1 + **data-driven intro** unique to this page: doctor count, fee range (min/median/max), ARS distribution, top facilities, languages. This is what keeps hubs from being doorway pages.
 - Comparison `<table>`: doctor (link), sub-specialty, sector, ARS, fee, next availability.
 - Doctor cards: top 20 + pagination with plain `<a href>` links.
@@ -216,10 +217,10 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
 {
   "@context": "https://schema.org",
   "@type": "IndividualPhysician",
-  "@id": "https://dir.do/dra-maria-perez-cardiologa#physician",
+  "@id": "https://guiddo.net/dra-maria-perez-cardiologa#physician",
   "name": "Dra. María Pérez",
-  "url": "https://dir.do/dra-maria-perez-cardiologa",
-  "image": "https://dir.do/img/dra-maria-perez.webp",
+  "url": "https://guiddo.net/dra-maria-perez-cardiologa",
+  "image": "https://guiddo.net/img/dra-maria-perez.webp",
   "description": "Cardióloga en Santo Domingo (Piantini)...",
   "medicalSpecialty": "https://schema.org/Cardiovascular",
   "knowsLanguage": ["es", "en"],
@@ -235,7 +236,7 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
   "geo": { "@type": "GeoCoordinates", "latitude": 18.47, "longitude": -69.94 },
   "practicesAt": [{
     "@type": "MedicalClinic",
-    "@id": "https://dir.do/centro/centro-medico-x#org",
+    "@id": "https://guiddo.net/centro/centro-medico-x#org",
     "name": "Centro Médico X"
   }],
   "hospitalAffiliation": [{ "@type": "Hospital", "name": "Hospital Y" }],
@@ -271,13 +272,13 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Cardiólogos en Santo Domingo",
-    "url": "https://dir.do/cardiologos/santo-domingo/",
+    "url": "https://guiddo.net/cardiologos/santo-domingo/",
     "about": { "@type": "MedicalSpecialty", "name": "Cardiología" },
     "mainEntity": {
       "@type": "ItemList",
       "numberOfItems": 42,
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "url": "https://dir.do/dra-maria-perez-cardiologa" }
+        { "@type": "ListItem", "position": 1, "url": "https://guiddo.net/dra-maria-perez-cardiologa" }
       ]
     }
   },
@@ -285,9 +286,9 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://dir.do/" },
-      { "@type": "ListItem", "position": 2, "name": "Cardiólogos", "item": "https://dir.do/cardiologos/" },
-      { "@type": "ListItem", "position": 3, "name": "Santo Domingo", "item": "https://dir.do/cardiologos/santo-domingo/" }
+      { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://guiddo.net/" },
+      { "@type": "ListItem", "position": 2, "name": "Cardiólogos", "item": "https://guiddo.net/cardiologos/" },
+      { "@type": "ListItem", "position": 3, "name": "Santo Domingo", "item": "https://guiddo.net/cardiologos/santo-domingo/" }
     ]
   }
 ]
@@ -299,13 +300,13 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
   "@context": "https://schema.org",
   "@type": "MedicalWebPage",
   "headline": "¿Cuánto cuesta una consulta con cardiólogo en RD?",
-  "url": "https://dir.do/guia/...",
+  "url": "https://guiddo.net/guia/...",
   "audience": { "@type": "Patient" },
   "about": { "@type": "MedicalSpecialty", "name": "Cardiología" },
   "lastReviewed": "2026-10-01",
-  "reviewedBy": { "@type": "IndividualPhysician", "@id": "https://dir.do/dr-x#physician", "name": "Dr. X" },
+  "reviewedBy": { "@type": "IndividualPhysician", "@id": "https://guiddo.net/dr-x#physician", "name": "Dr. X" },
   "citation": ["https://source-1", "https://source-2"],
-  "publisher": { "@id": "https://dir.do/#org" }
+  "publisher": { "@id": "https://guiddo.net/#org" }
 }
 ```
 `FAQPage` markup: only where Q&A is visible on page. FAQ rich results were retired by Google in 2026 — keep it only as harmless structure, not as a KPI.
@@ -315,10 +316,10 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": "https://dir.do/#org",
-  "name": "dir.do",
-  "url": "https://dir.do/",
-  "logo": "https://dir.do/logo.png",
+  "@id": "https://guiddo.net/#org",
+  "name": "guiddo.net",
+  "url": "https://guiddo.net/",
+  "logo": "https://guiddo.net/logo.png",
   "address": { "@type": "PostalAddress", "addressLocality": "Santo Domingo", "addressCountry": "DO" },
   "sameAs": ["[Instagram]", "[LinkedIn]", "[YouTube]", "[Wikidata — later]"]
 }
@@ -374,7 +375,7 @@ Disallow: /*?*genero=
 Disallow: /*?*precio=
 Disallow: /*?*disponibilidad=
 
-Sitemap: https://dir.do/sitemap-index.xml
+Sitemap: https://guiddo.net/sitemap-index.xml
 ```
 Note: a crawler matching a specific `User-agent` group ignores the `*` group, so if filter params must be blocked for named bots too, repeat the `Disallow` lines in each group (or generate the file programmatically).
 
@@ -413,9 +414,9 @@ Note: a crawler matching a specific `User-agent` group ignores the `*` group, so
 - `/en/` subfolder mirroring Spanish paths (`/en/dra-maria-perez-cardiologa`).
 - hreflang on both versions, reciprocal and self-referencing:
 ```html
-<link rel="alternate" hreflang="es-DO" href="https://dir.do/dra-maria-perez-cardiologa">
-<link rel="alternate" hreflang="en" href="https://dir.do/en/dra-maria-perez-cardiologa">
-<link rel="alternate" hreflang="x-default" href="https://dir.do/dra-maria-perez-cardiologa">
+<link rel="alternate" hreflang="es-DO" href="https://guiddo.net/dra-maria-perez-cardiologa">
+<link rel="alternate" hreflang="en" href="https://guiddo.net/en/dra-maria-perez-cardiologa">
+<link rel="alternate" hreflang="x-default" href="https://guiddo.net/dra-maria-perez-cardiologa">
 ```
 - Translate only: English-speaking doctors' profiles, tourism cities (Punta Cana, Puerto Plata, Santo Domingo), dental/plastic/bariatric/fertility hubs, cost guides. No bulk machine translation without review.
 
@@ -430,7 +431,7 @@ Note: a crawler matching a specific `User-agent` group ignores the `*` group, so
   ```
 - Events: `whatsapp_click`, `phone_click`, `map_open`, `website_click`, `filter_use`, `search`.
 - **Server/CDN logs**: daily counts by user agent (Googlebot, Bingbot, OAI-SearchBot, ChatGPT-User, Claude-*, PerplexityBot…), 4xx/403 rates per bot. Alert if AI bots get 403s.
-- **AI visibility panel**: monthly run of a fixed list of ~150 Spanish + 50 English prompts on ChatGPT, Perplexity, Gemini, Claude, Copilot, Google AI Mode; log whether dir.do is cited, which URL, position, and factual accuracy. Store in a table for trend charts.
+- **AI visibility panel**: monthly run of a fixed list of ~150 Spanish + 50 English prompts on ChatGPT, Perplexity, Gemini, Claude, Copilot, Google AI Mode; log whether guiddo.net is cited, which URL, position, and factual accuracy. Store in a table for trend charts.
 - **Internal dashboard**: verified doctors, % claimed, indexable pages by type, overdue re-verifications.
 
 ---
@@ -450,12 +451,12 @@ consents
 Technical rules for later:
 - Only verified reviews count toward rating and go into JSON-LD (`aggregateRating`, `review`); unverified are labeled and excluded.
 - Mark up only reviews visible on the page. Never import or mark up Google reviews.
-- Reviews on dir.do are eligible for review stars (third-party site). A doctor-site embed widget must NOT output review structured data.
+- Reviews on guiddo.net are eligible for review stars (third-party site). A doctor-site embed widget must NOT output review structured data.
 - No review gating; negative reviews never removed for being negative; one public doctor reply per review.
 - Each new review updates `<lastmod>` and pings IndexNow.
 - Consent capture and deletion flows per Ley 172-13 (legal review required before launch).
 
-Doctor badge widget (phase 2): static HTML snippet with a plain link to the profile, e.g. "Médico verificado en dir.do" — no structured data in the snippet.
+Doctor badge widget (phase 2): static HTML snippet with a plain link to the profile, e.g. "Médico verificado en guiddo.net" — no structured data in the snippet.
 
 ---
 
