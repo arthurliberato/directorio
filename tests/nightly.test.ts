@@ -36,11 +36,11 @@ test('diff: pings new, changed, de-indexed and removed URLs only', () => {
 test('IndexNow batches at 10,000 URLs and sends key + keyLocation', async () => {
   const calls: any[] = [];
   const fakeFetch = (async (_u: string, init: any) => { calls.push(JSON.parse(init.body)); return { status: 200 }; }) as any;
-  const urls = Array.from({ length: 10_001 }, (_, i) => `https://dir.do/p${i}`);
-  const r = await pingIndexNow(urls, { host: 'dir.do', key: 'abc123', fetchImpl: fakeFetch });
+  const urls = Array.from({ length: 10_001 }, (_, i) => `https://guiddo.io/p${i}`);
+  const r = await pingIndexNow(urls, { host: 'guiddo.io', key: 'abc123', fetchImpl: fakeFetch });
   assert.equal(calls.length, 2);
   assert.equal(calls[0].urlList.length, 10_000);
-  assert.equal(calls[0].keyLocation, 'https://dir.do/abc123.txt');
+  assert.equal(calls[0].keyLocation, 'https://guiddo.io/abc123.txt');
   assert.deepEqual(r.status, [200, 200]);
 });
 

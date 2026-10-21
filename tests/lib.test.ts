@@ -76,7 +76,7 @@ test('physician JSON-LD: required fields, no invented data, safe serialization',
 
 test('robots.txt: prototype blocks all; production allows named bots and repeats filter disallows', () => {
   assert.match(buildRobotsTxt('prototype'), /Disallow: \/\n/);
-  const r = buildRobotsTxt('production', 'https://dir.do');
+  const r = buildRobotsTxt('production', 'https://guiddo.io');
   for (const b of [...SEARCH_BOTS, ...AI_SEARCH_BOTS, ...AI_TRAINING_BOTS]) assert.match(r, new RegExp(`User-agent: ${b}\\nAllow: /\\nDisallow: /buscar`));
   assert.match(r, /Sitemap: https:\/\/dir\.do\/sitemap-index\.xml/);
 });
@@ -85,7 +85,7 @@ test('sitemaps contain only indexable URLs with real lastmod', () => {
   const docUrls = doctorUrls().map((u) => u.loc);
   assert.ok(!docUrls.some((u) => u.includes('datos-minimos') || u.includes('sin-verificar')));
   const hubs = hubUrls().map((u) => u.loc);
-  assert.ok(hubs.includes('https://dir.do/cardiologos/santo-domingo'));
+  assert.ok(hubs.includes('https://guiddo.io/cardiologos/santo-domingo'));
   assert.ok(!hubs.some((u) => u.includes('dermatologos')), 'hubs with < 5 doctors are excluded');
   for (const [, urls] of sitemapFiles()) for (const u of urls) assert.match(u.lastmod, /^\d{4}-\d{2}-\d{2}$/);
   assert.ok(renderUrlset(doctorUrls()).includes('<lastmod>'));
@@ -109,7 +109,7 @@ test('bot classification: AI search/training/user agents are distinguished', () 
 import { parseCsv, summarize } from '../src/lib/ai-visibility.ts';
 test('AI visibility CSV: validates prompt ids and computes citation rate', () => {
   const ids = new Set(['es-1', 'es-2']);
-  const csv = 'run_month,engine,prompt_id,cited,cited_url,position,accuracy\n2026-10,chatgpt,es-1,1,https://dir.do/x,2,accurate\n2026-10,chatgpt,es-2,0,,,\n';
+  const csv = 'run_month,engine,prompt_id,cited,cited_url,position,accuracy\n2026-10,chatgpt,es-1,1,https://guiddo.io/x,2,accurate\n2026-10,chatgpt,es-2,0,,,\n';
   const { rows, errors } = parseCsv(csv, ids);
   assert.deepEqual(errors, []);
   assert.deepEqual(summarize(rows)[0], { month: '2026-10', engine: 'chatgpt', prompts: 2, cited: 1, citationRate: 50, avgPosition: 2, inaccurate: 0 });
@@ -135,7 +135,7 @@ test('pagination: >20 doctors yields pages with self paths, sitemap entries, and
     assert.equal(resolveHub(['cardiologos', 'santo-domingo', 'pagina', '3']).status, 'not_found');
     assert.equal(hubPath(p1.status === 'ok' ? p1.query : (null as any), 2), '/cardiologos/santo-domingo/pagina/2');
     const urls = hubUrls().map((u) => u.loc);
-    assert.ok(urls.includes('https://dir.do/cardiologos/santo-domingo/pagina/2'));
+    assert.ok(urls.includes('https://guiddo.io/cardiologos/santo-domingo/pagina/2'));
     // page-2 items continue the ItemList numbering and don't repeat page 1
     const ids1 = new Set(p1.status === 'ok' ? p1.items.map((v) => v.doctor.id) : []);
     assert.ok(p2.status === 'ok' && p2.items.every((v) => !ids1.has(v.doctor.id)));
@@ -155,7 +155,7 @@ test('fact summary states every schedule block accurately (no mixing hours acros
 test('physician JSON-LD image: relative photo paths become absolute, absolute URLs stay untouched', () => {
   const v = structuredClone(getDoctorBySlug('dra-maria-perez-cardiologa')!);
   v.doctor.photo_url = '/img/doctors/x.webp';
-  assert.equal((physicianJsonLd(v) as any).image, 'https://dir.do/img/doctors/x.webp');
+  assert.equal((physicianJsonLd(v) as any).image, 'https://guiddo.io/img/doctors/x.webp');
   v.doctor.photo_url = 'https://cdn.example.com/a.jpg';
   assert.equal((physicianJsonLd(v) as any).image, 'https://cdn.example.com/a.jpg');
   v.doctor.photo_url = null;
@@ -205,7 +205,7 @@ test('booking links: cal.com shorthand and https only; WhatsApp message names th
   assert.equal(normalizeBookingUrl('  '), null);
   for (const bad of ['http://cal.com/x/y', 'javascript:alert(1)', 'ftp://x.do/a', 'no es un enlace']) assert.throws(() => normalizeBookingUrl(bad), /enlace de reserva|https/);
   const verified = getDoctorBySlug('dra-maria-perez-cardiologa')!.doctor;
-  const link = whatsappBookingLink(verified, '/dra-maria-perez-cardiologa', 'https://dir.do')!;
+  const link = whatsappBookingLink(verified, '/dra-maria-perez-cardiologa', 'https://guiddo.io')!;
   assert.match(link, /^https:\/\/wa\.me\/\d+\?text=/);
   assert.match(decodeURIComponent(link), /programar una cita con Dra\. María Pérez.*https:\/\/dir\.do\/dra-maria-perez-cardiologa/);
   assert.ok(canBook(verified));

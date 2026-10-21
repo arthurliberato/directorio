@@ -34,7 +34,7 @@ for (const ua of BOTS) {
 }
 {
   const html = await (await get('/cardiologos/santo-domingo?orden=precio')).text();
-  ok(html.includes('<link rel="canonical" href="https://dir.do/cardiologos/santo-domingo">') || /canonical" href="[^"]*\/cardiologos\/santo-domingo">/.test(html), 'filter-param URL canonicalizes to clean hub');
+  ok(html.includes('<link rel="canonical" href="https://guiddo.io/cardiologos/santo-domingo">') || /canonical" href="[^"]*\/cardiologos\/santo-domingo">/.test(html), 'filter-param URL canonicalizes to clean hub');
 }
 ok((await get('/neurologos')).status === 404, 'empty specialty hub is a real 404');
 ok((await get('/oftalmologos/santo-domingo')).status === 404, 'empty facet combo is a real 404');
