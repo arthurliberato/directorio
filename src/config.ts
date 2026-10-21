@@ -1,9 +1,9 @@
 // Runtime env first (so the host can flip SITE_MODE without a rebuild), build-time env as fallback.
 const env = (k: string): string | undefined => (typeof process !== 'undefined' ? process.env[k] : undefined) ?? (import.meta as any).env?.[k];
 
-export const BRAND = 'dir.do';
-/** Wordmark parts: the dot in "dir.do" is the coral dot of the logo; a brand without a dot gets a trailing coral dot. */
-export const BRAND_PARTS: [string, string] = BRAND.includes('.') ? [BRAND.slice(0, BRAND.indexOf('.')), BRAND.slice(BRAND.indexOf('.') + 1)] : [BRAND, ''];
+export const BRAND = 'guiddo';
+/** Name of the WhatsApp channel / platform as users see it in chat. */
+export const BOT_NAME = env('WHATSAPP_BOT_NAME') ?? 'guiddo';
 export const SITE_URL = (env('PUBLIC_SITE_URL') ?? 'https://dir.do').replace(/\/$/, '');
 // prototype => seed data: whole site noindex + robots Disallow:/ (never let illustrative data get indexed)
 export const SITE_MODE: 'prototype' | 'production' = env('SITE_MODE') === 'production' ? 'production' : 'prototype';

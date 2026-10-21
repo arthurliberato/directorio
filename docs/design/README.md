@@ -1,3 +1,5 @@
+> **Superseded:** the visual identity is now the guiddo design kit in `guiddo/` (`guiddo/DESIGN.md` is the source of truth). The Lovable mockups below are kept only for page-structure reference.
+
 # Visual reference — Home (mobile, from Lovable prototype)
 
 Screenshots of the Lovable prototype (`lovable.dev`), top to bottom. They define the **aesthetics** (look and feel) to match closely; markup and structure are rebuilt for SEO/AI per `SPEC.md`. Where the two conflict, the notes under "Spec alignment" apply.

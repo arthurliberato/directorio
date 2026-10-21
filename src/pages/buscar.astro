@@ -1,12 +1,16 @@
 ---
 // Non-indexable search entry (robots.txt Disallow). Redirects to the canonical hub path, fixed facet order.
+// Accepts either free text (?q=pediatra en santiago) or the explicit selects (?especialidad=&ciudad=&ars=).
 import { getArsBySlug, getCityBySlug, getSpecialtyBySlug, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
+import { parseQuery } from '../lib/search.ts';
 const p = Astro.url.searchParams;
-const specialty = getSpecialtyBySlug(p.get('especialidad') ?? '');
+const free = (p.get('q') ?? '').trim().slice(0, 200);
+const parsed = free ? parseQuery(free) : {};
+const specialty = parsed.specialty ?? getSpecialtyBySlug(p.get('especialidad') ?? '');
 if (!specialty) return Astro.redirect('/especialidad', 302);
-const city = getCityBySlug(p.get('ciudad') ?? '') ?? undefined;
-const ars = city ? getArsBySlug(p.get('ars') ?? '') ?? undefined : undefined;
+const city = parsed.city ?? getCityBySlug(p.get('ciudad') ?? '') ?? undefined;
+const ars = city ? parsed.ars ?? getArsBySlug(p.get('ars') ?? '') ?? undefined : undefined;
 // most specific page that actually has doctors: never send a visitor to a 404
 const attempts = [{ specialty, city, ars }, { specialty, city }, { specialty }];
 const hit = attempts.find((q) => queryHub(q).length > 0);

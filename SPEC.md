@@ -2,7 +2,7 @@
 
 Build spec for a doctor directory in the Dominican Republic, optimized for search engines (Google, Bing) and AI answer engines (Google AI Overviews/AI Mode, ChatGPT, Perplexity, Claude, Gemini, Copilot).
 
-- **Brand:** `dir.do` · **Domain:** `dir.do` (.do ccTLD)
+- **Brand:** `guiddo` (lowercase; see `docs/design/guiddo/DESIGN.md`) · **Domain:** `dir.do` (.do ccTLD)
 - **Language:** Spanish (`es-DO`) first; English (`/en/`) section later
 - **Aesthetics:** the Lovable mockup in `docs/design/` defines the look (palette, typography, cards, spacing, tone) and is matched closely. It is not a code source: markup, structure and stack are built from scratch for SEO and AI-crawler needs
 - **Reviews:** NOT in v1. Reserve the space and data model; spec in §12

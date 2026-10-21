@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>guiddo — la guía de doctores dominicanos</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&family=Nunito+Sans:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  .page { max-width: 480px; margin: 0 auto; background: var(--gd-paper); }
+  .i { font-size: 15px; vertical-align: -2px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<!-- Approved v1 homepage (mobile). Reference for structure, spacing and components. -->
+<main class="page">
+
+  <header class="gd-header">
+    <a href="/" class="gd-logo" style="font-size:24px;text-decoration:none;" aria-label="guiddo">guid<span class="gd-logo__d">d</span>o</a>
+    <a href="/doctores" style="font-size:13px;font-weight:700;color:var(--gd-ink);text-decoration:none;">Para doctores</a>
+  </header>
+
+  <section class="gd-hero">
+    <svg class="gd-pattern" id="pattern-hero" width="160" style="right:-12px;top:-6px;" aria-hidden="true"></svg>
+    <div class="gd-label">La guía de doctores dominicanos</div>
+    <h1 class="gd-h1" style="max-width:270px;margin-top:8px;">El doctor que te recomiendan <span class="gd-hl">de verdad</span></h1>
+    <form class="gd-search" style="margin-top:18px;" role="search">
+      <i class="ti ti-search" aria-hidden="true" style="font-size:16px;opacity:.6;"></i>
+      <input type="search" placeholder="¿Qué te duele?" aria-label="Buscar doctor o especialidad">
+      <button class="gd-btn" type="submit">Buscar</button>
+    </form>
+  </section>
+
+  <section class="gd-section" style="padding-bottom:6px;">
+    <div class="gd-label" style="opacity:.6;">Especialidades</div>
+    <div class="gd-section__head"><h2 class="gd-h2">¿Hacia dónde vas?</h2></div>
+    <nav class="gd-signs" aria-label="Especialidades">
+      <a href="/pediatria" class="gd-sign gd-sign--ink"><span><span class="gd-sign__name">Pediatría</span><span class="gd-sign__hint">Niños</span></span><span class="gd-mono">128 →</span></a>
+      <a href="/ginecologia" class="gd-sign gd-sign--blue"><span><span class="gd-sign__name">Ginecología</span><span class="gd-sign__hint">Mujer</span></span><span class="gd-mono">96 →</span></a>
+      <a href="/dermatologia" class="gd-sign gd-sign--pale"><span><span class="gd-sign__name">Dermatología</span><span class="gd-sign__hint">Piel</span></span><span class="gd-mono">74 →</span></a>
+      <a href="/cardiologia" class="gd-sign gd-sign--pale"><span><span class="gd-sign__name">Cardiología</span><span class="gd-sign__hint">Corazón</span></span><span class="gd-mono">51 →</span></a>
+    </nav>
+  </section>
+
+  <section class="gd-section" style="padding-bottom:20px;">
+    <div class="gd-label" style="opacity:.6;">Recomendados</div>
+    <div class="gd-section__head">
+      <h2 class="gd-h2">Pediatras en Santo Domingo</h2>
+      <a href="/pediatria" class="gd-link" style="white-space:nowrap;">Ver todos</a>
+    </div>
+    <div style="display:grid;gap:10px;">
+
+      <article class="gd-rx">
+        <div class="gd-rx__top"><span class="gd-rx__rx">Rx</span><span class="gd-mono" style="opacity:.5;">N.º 0417</span></div>
+        <div class="gd-rx__who">
+          <div class="gd-avatar">MR</div>
+          <div><div class="gd-rx__name">Dra. María Reyes</div><div class="gd-rx__spec">Pediatra</div></div>
+        </div>
+        <dl class="gd-rx__data gd-mono">
+          <dt>ZONA</dt><dd>Piantini</dd>
+          <dt>ARS</dt><dd>Humano · Universal</dd>
+          <dt>HORARIO</dt><dd>Lun–Vie</dd>
+        </dl>
+        <div class="gd-rx__foot">
+          <span class="gd-confirmed"><i class="ti ti-circle-check i" aria-hidden="true"></i>38 pacientes confirmados</span>
+          <a href="/dra-maria-reyes" style="font-size:12px;font-weight:800;color:var(--gd-ink);text-decoration:none;">Ver perfil →</a>
+        </div>
+      </article>
+
+      <article class="gd-rx">
+        <div class="gd-rx__top"><span class="gd-rx__rx">Rx</span><span class="gd-mono" style="opacity:.5;">N.º 0522</span></div>
+        <div class="gd-rx__who">
+          <div class="gd-avatar">LP</div>
+          <div><div class="gd-rx__name">Dr. Luis Peña</div><div class="gd-rx__spec">Pediatra</div></div>
+        </div>
+        <dl class="gd-rx__data gd-mono">
+          <dt>ZONA</dt><dd>Naco</dd>
+          <dt>ARS</dt><dd>Senasa · Mapfre</dd>
+          <dt>HORARIO</dt><dd>Lun–Sáb</dd>
+        </dl>
+        <div class="gd-rx__foot">
+          <span class="gd-confirmed"><i class="ti ti-circle-check i" aria-hidden="true"></i>24 pacientes confirmados</span>
+          <a href="/dr-luis-pena" style="font-size:12px;font-weight:800;color:var(--gd-ink);text-decoration:none;">Ver perfil →</a>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="gd-dark">
+    <div class="gd-crop" aria-hidden="true">dd</div>
+    <div class="gd-label">Para doctores</div>
+    <h2 class="gd-h2" style="font-size:26px;line-height:1.02;letter-spacing:-0.6px;margin-top:6px;color:var(--gd-paper);">Tus pacientes ya te recomiendan</h2>
+    <p style="font-size:13px;font-weight:700;color:var(--gd-blue-pale);margin:6px 0 0;max-width:230px;">Haz que los próximos te encuentren en guiddo.</p>
+    <a href="/doctores" class="gd-btn gd-btn--blue" style="margin-top:14px;">Únete a guiddo</a>
+  </section>
+
+  <footer class="gd-footer">
+    <span class="gd-logo" style="font-size:18px;">guid<span class="gd-logo__d">d</span>o</span>
+    <span class="gd-label" style="opacity:.6;">Santo Domingo · RD</span>
+  </footer>
+
+</main>
+<script>
+  // i pattern — see DESIGN.md §6.1
+  function guiddoPattern(svg, { cols = 5, rows = 4, base, hiBody, hiHead }) {
+    svg.setAttribute('viewBox', `0 0 ${cols * 32} ${rows * 28 + 8}`);
+    let out = '';
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const x = 14 + c * 32 + (r % 2) * 16, y = 6 + r * 28, hi = (r * cols + c) % 7 === 3;
+      out += `<rect x="${x - 4}" y="${y + 7}" width="8" height="15" rx="4" fill="${hi ? hiBody : base}"/>` +
+             `<circle cx="${x}" cy="${y + 1}" r="4" fill="${hi ? hiHead : base}"/>`;
+    }
+    svg.innerHTML = out;
+  }
+  guiddoPattern(document.getElementById('pattern-hero'), { base: '#C6D7EA', hiBody: '#5E9BD6', hiHead: '#1A2A4C' });
+</script>
+</body>
+</html>

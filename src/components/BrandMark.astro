@@ -1,5 +1,6 @@
 ---
-import { BRAND, BRAND_PARTS } from '../config.ts';
-const [a, b] = BRAND_PARTS;
+import { BRAND } from '../config.ts';
+// Wordmark: lowercase, Nunito Black, the second "d" in Guiddo Blue (design kit §2). Text, not an image: crawlable and always crisp.
+const i = BRAND.lastIndexOf('d');
 ---
-<span class="wordmark" aria-label={BRAND}>{a}<i>.</i>{b}</span>
+<span class="gd-logo" aria-label={BRAND}>{BRAND.slice(0, i)}<span class="gd-logo__d">d</span>{BRAND.slice(i + 1)}</span>

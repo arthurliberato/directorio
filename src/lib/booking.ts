@@ -1,4 +1,4 @@
-import { SITE_URL } from '../config.ts';
+import { BRAND, SITE_URL } from '../config.ts';
 import type { Doctor } from './types.ts';
 
 /**
@@ -23,7 +23,7 @@ export const canBook = (d: Doctor) => d.listing_status === 'affiliated' && !!(d.
 export function whatsappBookingLink(d: Doctor, profilePath: string, siteUrl = SITE_URL): string | null {
   const num = d.whatsapp?.replace(/\D/g, '');
   if (!num) return null;
-  const text = `Hola, quisiera programar una cita con ${d.display_name}. Vi su perfil en dir.do: ${siteUrl}${profilePath}`;
+  const text = `Hola, quisiera programar una cita con ${d.display_name}. Vi su perfil en ${BRAND}: ${siteUrl}${profilePath}`;
   return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
 }
 
