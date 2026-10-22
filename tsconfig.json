@@ -1,6 +1,6 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "guiddo-bot"],
   "compilerOptions": { "allowImportingTsExtensions": true, "noEmit": true }
 }

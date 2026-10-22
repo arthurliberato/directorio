@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: guiddo-bot
+    runtime: node
+    plan: starter
+    numInstances: 1 # conversation state (pending appointment requests, webhook dedupe) lives in memory: do not scale out
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - { key: NODE_VERSION, value: "22.22.0" }
+      - { key: NODE_ENV, value: production }
+      - { key: PUBLIC_SITE_URL, value: https://guiddo.net }
+      - { key: DATABASE_URL, sync: false }
+      - { key: WHATSAPP_TOKEN, sync: false }
+      - { key: WHATSAPP_PHONE_NUMBER_ID, sync: false }
+      - { key: WHATSAPP_APP_SECRET, sync: false }
+      - { key: WHATSAPP_VERIFY_TOKEN, sync: false }
+      - { key: WHATSAPP_TEMPLATE_APPT, sync: false }
+      - { key: CEDULA_PEPPER, sync: false }
+      - { key: ADMIN_PASSWORD, sync: false }
