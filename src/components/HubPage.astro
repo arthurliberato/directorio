@@ -93,18 +93,18 @@ const pageHref = (p: number) => hubPath(q, p);
       <a href={sortHref('precio')} data-event="filter_use" aria-current={orden === 'precio' ? 'true' : undefined} rel="nofollow">Precio</a>
     </div>
     <div class="table-scroll">
-      <table class="compare">
+      <table class="compare stack">
         <thead><tr><th scope="col">Médico</th>{hasSub && <th scope="col">Subespecialidad</th>}<th scope="col">Zona</th><th scope="col">Centro</th>{hasArs && <th scope="col">ARS</th>}{hasFee && <th scope="col">Consulta desde</th>}{hasHours && <th scope="col">Horario</th>}</tr></thead>
         <tbody>
           {organic.map((v) => (
             <tr>
               <th scope="row"><a href={profilePath(v)}>{v.doctor.display_name}</a>{isAffiliated(v.doctor) && <span class="badge" style="margin-left:8px;font-size:.75rem">Verificado</span>}</th>
-              {hasSub && <td>{v.doctor.subspecialties.join(', ') || v.specialty.field_name}</td>}
-              <td>{v.locations[0]?.sector?.name ?? v.locations[0]?.city.name ?? '—'}</td>
-              <td>{v.locations[0]?.facility ? <a href={`/centro/${v.locations[0].facility.slug}`}>{v.locations[0].facility.name}</a> : '—'}</td>
-              {hasArs && <td>{v.ars.map((a) => a.name).join(', ') || '—'}</td>}
-              {hasFee && <td>{v.doctor.consultation_fee_min != null ? formatDOP(v.doctor.consultation_fee_min) : '—'}</td>}
-              {hasHours && <td>{v.locations[0] && v.locations[0].schedule.length ? formatScheduleLines(v.locations[0].schedule).join('; ') : '—'}</td>}
+              {hasSub && <td data-label="Subespecialidad">{v.doctor.subspecialties.join(', ') || v.specialty.field_name}</td>}
+              <td data-label="Zona">{v.locations[0]?.sector?.name ?? v.locations[0]?.city.name ?? '—'}</td>
+              <td data-label="Centro">{v.locations[0]?.facility ? <a href={`/centro/${v.locations[0].facility.slug}`}>{v.locations[0].facility.name}</a> : '—'}</td>
+              {hasArs && <td data-label="ARS">{v.ars.map((a) => a.name).join(', ') || '—'}</td>}
+              {hasFee && <td data-label="Consulta desde">{v.doctor.consultation_fee_min != null ? formatDOP(v.doctor.consultation_fee_min) : '—'}</td>}
+              {hasHours && <td data-label="Horario">{v.locations[0] && v.locations[0].schedule.length ? formatScheduleLines(v.locations[0].schedule).join('; ') : '—'}</td>}
             </tr>
           ))}
         </tbody>
@@ -113,10 +113,10 @@ const pageHref = (p: number) => hubPath(q, p);
   </section>
 
   <section class="wrap section" aria-labelledby="medicos">
-    <h2 id="medicos">Médicos</h2>
+    <h2 id="medicos" class="cards-desktop">Médicos</h2>
     <p class="muted" style="margin-top:-4px"><b>Verificado</b>: afiliado a {BRAND} con exequátur comprobado. <b>Perfil informativo</b>: datos de fuentes públicas, sin verificar.</p>
     {sponsored.length > 0 && <div class="sponsored-block"><p class="label">Profesional patrocinado · <a href="/publicidad-y-patrocinios">qué significa</a></p><div class="grid cards">{sponsored.map((v) => <DoctorCard v={v} />)}</div></div>}
-    <div class="grid cards">
+    <div class="grid cards cards-desktop">
       {organic.map((v) => <DoctorCard v={v} />)}
     </div>
     {r.totalPages > 1 && (

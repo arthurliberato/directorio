@@ -151,7 +151,7 @@ address { font-style: normal; color: var(--muted); }
 .fcard .count { margin-top: auto; padding-top: 12px; border-top: 1.5px dashed var(--gd-blue-pattern); display: flex; justify-content: space-between; align-items: center; color: var(--muted); }
 .fcard .count strong { color: var(--ink); font: 900 1.1rem var(--font-head); }
 .badge.type { margin-right: 6px; }
-.grid.specs { grid-template-columns: repeat(2, 1fr); } @media (min-width: 700px) { .grid.specs { grid-template-columns: repeat(3, 1fr); } } @media (min-width: 1000px) { .grid.specs { grid-template-columns: repeat(4, 1fr); } }
+.grid.specs { grid-template-columns: 1fr; }  @media (min-width: 480px) { .grid.specs { grid-template-columns: repeat(2, minmax(0, 1fr)); } } @media (min-width: 700px) { .grid.specs { grid-template-columns: repeat(3, 1fr); } } @media (min-width: 1000px) { .grid.specs { grid-template-columns: repeat(4, 1fr); } }
 .spec-row { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; color: var(--ink); }
 .spec-row .ico { width: 42px; height: 42px; border-radius: var(--radius); background: var(--pale); color: var(--accent); display: grid; place-items: center; flex: none; }
 .spec-row strong { display: block; line-height: 1.2; } .spec-row small { color: var(--muted); }
@@ -186,3 +186,18 @@ address { font-style: normal; color: var(--muted); }
 .refine { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin-block: 8px 18px; }
 .refine > div { flex: 1 1 11rem; max-width: 18rem; } .refine label { display: block; font: 500 11px var(--gd-font-mono); text-transform: uppercase; letter-spacing: .2px; margin-bottom: 4px; }
 .refine select { width: 100%; padding: 10px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); font: inherit; color: var(--ink); }
+
+/* Phones: the comparison table becomes stacked rows (nothing to scroll sideways); the card grid is only for wider screens. */
+@media (max-width: 719px) {
+  .table-scroll { overflow: visible; border: 0; } .table-scroll table { min-width: 0; }
+  table.stack, table.stack tbody, table.stack tr, table.stack th, table.stack td { display: block; width: 100%; }
+  table.stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.stack tr { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; }
+  table.stack th[scope=row] { border: 0; padding: 0 0 6px; font-family: var(--font-head); font-size: 1.05rem; }
+  table.stack td { border: 0; padding: 3px 0; display: grid; grid-template-columns: 7.5rem 1fr; gap: 8px; font-size: .95rem; overflow-wrap: anywhere; }
+  table.stack td::before { content: attr(data-label); font: 500 11px var(--gd-font-mono); text-transform: uppercase; letter-spacing: .2px; color: var(--muted); padding-top: 3px; }
+  .cards-desktop { display: none; }
+}
+body { overflow-x: clip; }
+
+.spec-row > span:last-child, .fcard, .city-row > span { min-width: 0; overflow-wrap: anywhere; }
