@@ -18,7 +18,7 @@ export const SITEMAP_URLS_PER_FILE = 50000;
 export const NAP = {
   name: BRAND,
   email: 'contacto@guiddo.net',
-  street: 'Av. de la Salud 123',
+  street: env('NAP_STREET') ?? '', // only shown when set: never a made-up address
   locality: 'Santo Domingo',
   country: 'DO',
   countryName: 'República Dominicana',

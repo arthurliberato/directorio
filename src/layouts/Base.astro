@@ -54,7 +54,6 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
 </head>
 <body>
   <a class="skip" href="#main">Saltar al contenido</a>
-  {SITE_MODE === 'prototype' && <div class="proto-banner">Prototipo · perfiles y datos ilustrativos · sitio no indexable</div>}
   <header class="site-header">
     <div class="wrap">
       <a class="logo" href="/" aria-label={`${BRAND} — inicio`}><BrandMark /></a>
@@ -105,13 +104,12 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
           <address>
             <a href="/contacto">Contacto</a><br />
             <a href={`mailto:${NAP.email}`}>{NAP.email}</a><br />
-            {NAP.street}<br />{NAP.locality}, {NAP.countryName}
+            {NAP.street && <>{NAP.street}<br /></>}{NAP.locality}, {NAP.countryName}
           </address>
         </div>
       </div>
       <div class="legal">
         <p>© 2026 {BRAND}. Todos los derechos reservados.</p>
-        {SITE_MODE === 'prototype' && <p>Prototipo · Perfiles, dirección y correo de ejemplo.</p>}
       </div>
     </div>
   </footer>
