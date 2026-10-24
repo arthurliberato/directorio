@@ -128,6 +128,7 @@ export const paginate = <T>(list: T[], page: number) => ({
   totalPages: Math.max(1, Math.ceil(list.length / PAGE_SIZE)),
 });
 
+import { matchesWhen, type When } from './availability.ts';
 import { hubIndexDecision, type IndexDecision } from './indexing.ts';
 import { LANGUAGE_NAMES } from './format.ts';
 
@@ -136,10 +137,10 @@ export type HubResolution =
   | { status: 'redirect'; to: string }
   | {
       status: 'ok'; query: HubQuery; page: number; totalPages: number; total: number;
-      items: DoctorView[]; stats: HubStats; decision: IndexDecision; intro: string; path: string;
+      items: DoctorView[]; stats: HubStats; when: When | null; decision: IndexDecision; intro: string; path: string;
     };
 
-export function resolveHub(segments: string[], orden: string | null = null): HubResolution {
+export function resolveHub(segments: string[], orden: string | null = null, when: When | null = null): HubResolution {
   const parsed = parseHubPath(segments);
   if (!parsed.ok) return { status: 'not_found' };
   const { query, page, explicitPage1 } = parsed;
@@ -147,13 +148,15 @@ export function resolveHub(segments: string[], orden: string | null = null): Hub
   const all = queryHub(query);
   const decision = hubIndexDecision(all.length);
   if (decision.kind === 'not_found') return { status: 'not_found' }; // real 404, never soft
-  const sorted = sortDoctors(all, orden);
+  const shown = when ? all.filter((v) => matchesWhen(v, when)) : all;
+  const sorted = sortDoctors(shown, orden);
   const { items, totalPages } = paginate(sorted, page);
-  if (page > totalPages) return { status: 'not_found' };
+  if (page > totalPages && !(when && page === 1)) return { status: 'not_found' };
   const stats = hubStats(all);
   return {
-    status: 'ok', query, page, totalPages, total: all.length, items, stats,
-    decision: { robots: decision.robots, indexable: decision.indexable, reason: decision.reason },
+    status: 'ok', query, page, totalPages, total: shown.length, items, stats, when,
+    // a filtered view is never indexable: robots.txt blocks the params and the page says noindex, canonical stays the clean hub
+    decision: when ? { robots: 'noindex,follow' as const, indexable: false, reason: 'filtered by day/time' } : { robots: decision.robots, indexable: decision.indexable, reason: decision.reason },
     intro: hubIntro(query, stats, (c) => LANGUAGE_NAMES[c] ?? c), path: hubPath(query, page),
   };
 }

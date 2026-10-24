@@ -201,3 +201,6 @@ address { font-style: normal; color: var(--muted); }
 body { overflow-x: clip; }
 
 .spec-row > span:last-child, .fcard, .city-row > span { min-width: 0; overflow-wrap: anywhere; }
+
+.finder .when-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .finder .when-row select { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); padding: 4px 0; min-width: 0; }
+@media (min-width: 900px) { .finder { grid-template-columns: repeat(4, 1fr) auto; } .finder .when { grid-column: auto; } }

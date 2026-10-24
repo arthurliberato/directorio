@@ -1,7 +1,8 @@
 ---
 // Non-indexable search entry (robots.txt Disallow). Redirects to the canonical page. Only `especialidad` is required;
 // `ciudad` narrows to a hub (and `ars` to a per-city ARS hub), `centro` goes to that center's page, anchored to the specialty,
-// when it has doctors of that specialty.
+// when it has doctors of that specialty. `dia` (hoy | manana | lun..dom) and `hora` (manana | tarde | noche) filter by published hours.
+import { dayInDR, DAY_SLUGS, SLOTS, whenQuery } from '../lib/availability.ts';
 import { doctorsForFacility, getArsBySlug, getCityBySlug, getFacilityBySlug, getSpecialtyBySlug, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 const p = Astro.url.searchParams;
@@ -11,7 +12,12 @@ const center = getFacilityBySlug(p.get('centro') ?? '');
 if (center && doctorsForFacility(center.id).some((v) => v.specialty.id === specialty.id)) return Astro.redirect(`/centro/${center.slug}#${specialty.slug}`, 302);
 const city = getCityBySlug(p.get('ciudad') ?? '') ?? undefined;
 const ars = city ? getArsBySlug(p.get('ars') ?? '') ?? undefined : undefined;
+// "hoy" / "manana" are resolved here (this redirect is never cached), so cached hub pages only ever see concrete weekdays
+const rawDay = p.get('dia') ?? '';
+const day = rawDay === 'hoy' ? dayInDR() : rawDay === 'manana' ? dayInDR(new Date(), 1) : DAY_SLUGS.indexOf(rawDay as (typeof DAY_SLUGS)[number]) + 1 || undefined;
+const rawSlot = p.get('hora') ?? '';
+const when = day || rawSlot in SLOTS ? { day: day || undefined, slot: rawSlot in SLOTS ? (rawSlot as keyof typeof SLOTS) : undefined } : null;
 // most specific page that actually has doctors: never send a visitor to a 404
 const hit = [{ specialty, city, ars }, { specialty, city }, { specialty }].find((q) => queryHub(q).length > 0);
-return Astro.redirect(hit ? hubPath(hit) : '/especialidad', 302);
+return Astro.redirect(hit ? hubPath(hit) + whenQuery(when) : '/especialidad', 302);
 ---

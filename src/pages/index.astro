@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import DoctorCard from '../components/DoctorCard.astro';
 import GuiddoPattern from '../components/GuiddoPattern.astro';
 import Icon from '../components/Icon.astro';
+import { DAY_NAMES, DAY_SLUGS, SLOTS } from '../lib/availability.ts';
 import { SPECIALTY_HINTS } from '../data/hints.ts';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
 import { doctorCount, doctorsForFacility, getCities, getFacilities, getGuides, getSpecialties, isAffiliated, publishedDoctors, queryHub } from '../lib/data.ts';
@@ -37,6 +38,9 @@ const guides = getGuides().slice(0, 3);
           <select id="q-ciu" name="ciudad"><option value="">Todas las provincias</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select></div></div>
         <div class="field"><Icon name="building" size={24} /><div><label for="q-cen">Centro médico <small>Opcional</small></label>
           <select id="q-cen" name="centro"><option value="">Cualquier centro</option>{centers.map((f) => <option value={f.slug}>{f.name}</option>)}</select></div></div>
+        <div class="field"><Icon name="clock" size={24} /><div class="when"><label for="q-dia">Día y hora <small>Opcional</small></label>
+          <div class="when-row"><select id="q-dia" name="dia" aria-label="Día de la cita"><option value="">Cualquier día</option><option value="hoy">Hoy</option><option value="manana">Mañana</option>{DAY_SLUGS.map((d, i) => <option value={d}>{DAY_NAMES[i]}</option>)}</select>
+          <select name="hora" aria-label="Hora de la cita"><option value="">Cualquier hora</option>{Object.entries(SLOTS).map(([k, s]) => <option value={k}>{s.label}</option>)}</select></div></div></div>
         <button class="gd-btn" type="submit">Buscar doctor</button>
       </form>
       <div class="ticks"><span><Icon name="check" size={18} /> Exequátur verificado</span><span><Icon name="check" size={18} /> Información transparente</span></div>

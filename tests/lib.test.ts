@@ -222,3 +222,24 @@ test('calLinkOf extracts the Cal.com link (user names may contain dots) and igno
   assert.equal(calLinkOf('https://cal.com/usuario'), null, 'a profile without an event is not an embeddable link');
   assert.equal(calLinkOf(null), null);
 });
+
+test('availability filter: day and time slot match stored hours; doctors without hours never match', async () => {
+  const { matchesWhen, parseWhen, whenQuery, dayInDR } = await import('../src/lib/availability.ts');
+  const v = getDoctorBySlug('dra-maria-perez-cardiologa')!; // seed: Mon-Thu 08:00-12:00
+  assert.equal(matchesWhen(v, { day: 1 }), true);
+  assert.equal(matchesWhen(v, { day: 6 }), false, 'no Saturday hours');
+  assert.equal(matchesWhen(v, { day: 1, slot: 'manana' }), true);
+  assert.equal(matchesWhen(v, { day: 1, slot: 'tarde' }), false, 'hours end at 12:00');
+  assert.equal(matchesWhen(v, { slot: 'noche' }), false);
+  const noHours = { ...v, locations: v.locations.map((l) => ({ ...l, schedule: [] })) };
+  assert.equal(matchesWhen(noHours, { day: 1 }), false);
+  assert.deepEqual(parseWhen(new URLSearchParams('dia=mie&hora=tarde')), { day: 3, slot: 'tarde' });
+  assert.equal(parseWhen(new URLSearchParams('dia=xx&hora=yy')), null);
+  assert.equal(whenQuery({ day: 3, slot: 'tarde' }), '?dia=mie&hora=tarde');
+  // Dominican Republic is UTC-4: 02:00 UTC on a Wednesday is still Tuesday there
+  assert.equal(dayInDR(new Date('2026-10-21T02:00:00Z')), 2);
+  assert.equal(dayInDR(new Date('2026-10-21T02:00:00Z'), 1), 3);
+  const r = resolveHub(['cardiologos'], null, { day: 6 }); const all = resolveHub(['cardiologos']);
+  assert.ok(r.status === 'ok' && all.status === 'ok' && r.decision.robots === 'noindex,follow' && r.total < all.total);
+  assert.match(buildRobotsTxt('production', 'https://guiddo.net'), /Disallow: \/\*\?\*dia=/);
+});

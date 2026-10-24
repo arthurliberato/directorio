@@ -7,6 +7,7 @@ import { doctorsForFacility, getArs, getCities, getFacilities, getSectors, getSp
 import { formatDOP, formatDateLong, formatScheduleLines, joinList } from '../lib/format.ts';
 import { profilePath } from '../lib/facts.ts';
 import { hubHeading, hubPath, hubPlace, type HubResolution } from '../lib/hubs.ts';
+import { DAY_NAMES, DAY_SLUGS, SLOTS, whenLabel, whenQuery } from '../lib/availability.ts';
 import { hubJsonLd } from '../lib/schema.ts';
 import { PAGE_SIZE } from '../config.ts';
 
@@ -63,16 +64,18 @@ const jsonLd = [...hubJsonLd(q, organic, r.total, r.path, crumbs, startPos), faq
 const refineCities = getCities().filter((c) => queryHub({ specialty: q.specialty, city: c }).length > 0);
 const refineCenters = getFacilities().filter((f) => doctorsForFacility(f.id).some((v) => v.specialty.id === q.specialty.id)).sort((a, b) => a.name.localeCompare(b.name, 'es'));
 const refineArs = q.city ? getArs().filter((a) => queryHub({ specialty: q.specialty, city: q.city, ars: a }).length > 0) : [];
-const showRefine = refineCities.length > 0 || refineCenters.length > 0 || refineArs.length > 0;
-const sortHref = (o: string) => `${r.path}?orden=${o}`; // non-indexable: blocked in robots.txt, canonical stays clean
-const pageHref = (p: number) => hubPath(q, p);
+const showRefine = true; // day/time filter is always available
+const wq = whenQuery(r.when); // ?dia=..&hora=.. (non-indexable: blocked in robots.txt, noindex, canonical stays clean)
+const sortHref = (o: string) => `${r.path}?orden=${o}${wq ? '&' + wq.slice(1) : ''}`;
+const pageHref = (p: number) => `${hubPath(q, p)}${wq}`;
 ---
 <Base title={title} description={description} robots={r.decision.robots} jsonLd={jsonLd} canonicalPath={r.path}>
   <Breadcrumbs items={crumbs} />
   <div class="wrap page-head">
     <h1>{heading}</h1>
     <p class="summary">{r.intro}</p>
-    {r.decision.robots === 'noindex,follow' && <p class="muted">Aún estamos verificando más profesionales en esta búsqueda.</p>}
+    {r.when && <p class="summary" role="status">Doctores que atienden: <b>{whenLabel(r.when)}</b>, según el horario publicado en su perfil. Los doctores sin horario publicado no aparecen aquí: confirma siempre con el consultorio. <a href={r.path}>Quitar filtro</a></p>}
+    {!r.when && r.decision.robots === 'noindex,follow' && <p class="muted">Aún estamos verificando más profesionales en esta búsqueda.</p>}
   </div>
 
   {showRefine && (
@@ -81,6 +84,8 @@ const pageHref = (p: number) => hubPath(q, p);
       {refineCities.length > 0 && <div><label for="f-ciu">Provincia</label><select id="f-ciu" name="ciudad"><option value="">Todas las provincias</option>{refineCities.map((c) => <option value={c.slug} selected={q.city?.id === c.id}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select></div>}
       {refineArs.length > 0 && <div><label for="f-ars">Seguro (ARS)</label><select id="f-ars" name="ars"><option value="">Cualquier seguro</option>{refineArs.map((a) => <option value={a.slug} selected={q.ars?.id === a.id}>{a.name}</option>)}</select></div>}
       {refineCenters.length > 0 && <div><label for="f-cen">Centro médico</label><select id="f-cen" name="centro"><option value="">Cualquier centro</option>{refineCenters.map((f) => <option value={f.slug}>{f.name}</option>)}</select></div>}
+      <div><label for="f-dia">Día</label><select id="f-dia" name="dia"><option value="">Cualquier día</option><option value="hoy">Hoy</option><option value="manana">Mañana</option>{DAY_SLUGS.map((d, i) => <option value={d} selected={r.when?.day === i + 1}>{DAY_NAMES[i]}</option>)}</select></div>
+      <div><label for="f-hora">Hora</label><select id="f-hora" name="hora"><option value="">Cualquier hora</option>{Object.entries(SLOTS).map(([k, s]) => <option value={k} selected={r.when?.slot === k}>{s.label}</option>)}</select></div>
       <button class="btn" type="submit">Aplicar</button>
     </form>
   )}
@@ -92,7 +97,8 @@ const pageHref = (p: number) => hubPath(q, p);
       <a href={r.path} data-event="filter_use" aria-current={!orden || orden === 'nombre' ? 'true' : undefined} rel="nofollow">Nombre</a>
       <a href={sortHref('precio')} data-event="filter_use" aria-current={orden === 'precio' ? 'true' : undefined} rel="nofollow">Precio</a>
     </div>
-    <div class="table-scroll">
+    {organic.length === 0 && <p class="panel">Ningún doctor tiene publicado ese horario. <a href={r.path}>Quitar filtro</a></p>}
+    <div class="table-scroll" hidden={organic.length === 0}>
       <table class="compare stack">
         <thead><tr><th scope="col">Médico</th>{hasSub && <th scope="col">Subespecialidad</th>}<th scope="col">Zona</th><th scope="col">Centro</th>{hasArs && <th scope="col">ARS</th>}{hasFee && <th scope="col">Consulta desde</th>}{hasHours && <th scope="col">Horario</th>}</tr></thead>
         <tbody>
