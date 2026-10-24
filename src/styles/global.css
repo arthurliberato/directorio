@@ -40,8 +40,8 @@ p { margin: 0 0 1em; }
 /* Hero (home) */
 .hero { position: relative; overflow: hidden; background: var(--pale); padding: 28px 0 26px; }
 .hero > .wrap { position: relative; }
-.hero .gd-pattern { right: -12px; top: -6px; width: 160px; } @media (min-width: 800px) { .hero .gd-pattern { width: 320px; right: 24px; } }
-.hero h1 { max-width: 16ch; margin-top: 8px; } .hero h1 .accent { color: var(--gd-blue-ink); } /* kit's #5E9BD6 is 2.4:1 on Pale Blue; blue-ink passes */
+.hero .gd-pattern { right: -20px; top: -12px; width: 118px; } @media (min-width: 800px) { .hero .gd-pattern { width: 320px; right: 24px; } }
+.hero h1 { max-width: 20ch; margin-top: 8px; } .hero h1 .accent { color: var(--gd-blue-ink); } /* kit's #5E9BD6 is 2.4:1 on Pale Blue; blue-ink passes */
 .hero p.lead { color: var(--ink); font-weight: 700; max-width: 30rem; margin: 10px 0 18px; }
 .hero .gd-search { max-width: 34rem; } .hero .gd-search .btn { padding: 10px 18px; }
 .hero details { margin-top: 12px; max-width: 34rem; } .hero summary { cursor: pointer; font-weight: 800; font-size: 13px; color: var(--ink); }
