@@ -72,6 +72,10 @@ sectors            -- id, slug, name, city_id
 ars                -- id, slug, name (Humano, Universal, SeNaSa, Mapfre Salud, ...)
 doctor_ars         -- doctor_id, ars_id, verified_at
 
+doctor_mentions    -- id, doctor_id, kind (press|article|video|social), title, source_name, url (https),
+                      published_on, summary (<=600 chars) + summary_origin (excerpt|summary),
+                      published, checked_at   -- added by a person; published requires checked_at
+
 guides             -- id, slug, title, answer_summary, body, reviewer_doctor_id,
                       reviewed_at, sources[] (title, url), related_specialty_ids[]
 
@@ -173,6 +177,7 @@ Otherwise `noindex,follow` (still reachable through internal links).
 - **"Programar cita" panel (verified doctors only):** "Agendar por WhatsApp" (wa.me click-to-chat with a prefilled message naming the doctor and the profile URL) and/or "Reservar en línea" (the doctor's `booking_url`: a Cal.com link opens as a popup inside the profile, loading Cal.com's script only on hover/focus/touch, with the plain link as no-JS/failure fallback; any other https booking page opens in a new tab). Never shown for listed doctors. Events: `whatsapp_booking_click`, `booking_click`.
 - Map: static image first (`<img>` with address alt), interactive map loads on click.
 - Internal links: specialty hub, city hub, sector hub, facility pages, ARS hubs, 3–5 nearby same-specialty doctors.
+- **"En los medios y publicaciones" (affiliated doctors only):** published `doctor_mentions` (press, article, video, own social post), newest first: kind · source · date, linked title (`rel="noopener nofollow"`), and the optional text labeled "Extracto" (literal quote) or "Resumen de guiddo" (written by us, checked against the original). Links and short text only: no third-party embeds or scripts, no copied articles. Every item is entered and reviewed by a person in `/admin/doctors/<id>/contenido`; the page shows the last review date. Listed doctors never show this section.
 - Reserved, hidden reviews section (no markup until §12 is live).
 - JSON-LD: §6.1.
 
@@ -259,6 +264,7 @@ Rules: JSON-LD rendered server-side in `<head>` or `<body>`; every value must ma
 - `IndividualPhysician` is the schema.org v24+ type for an individual doctor (`practicesAt` exists only on it).
 - Only include the exequátur identifier if publishing it is cleared; otherwise omit `identifier`.
 - Do NOT use `usNPI`.
+- `subjectOf`: one `Article` / `SocialMediaPosting` / `CreativeWork` per mention visible in "En los medios y publicaciones" (headline, url, datePublished, publisher); omitted when there are none or the doctor is not affiliated.
 - Add `aggregateRating` / `review` only in phase 2 (§12).
 
 ### 6.2 Facility — `Hospital` or `MedicalClinic`

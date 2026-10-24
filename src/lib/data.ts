@@ -1,7 +1,7 @@
 // Data access layer. Pages only talk to this module. It reads the current in-memory snapshot (seed or
 // Postgres, see dataset.ts) through indexes built once per snapshot.
 import { getDataset, type Dataset } from './dataset.ts';
-import type { Ars, City, Doctor, Facility, Guide, Location, Sector, Specialty } from './types.ts';
+import type { Ars, City, Doctor, DoctorMention, Facility, Guide, Location, Sector, Specialty } from './types.ts';
 
 export interface LocationView extends Location { city: City; sector: Sector | null; facility: Facility | null; }
 export interface DoctorView { doctor: Doctor; specialty: Specialty; locations: LocationView[]; ars: Ars[]; }
@@ -11,6 +11,7 @@ interface Index {
   ds: Dataset; published: DoctorView[]; bySlug: Map<string, DoctorView>;
   specBySlug: Map<string, Specialty>; cityBySlug: Map<string, City>; arsBySlug: Map<string, Ars>;
   facBySlug: Map<string, Facility>; guideBySlug: Map<string, Guide>; redirectByPath: Map<string, string>;
+  mentionsByDoctor: Map<number, DoctorMention[]>;
 }
 
 const cache = new WeakMap<Dataset, Index>();
@@ -30,8 +31,13 @@ const idx = (): Index => {
   for (const a of ds.doctorArs) { const r = ars.get(a.ars_id); if (r) arsByDoctor.set(a.doctor_id, [...(arsByDoctor.get(a.doctor_id) ?? []), r]); }
   // "Published" = listed or affiliated. Drafts (e.g. doctors you have not decided to show yet) never render.
   const published = ds.doctors.filter(isPublished).map((d): DoctorView => ({ doctor: d, specialty: spec.get(d.specialty_id)!, locations: locs.get(d.id) ?? [], ars: arsByDoctor.get(d.id) ?? [] }));
+  // Newest first; undated items last. Only published, reviewed items (the database also requires a review date for them).
+  const mentionsByDoctor = new Map<number, DoctorMention[]>();
+  for (const m of [...ds.mentions].filter((x) => x.published && x.checked_at).sort((a, b) => (b.published_on ?? '').localeCompare(a.published_on ?? '') || b.id - a.id)) {
+    mentionsByDoctor.set(m.doctor_id, [...(mentionsByDoctor.get(m.doctor_id) ?? []), m]);
+  }
   i = {
-    ds, published, bySlug: new Map(published.map((v) => [v.doctor.slug, v])),
+    ds, published, mentionsByDoctor, bySlug: new Map(published.map((v) => [v.doctor.slug, v])),
     specBySlug: new Map(ds.specialties.map((s) => [s.slug, s])), cityBySlug: new Map(ds.cities.map((c) => [c.slug, c])),
     arsBySlug: new Map(ds.ars.map((a) => [a.slug, a])), facBySlug: new Map(ds.facilities.map((f) => [f.slug, f])),
     guideBySlug: new Map(ds.guides.map((g) => [g.slug, g])), redirectByPath: new Map(ds.redirects.map((r) => [r.from_path, r.to_path])),
@@ -90,6 +96,11 @@ export function nearbyDoctors(v: DoctorView, limit = 5): DoctorView[] {
     .sort((a, b) => tierRank(a) - tierRank(b) || sameSector(b) - sameSector(a) || a.doctor.slug.localeCompare(b.doctor.slug))
     .slice(0, limit);
 }
+
+/** Published press/article/video/social items for a profile. Verified (affiliated) doctors only: listed profiles never carry third-party content. */
+export const doctorMentions = (v: DoctorView): DoctorMention[] => (isAffiliated(v.doctor) ? idx().mentionsByDoctor.get(v.doctor.id) ?? [] : []);
+/** Everything saved for a doctor, drafts included (admin). */
+export const allMentionsFor = (doctorId: number): DoctorMention[] => idx().ds.mentions.filter((m) => m.doctor_id === doctorId).sort((a, b) => b.id - a.id);
 
 export const primaryLocation = (v: DoctorView): LocationView | null => v.locations[0] ?? null;
 export function doctorCount(specialtyId?: number, cityId?: number): number {

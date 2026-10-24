@@ -1,0 +1,78 @@
+---
+import AdminShell from '../../../../components/AdminShell.astro';
+import { addMention, deleteMention, updateMention } from '../../../../lib/admin-db.ts';
+import { adminCanWrite, withDb } from '../../../../lib/admin-run.ts';
+import { allDoctors, allMentionsFor, isAffiliated } from '../../../../lib/data.ts';
+import { MENTION_KIND_LABEL, MENTION_KINDS, MENTION_SUMMARY_MAX, type MentionInput } from '../../../../lib/mentions.ts';
+
+// Press, articles, videos and social posts shown on a verified doctor's profile. Nothing is published until a person checks it here.
+const id = Number(Astro.params.id);
+if (!allDoctors().some((x) => x.id === id)) return new Response('Not found', { status: 404 });
+let message = ''; let error = false;
+if (Astro.request.method === 'POST' && adminCanWrite()) {
+  const f = await Astro.request.formData();
+  const str = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v === '' ? null : v; };
+  const input: MentionInput = {
+    kind: String(f.get('kind') ?? ''), title: String(f.get('title') ?? ''), source_name: String(f.get('source_name') ?? ''), url: String(f.get('url') ?? ''),
+    published_on: str('published_on'), summary: str('summary'), summary_origin: str('summary_origin'), published: f.get('published') === 'on',
+  };
+  const action = String(f.get('action') ?? '');
+  try {
+    await withDb(async (run) => {
+      if (action === 'add') await addMention(run, id, input);
+      else if (action === 'update') { const mid = Number(f.get('mention_id')); if (!allMentionsFor(id).some((m) => m.id === mid)) throw new Error('item no encontrado'); await updateMention(run, mid, input); }
+      else if (action === 'delete') { const mid = Number(f.get('mention_id')); if (!allMentionsFor(id).some((m) => m.id === mid)) throw new Error('item no encontrado'); await deleteMention(run, mid); }
+      else throw new Error('acción no válida');
+    }, { reload: true });
+    message = action === 'delete' ? 'Eliminado.' : 'Guardado.';
+  } catch (e) { message = `Error: ${(e as Error).message}`; error = true; }
+}
+const d = allDoctors().find((x) => x.id === id)!;
+const items = allMentionsFor(id);
+const affiliated = isAffiliated(d);
+const origins = [['excerpt', 'Extracto literal del contenido (entre comillas)'], ['summary', 'Resumen escrito por nosotros']] as const;
+---
+<AdminShell title={`Prensa y publicaciones · ${d.display_name}`} message={message} error={error}>
+  <p><a href={`/admin/doctors/${id}`}>← Ficha del médico</a>{affiliated ? <> · <a href={`/${d.slug}`}>ver perfil público</a></> : null}</p>
+  {!affiliated && <p class="warn"><b>Este médico no es «Verificado (afiliado)».</b> Los perfiles informativos nunca muestran contenido de terceros: lo que guardes aquí no aparecerá hasta que se afilie.</p>}
+  <p><small>Reglas: solo enlaces <b>https</b> a contenido que de verdad trate de este médico; para redes sociales, solo cuentas propias del médico y con su permiso. Si el texto sale de un video, <b>míralo completo y compáralo</b> antes de publicar: no incluyas consejos médicos, cifras ni afirmaciones que el médico no dijo. Al marcar «Publicar» confirmas que revisaste el enlace y el texto; se guarda la fecha de hoy como fecha de revisión.</small></p>
+
+  <h2>Añadir</h2>
+  <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
+    <input type="hidden" name="action" value="add" />
+    <div class="grid2">
+      <div><label for="n-kind">Tipo</label><select id="n-kind" name="kind">{MENTION_KINDS.map((k) => <option value={k}>{MENTION_KIND_LABEL[k]}</option>)}</select></div>
+      <div><label for="n-src">Fuente (medio o cuenta)</label><input id="n-src" name="source_name" required maxlength="100" placeholder="Listín Diario / Instagram de la doctora" /></div>
+      <div><label for="n-title">Título</label><input id="n-title" name="title" required maxlength="200" /></div>
+      <div><label for="n-url">Enlace (https)</label><input id="n-url" name="url" type="url" required placeholder="https://" /></div>
+      <div><label for="n-date">Fecha de publicación (opcional)</label><input id="n-date" name="published_on" type="date" /></div>
+      <div><label for="n-origin">El texto de abajo es…</label><select id="n-origin" name="summary_origin"><option value="">(sin texto)</option>{origins.map(([v, l]) => <option value={v}>{l}</option>)}</select></div>
+    </div>
+    <label for="n-sum">Texto (máx. {MENTION_SUMMARY_MAX} caracteres)</label><textarea id="n-sum" name="summary" rows="3" maxlength={MENTION_SUMMARY_MAX}></textarea>
+    <p><label style="font-weight:400"><input type="checkbox" name="published" /> <b>Publicar</b> (revisé el enlace y el texto)</label></p>
+    <p><button type="submit">Añadir</button></p>
+  </fieldset></form>
+
+  <h2>Guardados ({items.length})</h2>
+  {items.length === 0 && <p><small>Todavía no hay contenido para este médico.</small></p>}
+  {items.map((m) => (
+    <details style="background:#fff;border:1px solid #d9e3ec;border-radius:10px;padding:10px 14px;margin:8px 0">
+      <summary><b>{m.title}</b> · {MENTION_KIND_LABEL[m.kind]} · {m.source_name} {m.published ? <span class="chip" style="background:#e4f4e8;color:#25693a">publicado · revisado {m.checked_at}</span> : <span class="chip">borrador</span>}</summary>
+      <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
+        <input type="hidden" name="action" value="update" /><input type="hidden" name="mention_id" value={m.id} />
+        <div class="grid2">
+          <div><label>Tipo</label><select name="kind">{MENTION_KINDS.map((k) => <option value={k} selected={m.kind === k}>{MENTION_KIND_LABEL[k]}</option>)}</select></div>
+          <div><label>Fuente</label><input name="source_name" required maxlength="100" value={m.source_name} /></div>
+          <div><label>Título</label><input name="title" required maxlength="200" value={m.title} /></div>
+          <div><label>Enlace (https)</label><input name="url" type="url" required value={m.url} /></div>
+          <div><label>Fecha de publicación</label><input name="published_on" type="date" value={m.published_on ?? ''} /></div>
+          <div><label>El texto es…</label><select name="summary_origin"><option value="">(sin texto)</option>{origins.map(([v, l]) => <option value={v} selected={m.summary_origin === v}>{l}</option>)}</select></div>
+        </div>
+        <label>Texto</label><textarea name="summary" rows="3" maxlength={MENTION_SUMMARY_MAX}>{m.summary ?? ''}</textarea>
+        <p><label style="font-weight:400"><input type="checkbox" name="published" checked={m.published} /> <b>Publicar</b> (revisé el enlace y el texto; al guardar se actualiza la fecha de revisión)</label></p>
+        <p><button type="submit">Guardar</button> <a href={m.url} target="_blank" rel="noopener nofollow">abrir enlace ↗</a></p>
+      </fieldset></form>
+      <form method="post" class="inline" onsubmit="return confirm('¿Eliminar este item?')"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0"><input type="hidden" name="action" value="delete" /><input type="hidden" name="mention_id" value={m.id} /><button class="ghost" type="submit">Eliminar</button></fieldset></form>
+    </details>
+  ))}
+</AdminShell>

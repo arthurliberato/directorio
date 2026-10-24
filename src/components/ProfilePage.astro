@@ -5,7 +5,8 @@ import DoctorCard from './DoctorCard.astro';
 import MapBox from './MapBox.astro';
 import Icon from './Icon.astro';
 import { BRAND } from '../config.ts';
-import { isAffiliated, nearbyDoctors, type DoctorView } from '../lib/data.ts';
+import { doctorMentions, isAffiliated, nearbyDoctors, type DoctorView } from '../lib/data.ts';
+import { MENTION_KIND_LABEL, MENTION_ORIGIN_LABEL } from '../lib/mentions.ts';
 import { agentNoun, doctorHubLinks, factSummary, initialsOf, isListedOnly, profileMetaDescription, profilePath, profileTitle, titleOf } from '../lib/facts.ts';
 import { formatDate, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
 import { profileIndexDecision } from '../lib/indexing.ts';
@@ -21,6 +22,7 @@ const loc = v.locations[0];
 const affiliated = isAffiliated(d);
 const showPhoto = affiliated && !!d.photo_url; // photos only for verified affiliates
 const nearby = nearbyDoctors(v, 4);
+const mentions = doctorMentions(v); // verified doctors only; items are reviewed by a person before they are published
 const crumbs = [{ name: 'Inicio', path: '/' }, { name: v.specialty.name_plural, path: hubPath({ specialty: v.specialty }) }];
 if (loc) crumbs.push({ name: loc.city.name, path: hubPath({ specialty: v.specialty, city: loc.city }) });
 crumbs.push({ name: d.display_name, path: profilePath(v) });
@@ -81,6 +83,22 @@ const initials = initialsOf(d.display_name);
       </section>
 
       {d.bio && <section aria-labelledby="sobre"><h2 id="sobre" style="margin-top:1.5em">Sobre {titleOf(v)} {d.display_name.replace(/^Dra?\.\s*/, '')}</h2><p>{d.bio}</p></section>}
+
+      {mentions.length > 0 && (
+        <section aria-labelledby="prensa" style="margin-top:1.5em">
+          <h2 id="prensa">En los medios y publicaciones</h2>
+          <ul style="list-style:none;padding:0;margin:0;display:grid;gap:12px">
+            {mentions.map((m) => (
+              <li class="panel" style="padding:14px">
+                <p class="muted" style="margin:0 0 4px;font-size:.88rem">{MENTION_KIND_LABEL[m.kind]} · {m.source_name}{m.published_on && <> · <time datetime={m.published_on}>{formatDate(m.published_on)}</time></>}</p>
+                <p style="margin:0"><a href={m.url} target="_blank" rel="noopener nofollow"><b>{m.title}</b></a></p>
+                {m.summary && <p style="margin:6px 0 0"><span class="muted">{MENTION_ORIGIN_LABEL[m.summary_origin!]}:</span> {m.summary_origin === 'excerpt' ? `«${m.summary}»` : m.summary}</p>}
+              </li>
+            ))}
+          </ul>
+          <p class="muted" style="margin:8px 0 0;font-size:.85rem">Enlaces a contenido de terceros, revisados por {BRAND} (último control: <time datetime={mentions.map((m) => m.checked_at!).sort().at(-1)}>{formatDate(mentions.map((m) => m.checked_at!).sort().at(-1)!)}</time>). {BRAND} no controla esos sitios.</p>
+        </section>
+      )}
 
       {/* Reserved: reviews section (SPEC §12). Intentionally no markup until phase 2 is live. */}
 

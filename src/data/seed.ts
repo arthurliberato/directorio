@@ -1,5 +1,5 @@
 // ILLUSTRATIVE SEED DATA. Not real doctors. Replaced by Postgres (db/schema.sql) in production.
-import type { Ars, City, Doctor, DoctorArs, Facility, Guide, Location, RedirectRow, Sector, Specialty } from '../lib/types.ts';
+import type { Ars, City, Doctor, DoctorArs, DoctorMention, Facility, Guide, Location, RedirectRow, Sector, Specialty } from '../lib/types.ts';
 
 export const specialties: Specialty[] = [
   { id: 1, slug: 'cardiologos', name_singular: 'Cardiología', name_plural: 'Cardiólogos', field_name: 'Cardiología', agent_f: 'cardióloga', agent_m: 'cardiólogo', schema_enum: 'Cardiovascular', icon: 'heart' },
@@ -155,6 +155,18 @@ LISTED.forEach(([name, specSlug, cityId, clinic, suite, ext], i) => {
   locations.push({ id: id2, doctor_id: id2, facility_id: cityId === 1 ? 1 : 4, address: cityId === 1 ? facilities[0].address : facilities[3].address, sector_id: null, city_id: cityId,
     lat: null, lng: null, schedule: [], phone: cityId === 1 ? '+1-809-555-0101' : '+1-809-555-0104', suite, phone_ext: ext });
 });
+
+// Illustrative mentions (example.com is reserved). Only published ones of affiliated doctors ever render.
+export const mentions: DoctorMention[] = [
+  { id: 1, doctor_id: doctors[0].id, kind: 'press', title: 'Entrevista sobre prevención cardiovascular', source_name: 'Ejemplo Noticias', url: 'https://noticias.example.com/entrevista-prevencion',
+    published_on: '2026-09-18', summary: 'Habla de la importancia de revisar la presión arterial cada año.', summary_origin: 'summary', published: true, checked_at: '2026-10-10' },
+  { id: 2, doctor_id: doctors[0].id, kind: 'social', title: 'Consejos para el día a día del corazón', source_name: 'Instagram de la doctora', url: 'https://instagram.example.com/p/ejemplo',
+    published_on: '2026-10-02', summary: 'Caminar 30 minutos al día ayuda a cuidar el corazón.', summary_origin: 'excerpt', published: true, checked_at: '2026-10-10' },
+  { id: 3, doctor_id: doctors[0].id, kind: 'article', title: 'Borrador sin revisar', source_name: 'Ejemplo Revista', url: 'https://revista.example.com/borrador',
+    published_on: null, summary: null, summary_origin: null, published: false, checked_at: null },
+  { id: 4, doctor_id: 950, kind: 'press', title: 'Nota de un médico listado (nunca se muestra)', source_name: 'Ejemplo Noticias', url: 'https://noticias.example.com/listado',
+    published_on: '2026-09-01', summary: null, summary_origin: null, published: true, checked_at: '2026-10-10' },
+];
 
 // Sponsored placement (labeled, outside any ranking).
 doctors[2].sponsored = true;

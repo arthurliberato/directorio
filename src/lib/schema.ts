@@ -1,9 +1,10 @@
 // JSON-LD builders. Every value comes from the same records that render the visible page;
 // unknown fields are omitted, never invented (SPEC §6).
 import { BRAND, NAP, PUBLISH_EXEQUATUR_IDENTIFIER, SITE_URL } from '../config.ts';
-import type { DoctorView } from './data.ts';
+import { doctorMentions, type DoctorView } from './data.ts';
 import { agentNoun, factSummary, profilePath } from './facts.ts';
 import { dayToSchema } from './format.ts';
+import { mentionsJsonLd } from './mentions.ts';
 import type { Facility, Guide } from './types.ts';
 import { hubHeading } from './hubs.ts';
 import type { HubQuery } from './data.ts';
@@ -39,6 +40,7 @@ export function physicianJsonLd(v: DoctorView) {
     alumniOf: d.education.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
     paymentAccepted: v.ars.length ? `Efectivo, tarjeta, ${v.ars.map((a) => a.name).join(', ')}` : undefined,
     openingHoursSpecification: opening,
+    subjectOf: mentionsJsonLd(doctorMentions(v)),
     sameAs,
   });
 }

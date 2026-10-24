@@ -1,5 +1,6 @@
 // Admin writes (SPEC §1: edit doctors, mark verification, toggle index status). Parameterized SQL only.
 import { normalizeBookingUrl } from './booking.ts';
+import { validateMention, type MentionInput } from './mentions.ts';
 export type Run = (sql: string, params?: unknown[]) => Promise<any[]>;
 export const INDEX_STATUSES = ['auto', 'force_index', 'force_noindex'] as const;
 
@@ -102,3 +103,28 @@ export async function setListingStatus(run: Run, doctorId: number, status: strin
     throw e;
   }
 }
+
+// --- Mentions (press, articles, videos, social posts) -----------------------------------------------------------
+/** Publishing stamps today's date as the review date: the person saving it has just checked the link and the text. */
+export async function addMention(run: Run, doctorId: number, m: MentionInput): Promise<number> {
+  const errs = validateMention(m);
+  if (errs.length) throw new Error(errs.join('; '));
+  try {
+    const rows = await run('insert into doctor_mentions (doctor_id, kind, title, source_name, url, published_on, summary, summary_origin, published, checked_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, case when $9 then current_date else null end) returning id',
+      [doctorId, m.kind, m.title.trim(), m.source_name.trim(), m.url.trim(), m.published_on, m.summary?.trim() || null, m.summary?.trim() ? m.summary_origin : null, m.published]);
+    return Number(rows[0].id);
+  } catch (e) { throw mentionDbError(e); }
+}
+export async function updateMention(run: Run, id: number, m: MentionInput): Promise<void> {
+  const errs = validateMention(m);
+  if (errs.length) throw new Error(errs.join('; '));
+  try {
+    const rows = await run('update doctor_mentions set kind = $1, title = $2, source_name = $3, url = $4, published_on = $5, summary = $6, summary_origin = $7, published = $8, checked_at = case when $8 then current_date else null end, updated_at = now() where id = $9 returning id',
+      [m.kind, m.title.trim(), m.source_name.trim(), m.url.trim(), m.published_on, m.summary?.trim() || null, m.summary?.trim() ? m.summary_origin : null, m.published, id]);
+    if (!rows.length) throw new Error(`mention ${id} not found`);
+  } catch (e) { throw mentionDbError(e); }
+}
+export async function deleteMention(run: Run, id: number): Promise<void> {
+  await run('delete from doctor_mentions where id = $1', [id]);
+}
+const mentionDbError = (e: unknown) => (/doctor_mentions_doctor_id_url_key/.test((e as Error).message) ? new Error('Ese enlace ya está guardado para este médico.') : (e as Error));

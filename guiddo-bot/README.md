@@ -33,7 +33,7 @@ Routes: `GET|POST /webhook` (alias `/api/whatsapp`, so Meta's callback can be fl
 
 ## Deploy (order from the separation doc §5)
 
-1. **Database role**: run `db/bot-role.sql` (change the password) in Supabase. `select` on the 10 catalog tables, `select/insert/update` on `appointment_requests` only. Use that role's connection string as `DATABASE_URL`.
+1. **Database role** (run `db/migrations/007_doctor_mentions.sql` of the site first; if you already ran an older `bot-role.sql`, also run `grant select on doctor_mentions to guiddo_bot;`; the bot keeps working without it, just without mentions): run `db/bot-role.sql` (change the password) in Supabase. `select` on the 11 catalog tables (the catalog snapshot also loads `doctor_mentions`), `select/insert/update` on `appointment_requests` only. Use that role's connection string as `DATABASE_URL`.
 2. **Render**: new Web Service from `render.yaml` (one instance only: pending appointment requests and webhook de-duplication are in memory), custom domain e.g. `bot.guiddo.net`. Copy the `WHATSAPP_*` values and `CEDULA_PEPPER` from the site's service.
 3. **Test** with Meta's test number: `https://bot.guiddo.net/webhook` + the verify token, send a few messages, try the simulator.
 4. **Switch** the callback URL in Meta from the site to the bot. Check real round trips.

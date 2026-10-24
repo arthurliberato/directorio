@@ -43,6 +43,14 @@ export interface Doctor {
   booking_url: string | null;
   source_name: string | null; source_url: string | null; source_retrieved_at: string | null;
 }
+export type MentionKind = 'press' | 'article' | 'video' | 'social';
+export type MentionTextOrigin = 'excerpt' | 'summary';
+/** Press / article / video / social post about a doctor, added and reviewed by a person. Shown on affiliated profiles only. */
+export interface DoctorMention {
+  id: number; doctor_id: number; kind: MentionKind; title: string; source_name: string; url: string;
+  published_on: string | null; summary: string | null; summary_origin: MentionTextOrigin | null;
+  published: boolean; checked_at: string | null;
+}
 export interface DoctorArs { doctor_id: number; ars_id: number; verified_at: string; }
 export interface Guide {
   id: number; slug: string; title: string; category: string; icon: string;

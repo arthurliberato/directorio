@@ -1,17 +1,26 @@
 import type { Dataset } from './dataset.ts';
-import type { Ars, City, Doctor, DoctorArs, Facility, Guide, Location, RedirectRow, Sector, Specialty } from './types.ts';
+import type { Ars, City, Doctor, DoctorArs, DoctorMention, Facility, Guide, Location, RedirectRow, Sector, Specialty } from './types.ts';
 
 export type Query = (sql: string) => Promise<any[]>;
 
 const iso = (v: unknown): string | null => (v == null ? null : v instanceof Date ? v.toISOString() : String(v));
 const day = (v: unknown): string | null => iso(v)?.slice(0, 10) ?? null;
 
+// Rolling out the mentions table must not take the site (or the bot) down: a missing table or missing SELECT grant means "no mentions yet".
+const optional = async (q: Query, sql: string): Promise<any[]> => {
+  try { return await q(sql); } catch (e) {
+    if (['42P01', '42501'].includes((e as { code?: string }).code ?? '')) { console.warn('[dataset] doctor_mentions not readable yet, continuing without it'); return []; }
+    throw e;
+  }
+};
+
 /** Reads every table (SPEC §2) into a Dataset. Works with any driver exposing `query(text) -> rows`. */
 export async function loadFromSql(q: Query): Promise<Dataset> {
-  const [specialties, cities, sectors, ars, facilities, doctors, locations, doctorArs, guides, redirects] = await Promise.all([
+  const [specialties, cities, sectors, ars, facilities, doctors, locations, doctorArs, guides, redirects, mentions] = await Promise.all([
     q('select * from specialties order by id'), q('select * from cities order by id'), q('select * from sectors order by id'),
     q('select * from ars order by id'), q('select * from facilities order by id'), q('select * from doctors order by id'),
     q('select * from locations order by id'), q('select * from doctor_ars'), q('select * from guides order by id'), q('select * from redirects'),
+    optional(q, 'select * from doctor_mentions order by id'),
   ]);
   const specSlug = new Map<number, string>(specialties.map((s: any) => [s.id, s.slug]));
   const [{ now }] = await q('select now() as now');
@@ -35,6 +44,7 @@ export async function loadFromSql(q: Query): Promise<Dataset> {
       related_specialty_slugs: (g.related_specialty_ids ?? []).map((id: number) => specSlug.get(id)).filter(Boolean),
     })),
     redirects: redirects as RedirectRow[],
+    mentions: mentions.map((m: any): DoctorMention => ({ ...m, id: Number(m.id), doctor_id: Number(m.doctor_id), published_on: day(m.published_on), checked_at: day(m.checked_at) })),
     today: day(now)!, source: 'postgres', loadedAt: Date.now(),
   };
 }

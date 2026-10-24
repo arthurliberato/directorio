@@ -2,17 +2,17 @@
 // otherwise the illustrative seed. Pages read the snapshot synchronously (see data.ts); the snapshot is
 // refreshed in the background so CDN-cached SSR stays fast and fresh.
 import * as seed from '../data/seed.ts';
-import type { Ars, City, Doctor, DoctorArs, Facility, Guide, Location, RedirectRow, Sector, Specialty } from './types.ts';
+import type { Ars, City, Doctor, DoctorArs, DoctorMention, Facility, Guide, Location, RedirectRow, Sector, Specialty } from './types.ts';
 
 export interface Dataset {
   specialties: Specialty[]; cities: City[]; sectors: Sector[]; ars: Ars[]; facilities: Facility[];
-  doctors: Doctor[]; locations: Location[]; doctorArs: DoctorArs[]; guides: Guide[]; redirects: RedirectRow[];
+  doctors: Doctor[]; locations: Location[]; doctorArs: DoctorArs[]; guides: Guide[]; redirects: RedirectRow[]; mentions: DoctorMention[];
   today: string; source: 'seed' | 'postgres'; loadedAt: number;
 }
 
 export const seedDataset = (): Dataset => ({
   specialties: seed.specialties, cities: seed.cities, sectors: seed.sectors, ars: seed.ars, facilities: seed.facilities,
-  doctors: seed.doctors, locations: seed.locations, doctorArs: seed.doctorArs, guides: seed.guides, redirects: seed.redirects,
+  doctors: seed.doctors, locations: seed.locations, doctorArs: seed.doctorArs, guides: seed.guides, redirects: seed.redirects, mentions: seed.mentions,
   today: seed.SEED_TODAY, source: 'seed', loadedAt: Date.now(),
 });
 
