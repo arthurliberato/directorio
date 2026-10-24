@@ -29,7 +29,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <div class="gd-label">La guía de doctores dominicanos</div>
       <h1 class="gd-h1">Encuentra al doctor que <span class="accent">buscas</span></h1>
       <!-- Filters update the list below in place (script at the bottom). Without JS the form falls back to GET /buscar (noindex). -->
-      <form class="finder" action="/buscar" method="get" data-live data-event="search">
+      <div class="board"><form class="finder" action="/buscar" method="get" data-live data-event="search">
         <div class="field"><Icon name="stethoscope" size={24} /><div><label for="q-esp">Especialidad <small>Opcional</small></label>
           <select id="q-esp" name="especialidad"><option value="">Todas las especialidades</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
         <div class="field"><Icon name="pin" size={24} /><div><label for="q-ciu">Provincia <small>Recomendado</small></label>
@@ -41,12 +41,9 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
           <select name="hora" aria-label="Hora"><option value="ahora">Ahora</option><option value="">Cualquier hora</option>{Object.entries(SLOTS).map(([k, s]) => <option value={k}>{s.label}</option>)}</select></div></div></div>
         <button class="gd-btn" type="submit">Ver resultados</button>
       </form>
+      <div id="resultados" class="board__body" aria-live="polite" aria-labelledby="res-titulo"><AvailableList filters={{}} /></div></div>
       <div class="ticks"><span><Icon name="check" size={18} /> Exequátur verificado</span><span><Icon name="check" size={18} /> Información transparente</span></div>
     </div>
-  </section>
-
-  <section class="section wrap" id="resultados" aria-live="polite" aria-labelledby="res-titulo" style="padding-bottom:14px">
-    <AvailableList filters={{}} />
   </section>
 
   <section class="section wrap" aria-labelledby="esp" style="padding-bottom:14px;padding-top:14px">

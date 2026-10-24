@@ -249,13 +249,15 @@ test('available now: who is at the practice at this moment (DR time), later toda
   const mon10 = new Date('2026-10-19T14:00:00Z'); // Monday 10:00 in the Dominican Republic
   const now = availableDoctors({}, mon10);
   assert.equal(now.mode, 'now'); assert.ok(now.items.length > 0);
-  assert.ok(now.items.every((v) => v.locations.some((l) => l.schedule.some((e) => e.day === 1 && e.open <= '10:00' && '10:00' < e.close))), 'everyone listed is in consultation at 10:00');
+  assert.ok(now.items.every((u) => u.live && u.v.locations.some((l) => l.schedule.some((e) => e.day === 1 && e.open <= '10:00' && '10:00' < e.close))), 'everyone listed is in consultation at 10:00');
+  assert.deepEqual(now.items.map((u) => u.hour ?? ''), [...now.items.map((u) => u.hour ?? '')].sort(), 'board is ordered by hour');
+  assert.ok(now.items.every((u) => !u.hour || u.hour >= '10:00'), 'hour = next whole hour from now, never one already past');
   const sat = availableDoctors({}, new Date('2026-10-24T14:00:00Z')); // Saturday: nobody has hours
-  assert.equal(sat.mode, 'fallback'); assert.ok(sat.items.every((v) => v.doctor.listing_status === 'affiliated'));
+  assert.equal(sat.mode, 'fallback'); assert.ok(sat.items.every((u) => u.v.doctor.listing_status === 'affiliated'));
   const night = availableDoctors({}, new Date('2026-10-20T03:00:00Z')); // Monday 23:00 DR: nobody now, nothing later today
   assert.ok(night.mode !== 'now');
   const ped = availableDoctors({ especialidad: 'pediatras', dia: 'lun', hora: 'tarde' }, mon10);
-  assert.equal(ped.mode, 'filtered'); assert.ok(ped.items.length > 0 && ped.items.every((v) => v.specialty.slug === 'pediatras'));
+  assert.equal(ped.mode, 'filtered'); assert.ok(ped.items.length > 0 && ped.items.every((u) => u.v.specialty.slug === 'pediatras' && (u.hour ?? '') >= '12:00'));
   assert.equal(availableDoctors({ dia: 'dom', hora: '' }, mon10).items.length, 0);
   assert.deepEqual(filtersFrom(new URLSearchParams('hora=&dia=lun')), { especialidad: undefined, ciudad: undefined, centro: undefined, dia: 'lun', hora: '' });
 });

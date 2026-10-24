@@ -66,13 +66,13 @@ export function hoursOn(v: DoctorView, day: number): string | null {
 
 /** Bookable-looking hour chips derived from the REAL published hours: whole hours inside each opening window for that day.
  *  `fromMinutes` (today only) skips hours already past. Never invents a window the doctor does not publish. */
-export function hourChips(v: DoctorView, day: number, fromMinutes: number | null = null): string[] {
+export function hourChips(v: DoctorView, day: number, fromMinutes: number | null = null, slot?: SlotSlug): string[] {
   const out = new Set<number>();
   for (const e of v.locations.flatMap((l) => l.schedule).filter((x) => x.day === day)) {
     const open = mins(e.open), close = mins(e.close);
     let t = Math.ceil(open / 60) * 60;
     if (open % 60 === 0) t = open;
-    for (; t < close; t += 60) if (fromMinutes == null || t >= fromMinutes) out.add(t);
+    for (; t < close; t += 60) if ((fromMinutes == null || t >= fromMinutes) && (!slot || (t >= mins(SLOTS[slot].from) && t < mins(SLOTS[slot].to)))) out.add(t);
   }
   return [...out].sort((a, b) => a - b).map(hhmmOf);
 }
