@@ -18,8 +18,8 @@ const address = loc ? `${loc.facility ? loc.facility.name + ', ' : ''}${loc.suit
 const others = u.chips.slice(1);
 ---
 <li class="gd-slotwrap">
-  <a class:list={['gd-slot', { 'gd-slot--live': u.live }]} href={profilePath(v)} data-open={id} aria-haspopup="dialog">
-    <span class="gd-slot__time">{u.hour ?? (u.live ? 'Ahora' : '→')}{u.hour && u.live && <small>en consulta</small>}</span>
+  <a class:list={['gd-slot', { 'gd-slot--soon': u.soon }]} href={profilePath(v)} data-open={id} aria-haspopup="dialog">
+    <span class="gd-slot__time">{u.hour ?? (u.live ? 'Ahora' : '→')}{u.hour && u.soon && <small>{u.live ? 'en consulta' : u.away ? `en ${u.away} min` : 'ahora'}</small>}</span>
     <span class="gd-slot__who">
       <span class="gd-slot__name">{d.display_name}{aff && <Icon name="shield" size={15} />}{d.sponsored && <em>Patrocinado</em>}</span>
       <span class="gd-slot__spec"><Icon name={specialtyIcon(v.specialty.slug, v.specialty.icon)} size={16} />{v.specialty.field_name}</span>
@@ -34,7 +34,7 @@ const others = u.chips.slice(1);
         <div><strong class="gd-modal__name">{d.display_name}</strong><div class="gd-tile__spec">{agentNoun(v)[0].toUpperCase() + agentNoun(v).slice(1)}</div>
           <span class:list={['gd-rx__tier', aff ? 'ok' : 'info']}>{aff ? 'Verificado' : 'Perfil informativo · no verificado'}</span></div>
       </div>
-      {u.chips.length > 0 && <div><div class="gd-label soft">Horas {day ? 'del día' : ''}</div><div class="gd-tile__chips">{u.chips.map((h, i) => <span class:list={['gd-chip', { 'gd-chip--first': i === 0 }]}>{h}</span>)}</div></div>}
+      {u.chips.length > 0 && <div><div class="gd-label soft">Horas {day ? 'del día' : ''}</div><div class="gd-tile__chips">{u.chips.map((h, i) => <span class:list={['gd-chip', { 'gd-chip--first': i === 0, 'gd-chip--soon': i === 0 && u.soon }]}>{h}</span>)}</div></div>}
       <dl class="gd-rx__data gd-mono">
         {address && <><dt>LUGAR</dt><dd>{address}</dd></>}
         {hoursOn(v, day) && <><dt>HORARIO</dt><dd>{hoursOn(v, day)}</dd></>}

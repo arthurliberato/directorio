@@ -241,7 +241,8 @@ dialog.gd-modal::backdrop { background: color-mix(in srgb, var(--gd-ink) 60%, tr
 .gd-slot:hover { border-color: var(--ink); }
 .gd-slot__time { display: grid; place-items: center; align-content: center; min-width: 5.2rem; align-self: stretch; padding: 12px 10px; background: var(--ink); color: var(--paper); font: 500 1.35rem/1 var(--gd-font-mono); letter-spacing: -.02em; text-align: center; }
 .gd-slot__time small { font: 800 10px var(--font-body); letter-spacing: 0; opacity: .9; margin-top: 4px; text-transform: uppercase; }
-.gd-slot--live .gd-slot__time { background: var(--gd-blue); color: var(--gd-ink); }
+.gd-slot--soon .gd-slot__time { background: var(--gd-soon); color: var(--gd-ink); }
+.gd-slot--soon { border-color: var(--gd-soon); }
 .gd-slot__who { display: grid; gap: 2px; min-width: 0; padding: 10px 0; }
 .gd-slot__name { font: 900 1.05rem/1.15 var(--font-head); letter-spacing: -.01em; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; } .gd-slot__name svg { color: var(--accent); flex: none; }
 .gd-slot__name em { font: 500 10px var(--gd-font-mono); text-transform: uppercase; font-style: normal; border: 1px solid var(--gd-blue); border-radius: var(--radius-sm); padding: 1px 5px; }
@@ -262,3 +263,4 @@ dialog.gd-modal::backdrop { background: color-mix(in srgb, var(--gd-ink) 60%, tr
 .gd-sign__lead { display: flex; align-items: center; gap: 10px; } .gd-sign__lead svg { flex: none; }
 .gd-slot__spec { display: inline-flex; align-items: center; gap: 6px; } .gd-slot__spec svg { color: var(--accent); flex: none; }
 .gd-rx__spec { display: flex; align-items: center; gap: 4px; } .gd-rx__spec svg { color: var(--accent); flex: none; }
+.gd-chip--soon { background: var(--gd-soon); color: var(--gd-ink); border-color: var(--gd-soon); }

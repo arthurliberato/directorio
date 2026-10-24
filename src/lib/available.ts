@@ -5,7 +5,7 @@ import { byTierThenName, getCityBySlug, getFacilityBySlug, getSpecialtyBySlug, i
 
 export interface AvailFilters { especialidad?: string; ciudad?: string; centro?: string; dia?: string; hora?: string }
 /** One board row: doctor + specialty + hour. `hour` is the next whole hour inside the published hours (null when the doctor has none). */
-export interface Unit { v: DoctorView; hour: string | null; live: boolean; until: string | null; chips: string[] }
+export interface Unit { v: DoctorView; hour: string | null; live: boolean; until: string | null; chips: string[]; /** within the next 60 minutes (or in consultation now): highlighted */ soon: boolean; away: number | null }
 export interface Available {
   mode: 'now' | 'later' | 'filtered' | 'fallback'; items: Unit[]; day: number; timeLabel: string; heading: string;
   /** Specialty slug when one is chosen (for the "ver todos" link). */
@@ -37,7 +37,8 @@ export function availableDoctors(f: AvailFilters, nowDate = new Date()): Availab
   const unitsOf = (l: DoctorView[], from: number | null, withSlot: boolean): Unit[] => l.map((v) => {
     const chips = hourChips(v, day, from, withSlot ? slot : undefined);
     const until = from != null ? closesAt(v, day, from) : null;
-    return { v, hour: chips[0] ?? null, live: until != null, until, chips };
+    const away = from != null && chips[0] ? Number(chips[0].slice(0, 2)) * 60 + Number(chips[0].slice(3)) - from : null;
+    return { v, hour: chips[0] ?? null, live: until != null, until, chips, away, soon: until != null || (away != null && away <= 60) };
   }).sort((a, b) => (a.hour ?? (a.live ? '00' : '99')).localeCompare(b.hour ?? (b.live ? '00' : '99')) || byTierThenName(a.v, b.v));
   const common = { day, timeLabel, specialty: spec?.slug, fromMinutes: isToday ? now.minutes : null };
 
@@ -47,7 +48,7 @@ export function availableDoctors(f: AvailFilters, nowDate = new Date()): Availab
     if (later.length) return { ...common, mode: 'later', items: unitsOf(later.map((x) => x.v), now.minutes, false).slice(0, MAX), heading: 'Ahora no hay doctores en consulta; estos atienden más tarde hoy' };
   }
   if (!spec && !city && !center && !f.dia && !f.hora) { // nothing chosen and nobody has hours: still show verified doctors
-    return { ...common, mode: 'fallback', items: sort(base.filter((v) => isAffiliated(v.doctor))).slice(0, 6).map((v) => ({ v, hour: null, live: false, until: null, chips: [] })), heading: 'Ahora no hay consultas publicadas. Doctores verificados' };
+    return { ...common, mode: 'fallback', items: sort(base.filter((v) => isAffiliated(v.doctor))).slice(0, 6).map((v) => ({ v, hour: null, live: false, until: null, chips: [], soon: false, away: null })), heading: 'Ahora no hay consultas publicadas. Doctores verificados' };
   }
   return { ...common, mode: 'filtered', items: [], heading: `Ningún doctor tiene publicado horario ${asNow ? 'para este momento' : timeLabel}` };
 }
