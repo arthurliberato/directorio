@@ -7,7 +7,7 @@
   --gd-ink: #1A2A4C;
   --gd-blue: #5E9BD6;
   --gd-blue-pale: #DDE8F4;
-  --gd-soon: #F4845F;          /* "soonest available" highlight (hour blocks); ink text on it is 5:1 */
+  --gd-soon: #57C785;          /* "soonest available" highlight (hour blocks); ink text on it is ~7:1 */
 
   /* Color — derived */
   --gd-blue-ink: #2F6DAB;      /* small blue text on paper (AA) */
