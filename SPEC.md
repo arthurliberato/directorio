@@ -184,7 +184,7 @@ Otherwise `noindex,follow` (still reachable through internal links).
 ### 5.2 Specialty × city (× sector / ARS) hub
 - `<title>`: `Cardiólogos en Santo Domingo (42 médicos) | guiddo.net`
 - H1 + **data-driven intro** unique to this page: doctor count, fee range (min/median/max), ARS distribution, top facilities, languages. This is what keeps hubs from being doorway pages.
-- Comparison `<table>`: doctor (link), sub-specialty, sector, ARS, fee, next availability.
+- Doctors `<table>` (class `doctors-table`): doctor (link), sub-specialty, sector, ARS, fee, next availability.
 - Doctor cards: top 20 + pagination with plain `<a href>` links.
 - Q&A block (visible, data-driven answers), e.g. "¿Cuánto cuesta una consulta con cardiólogo en Santo Domingo?" → answered from the hub's own fee data with n and date.
 - Filters: non-indexable (params/fragments).

@@ -99,7 +99,7 @@ export function hubStats(doctors: DoctorView[]): HubStats {
 /** Data-driven intro: unique per hub because it is built from that hub's own numbers. */
 export function hubIntro(q: HubQuery, s: HubStats, langName: (c: string) => string): string {
   const parts: string[] = [];
-  parts.push(`Compara ${q.specialty.name_plural.toLowerCase()} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''}: precio de consulta, ARS aceptadas y centros médicos.${s.affiliated > 0 ? ' Los perfiles verificados aparecen primero.' : ''}`);
+  parts.push(`Encuentra ${q.specialty.name_plural.toLowerCase()} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''}: precio de consulta, ARS aceptadas y centros médicos.${s.affiliated > 0 ? ' Los perfiles verificados aparecen primero.' : ''}`);
   if (s.feeMin != null && s.feeMax != null) {
     parts.push(s.feeMin === s.feeMax
       ? `La consulta cuesta desde ${formatDOP(s.feeMin)}.`

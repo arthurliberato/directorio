@@ -15,7 +15,7 @@ const itemList = { '@context': 'https://schema.org', '@type': 'ItemList', number
   <Breadcrumbs items={crumbs} />
   <div class="wrap page-head">
     <h1>Especialidades médicas</h1>
-    <p class="summary">Elige una especialidad para comparar médicos, precios de consulta y ARS aceptadas.</p>
+    <p class="summary">Elige una especialidad para ver médicos, precios de consulta y ARS aceptadas.</p>
   </div>
   <div class="wrap section" style="padding-top:8px">
     <div class="grid specs">{specs.map(({ s, n }) => <a class="spec-row" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={22} /></span><span><strong>{s.name_singular}</strong>{SPECIALTY_HINTS[s.slug] && <small>{SPECIALTY_HINTS[s.slug]}</small>}</span></a>)}</div>

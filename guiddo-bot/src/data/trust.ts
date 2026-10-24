@@ -13,7 +13,7 @@ export const trustPages: TrustPageData[] = [
   { slug: 'politica-editorial', title: 'Política editorial', description: 'Principios editoriales, revisión médica y correcciones.',
     body: ['Las guías de salud son informativas, no sustituyen la consulta médica y son revisadas por un profesional con exequátur verificado, cuyo nombre y fecha de revisión se publican.', 'Citamos nuestras fuentes y corregimos los errores en cuanto los detectamos. Escríbenos desde la página de contacto.'] },
   { slug: 'publicidad-y-patrocinios', title: 'Publicidad y patrocinios', description: 'Cómo identificamos los espacios patrocinados.',
-    body: ['Los espacios pagados siempre están identificados con la etiqueta «Patrocinado» y un estilo visual distinto.', 'Los patrocinios nunca forman parte de listas ordenadas ni influyen en comparaciones. Los enlaces patrocinados a sitios externos usan rel="sponsored".'] },
+    body: ['Los espacios pagados siempre están identificados con la etiqueta «Patrocinado» y un estilo visual distinto.', 'Los patrocinios nunca forman parte de listas ordenadas ni influyen en los resultados de búsqueda. Los enlaces patrocinados a sitios externos usan rel="sponsored".'] },
   { slug: 'privacidad', title: 'Política de privacidad', description: 'Cómo tratamos los datos personales conforme a la Ley 172-13.',
     body: ['Este texto es provisional y debe ser revisado por un abogado dominicano antes del lanzamiento (Ley 172-13 sobre Protección de Datos Personales).', 'No mostramos la cédula de los profesionales. Guardamos únicamente un hash para evitar duplicados.'] },
   { slug: 'doctores', title: 'Para doctores', description: 'Cómo afiliarte a guiddo: perfil verificado, foto, citas por WhatsApp o en línea y prioridad en los listados.',

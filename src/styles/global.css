@@ -114,10 +114,10 @@ p { margin: 0 0 1em; }
 .layout { display: grid; gap: 28px; } @media (max-width: 899px) { .layout.sidebar > aside { order: -1; } }
 @media (min-width: 900px) { .layout.sidebar { grid-template-columns: 1fr 22rem; align-items: start; } }
 .panel { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; background: var(--card); }
-table.facts, table.compare { width: 100%; border-collapse: collapse; font-size: .97rem; }
-table.facts th, table.facts td, table.compare th, table.compare td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.facts, table.doctors-table { width: 100%; border-collapse: collapse; font-size: .97rem; }
+table.facts th, table.facts td, table.doctors-table th, table.doctors-table td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 table.facts th { width: 38%; color: var(--muted); font: 500 12px var(--gd-font-mono); text-transform: uppercase; letter-spacing: .2px; }
-table.compare thead th { background: var(--pale); font-weight: 800; }
+table.doctors-table thead th { background: var(--pale); font-weight: 800; }
 .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
 .table-scroll table { min-width: 36rem; }
 .contact { display: grid; gap: 10px; }

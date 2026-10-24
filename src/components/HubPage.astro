@@ -85,15 +85,15 @@ const pageHref = (p: number) => hubPath(q, p);
     </form>
   )}
 
-  <section class="wrap" aria-labelledby="comparar">
-    <h2 id="comparar">Compara {q.specialty.name_plural.toLowerCase()} en {place}</h2>
+  <section class="wrap" aria-labelledby="listado">
+    <h2 id="listado">{q.specialty.name_plural} en {place}: precio, ARS y centro médico</h2>
     <div class="sort" aria-label="Ordenar">
       <span class="muted">Ordenar:</span>
       <a href={r.path} data-event="filter_use" aria-current={!orden || orden === 'nombre' ? 'true' : undefined} rel="nofollow">Nombre</a>
       <a href={sortHref('precio')} data-event="filter_use" aria-current={orden === 'precio' ? 'true' : undefined} rel="nofollow">Precio</a>
     </div>
     <div class="table-scroll">
-      <table class="compare">
+      <table class="doctors-table">
         <thead><tr><th scope="col">Médico</th>{hasSub && <th scope="col">Subespecialidad</th>}<th scope="col">Zona</th><th scope="col">Centro</th>{hasArs && <th scope="col">ARS</th>}{hasFee && <th scope="col">Consulta desde</th>}{hasHours && <th scope="col">Horario</th>}</tr></thead>
         <tbody>
           {organic.map((v) => (
