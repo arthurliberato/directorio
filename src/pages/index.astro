@@ -4,7 +4,7 @@ import AvailableList from '../components/AvailableList.astro';
 import GuiddoPattern from '../components/GuiddoPattern.astro';
 import Icon from '../components/Icon.astro';
 import { DAY_NAMES, DAY_SLUGS, SLOTS } from '../lib/availability.ts';
-import { SPECIALTY_HINTS } from '../data/hints.ts';
+import { SPECIALTY_HINTS, specialtyIcon } from '../data/hints.ts';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
 import { doctorCount, doctorsForFacility, getCities, getFacilities, getGuides, getSpecialties, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
@@ -47,7 +47,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     <div class="section-head"><h2 class="gd-h2" id="esp">¿Hacia dónde vas?</h2><a class="more" href="/especialidad">Todas las especialidades →</a></div>
     <nav class="gd-signs cols" aria-label="Especialidades">
       {signs.map(({ s, n }, i) => (
-        <a class={`gd-sign gd-sign--${SIGN_TONES[i % 4]}`} href={`/${s.slug}`}><span><span class="gd-sign__name">{s.name_singular}</span>{SPECIALTY_HINTS[s.slug] && <span class="gd-sign__hint">{SPECIALTY_HINTS[s.slug]}</span>}</span><span class="gd-mono">→</span></a>
+        <a class={`gd-sign gd-sign--${SIGN_TONES[i % 4]}`} href={`/${s.slug}`}><span class="gd-sign__lead"><Icon name={specialtyIcon(s.slug, s.icon)} size={28} /><span><span class="gd-sign__name">{s.name_singular}</span>{SPECIALTY_HINTS[s.slug] && <span class="gd-sign__hint">{SPECIALTY_HINTS[s.slug]}</span>}</span></span><span class="gd-mono">→</span></a>
       ))}
     </nav>
   </section>

@@ -4,6 +4,7 @@ import Icon from './Icon.astro';
 import { canBook, whatsappBookingLink } from '../lib/booking.ts';
 import { hoursOn } from '../lib/availability.ts';
 import type { Unit } from '../lib/available.ts';
+import { specialtyIcon } from '../data/hints.ts';
 import { isAffiliated } from '../lib/data.ts';
 import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
 import { formatDOP } from '../lib/format.ts';
@@ -21,7 +22,7 @@ const others = u.chips.slice(1);
     <span class="gd-slot__time">{u.hour ?? (u.live ? 'Ahora' : '→')}{u.hour && u.live && <small>en consulta</small>}</span>
     <span class="gd-slot__who">
       <span class="gd-slot__name">{d.display_name}{aff && <Icon name="shield" size={15} />}{d.sponsored && <em>Patrocinado</em>}</span>
-      <span class="gd-slot__spec">{v.specialty.field_name}</span>
+      <span class="gd-slot__spec"><Icon name={specialtyIcon(v.specialty.slug, v.specialty.icon)} size={16} />{v.specialty.field_name}</span>
     </span>
     <span class="gd-slot__go" aria-hidden="true">›</span>
   </a>

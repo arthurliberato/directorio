@@ -1,6 +1,7 @@
 ---
 import Icon from './Icon.astro';
 import { isAffiliated, type DoctorView } from '../lib/data.ts';
+import { specialtyIcon } from '../data/hints.ts';
 import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
 import { formatDOP } from '../lib/format.ts';
 import { hoursOn } from '../lib/availability.ts';
@@ -25,7 +26,7 @@ const zone = loc ? `${loc.sector ? `${loc.sector.name}, ` : ''}${loc.city.name}`
     <div>
       {d.sponsored && <div class="tag-sponsor">Patrocinado</div>}
       <H class="gd-rx__name"><a href={profilePath(v)}>{d.display_name}</a></H>
-      <div class="gd-rx__spec">{v.specialty.field_name}</div>
+      <div class="gd-rx__spec"><Icon name={specialtyIcon(v.specialty.slug, v.specialty.icon)} size={15} /> {v.specialty.field_name}</div>
     </div>
   </div>
   <dl class="gd-rx__data gd-mono">

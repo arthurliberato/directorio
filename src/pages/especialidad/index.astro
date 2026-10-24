@@ -1,5 +1,5 @@
 ---
-import { SPECIALTY_HINTS } from '../../data/hints.ts';
+import { SPECIALTY_HINTS, specialtyIcon } from '../../data/hints.ts';
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
@@ -18,6 +18,6 @@ const itemList = { '@context': 'https://schema.org', '@type': 'ItemList', number
     <p class="summary">Elige una especialidad para comparar médicos, precios de consulta y ARS aceptadas.</p>
   </div>
   <div class="wrap section" style="padding-top:8px">
-    <div class="grid specs">{specs.map(({ s, n }) => <a class="spec-row" href={`/${s.slug}`}><span class="ico"><Icon name={s.icon} size={22} /></span><span><strong>{s.name_singular}</strong>{SPECIALTY_HINTS[s.slug] && <small>{SPECIALTY_HINTS[s.slug]}</small>}</span></a>)}</div>
+    <div class="grid specs">{specs.map(({ s, n }) => <a class="spec-row" href={`/${s.slug}`}><span class="ico"><Icon name={specialtyIcon(s.slug, s.icon)} size={28} /></span><span><strong>{s.name_singular}</strong>{SPECIALTY_HINTS[s.slug] && <small>{SPECIALTY_HINTS[s.slug]}</small>}</span></a>)}</div>
   </div>
 </Base>
