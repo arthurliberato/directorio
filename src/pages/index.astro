@@ -23,7 +23,7 @@ const verifiedDocs = publishedDoctors().filter((v) => isAffiliated(v.doctor));
 const featured = [...verifiedDocs.filter((v) => v.doctor.sponsored), ...verifiedDocs.filter((v) => !v.doctor.sponsored && v.doctor.claimed)].slice(0, 3);
 const guides = getGuides().slice(0, 3);
 ---
-<Base title={`${BRAND} — la guía de doctores dominicanos`} description="Encuentra doctores en República Dominicana: perfiles verificados con exequátur comprobado, clínicas y hospitales, ARS aceptadas y precios de consulta." jsonLd={siteJsonLd()}>
+<Base title={`${BRAND} — la guía de doctores dominicanos`} description="Encuentra profesionales de la salud en República Dominicana: perfiles verificados con exequátur comprobado, clínicas y hospitales, ARS aceptadas y precios de consulta." jsonLd={siteJsonLd()}>
   <section class="hero">
     <GuiddoPattern />
     <div class="wrap">
@@ -55,8 +55,8 @@ const guides = getGuides().slice(0, 3);
 
   {featured.length > 0 && (
     <section class="section wrap" aria-labelledby="medicos" style="padding-top:14px">
-      <div class="gd-label soft">Doctores verificados</div>
-      <div class="section-head"><h2 class="gd-h2" id="medicos">Conoce a nuestros doctores</h2><a class="more" href="/especialidad">Ver todos →</a></div>
+      <div class="gd-label soft">Profesionales verificados</div>
+      <div class="section-head"><h2 class="gd-h2" id="medicos">Conoce a nuestros profesionales</h2><a class="more" href="/especialidad">Ver todos →</a></div>
       <div class="grid cards">{featured.map((v) => <DoctorCard v={v} />)}</div>
     </section>
   )}
@@ -70,7 +70,7 @@ const guides = getGuides().slice(0, 3);
   </section>
 
   <section class="banner" aria-label="Verificación">
-    <div class="wrap"><span class="tile"><Icon name="shield" size={28} /></span><div><h2>Información clara antes de elegir.</h2><p>Los doctores verificados tienen el exequátur comprobado por nosotros. Los perfiles informativos usan datos públicos y lo indican.</p><a class="more" href="/como-verificamos">Cómo verificamos →</a></div></div>
+    <div class="wrap"><span class="tile"><Icon name="shield" size={28} /></span><div><h2>Información clara antes de elegir.</h2><p>Los profesionales verificados tienen el exequátur comprobado por nosotros. Los perfiles informativos usan datos públicos y lo indican.</p><a class="more" href="/como-verificamos">Cómo verificamos →</a></div></div>
   </section>
 
   <section class="section wrap" aria-labelledby="guias">
@@ -84,7 +84,7 @@ const guides = getGuides().slice(0, 3);
   <section class="gd-dark" aria-labelledby="para-doctores">
     <div class="gd-crop" aria-hidden="true">dd</div>
     <div class="wrap">
-      <div class="gd-label">Para doctores</div>
+      <div class="gd-label">Para profesionales</div>
       <h2 class="gd-h2" id="para-doctores" style="font-size:26px;line-height:1.02;letter-spacing:-0.6px;margin-top:6px;color:var(--gd-paper)">Haz que los próximos pacientes te encuentren</h2>
       <p style="font-size:14px;font-weight:700;color:var(--gd-blue-pale);margin:6px 0 0;max-width:30rem">Perfil verificado, foto y citas por WhatsApp o en línea, en guiddo.</p>
       <a href="/doctores" class="gd-btn gd-btn--blue" style="margin-top:14px">Únete a guiddo</a>

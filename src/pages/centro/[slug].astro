@@ -40,7 +40,7 @@ const hubFor = (slug: string) => { const sp = getSpecialtyBySlug(slug)!; return 
         <ul class="linklist">{specs.map((s) => <li><a href={`#${s.slug}`}>{s.plural} ({s.count})</a></li>)}</ul>
         {affiliates.length > 0 && (
           <section id="verificados" style="margin-top:2em" aria-labelledby="h-verificados">
-            <h2 id="h-verificados" style="font-size:1.5rem">Médicos verificados</h2>
+            <h2 id="h-verificados" style="font-size:1.5rem">Profesionales verificados</h2>
             <div class="grid cards" style="grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))">{affiliates.map((v) => <DoctorCard v={v} />)}</div>
           </section>
         )}

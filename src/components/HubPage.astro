@@ -94,7 +94,7 @@ const pageHref = (p: number) => hubPath(q, p);
     </div>
     <div class="table-scroll">
       <table class="doctors-table">
-        <thead><tr><th scope="col">Médico</th>{hasSub && <th scope="col">Subespecialidad</th>}<th scope="col">Zona</th><th scope="col">Centro</th>{hasArs && <th scope="col">ARS</th>}{hasFee && <th scope="col">Consulta desde</th>}{hasHours && <th scope="col">Horario</th>}</tr></thead>
+        <thead><tr><th scope="col">Profesional</th>{hasSub && <th scope="col">Subespecialidad</th>}<th scope="col">Zona</th><th scope="col">Centro</th>{hasArs && <th scope="col">ARS</th>}{hasFee && <th scope="col">Consulta desde</th>}{hasHours && <th scope="col">Horario</th>}</tr></thead>
         <tbody>
           {organic.map((v) => (
             <tr>
@@ -112,8 +112,8 @@ const pageHref = (p: number) => hubPath(q, p);
     </div>
   </section>
 
-  <section class="wrap section" aria-labelledby="medicos">
-    <h2 id="medicos">Médicos</h2>
+  <section class="wrap section" aria-labelledby="profesionales">
+    <h2 id="profesionales">Profesionales</h2>
     <p class="muted" style="margin-top:-4px"><b>Verificado</b>: afiliado a {BRAND} con exequátur comprobado. <b>Perfil informativo</b>: datos de fuentes públicas, sin verificar.</p>
     {sponsored.length > 0 && <div class="sponsored-block"><p class="label">Profesional patrocinado · <a href="/publicidad-y-patrocinios">qué significa</a></p><div class="grid cards">{sponsored.map((v) => <DoctorCard v={v} />)}</div></div>}
     <div class="grid cards">

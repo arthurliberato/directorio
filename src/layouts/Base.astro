@@ -61,7 +61,7 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
       <nav class="nav-desktop" aria-label="Principal">
         <a href="/especialidad">Especialidades</a><a href="/centro">Clínicas y hospitales</a><a href="/guia">Guías de salud</a><a href="/como-verificamos">Cómo verificamos</a>
       </nav>
-      <div class="head-right"><a class="head-cta" href="/doctores">Para doctores</a>
+      <div class="head-right"><a class="head-cta" href="/doctores">Para profesionales</a>
       <details class="nav-mobile">
         <summary aria-label="Abrir menú"><Icon name="menu" size={28} /></summary>
         <nav aria-label="Principal móvil">
@@ -82,10 +82,10 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
         <div>
           <h2>El directorio</h2>
           <ul>
-            <li><a href="/especialidad">Buscar médicos</a></li>
+            <li><a href="/especialidad">Buscar profesionales</a></li>
             <li><a href="/centro">Clínicas y hospitales</a></li>
             <li><a href="/guia">Guías de salud</a></li>
-            <li><a href="/doctores">Para doctores</a></li>
+            <li><a href="/doctores">Para profesionales</a></li>
             {specs.slice(0, 4).map((s) => <li><a href={`/${s.slug}`}>{s.name_plural}</a></li>)}
           </ul>
         </div>
@@ -94,7 +94,7 @@ const specs = getSpecialties().filter((s) => queryHub({ specialty: s }).length >
           <ul>
             <li><a href="/quienes-somos">Sobre nosotros</a></li>
             <li><a href="/metodologia">Nuestra metodología</a></li>
-            <li><a href="/como-verificamos">Cómo verificamos a los médicos</a></li>
+            <li><a href="/como-verificamos">Cómo verificamos a los profesionales</a></li>
             <li><a href="/politica-editorial">Política editorial</a></li>
             <li><a href="/publicidad-y-patrocinios">Publicidad y patrocinios</a></li>
             <li><a href="/privacidad">Privacidad</a></li>

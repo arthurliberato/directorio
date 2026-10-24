@@ -46,3 +46,7 @@ insert into specialties (slug, name_singular, name_plural, field_name, agent_f, 
  ('podologos','Podología','Podólogos','Podología','podóloga','podólogo','Podiatric','bone'),
  ('psicologos','Psicología clínica','Psicólogos','Psicología clínica','psicóloga','psicólogo',null,'brain')
 on conflict (slug) do nothing;
+
+-- Profession of the non-physician specialties (the column comes from migration 008). Safe to re-run.
+update specialties set profession = 'odontologo' where slug in ('odontologos', 'ortodoncistas', 'endodoncistas', 'periodoncistas', 'cirujanos-maxilofaciales');
+update specialties set profession = 'psicologo' where slug = 'psicologos';

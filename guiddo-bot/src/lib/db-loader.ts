@@ -25,7 +25,7 @@ export async function loadFromSql(q: Query): Promise<Dataset> {
   const specSlug = new Map<number, string>(specialties.map((s: any) => [s.id, s.slug]));
   const [{ now }] = await q('select now() as now');
   return {
-    specialties: specialties as Specialty[], cities: cities as City[], sectors: sectors as Sector[], ars: ars as Ars[],
+    specialties: specialties.map((s: any): Specialty => ({ ...s, profession: s.profession ?? 'medico' })), /* 'medico' until migration 008 is applied */ cities: cities as City[], sectors: sectors as Sector[], ars: ars as Ars[],
     facilities: facilities.map((f: any): Facility => ({ ...f, updated_at: day(f.updated_at)! })),
     doctors: doctors.map((d: any): Doctor => ({
       ...d, gender: d.gender == null ? null : (String(d.gender).trim() as 'f' | 'm'), currency: 'DOP',

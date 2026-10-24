@@ -12,8 +12,13 @@ export function neutralAgent(masc: string, fem: string): string {
 
 export const agentNoun = (v: DoctorView) =>
   v.doctor.gender === 'f' ? v.specialty.agent_f : v.doctor.gender === 'm' ? v.specialty.agent_m : neutralAgent(v.specialty.agent_m, v.specialty.agent_f);
-export const titleOf = (v: DoctorView) => (v.doctor.gender === 'f' ? 'Dra.' : v.doctor.gender === 'm' ? 'Dr.' : '');
-const articleOf = (v: DoctorView) => (v.doctor.gender === 'f' ? 'La ' : v.doctor.gender === 'm' ? 'El ' : '');
+/** Dr./Dra. from the gender we hold; psychologists get no title by default (many are "Lic."; never guess a credential). */
+export const titleOf = (v: DoctorView) => (v.specialty.profession === 'psicologo' ? '' : v.doctor.gender === 'f' ? 'Dra.' : v.doctor.gender === 'm' ? 'Dr.' : '');
+const articleOf = (v: DoctorView) => (v.specialty.profession === 'psicologo' ? '' : v.doctor.gender === 'f' ? 'La ' : v.doctor.gender === 'm' ? 'El ' : '');
+/** "Médico verificado" only for physicians; dentists and psychologists are "Profesional verificado". */
+export const verifiedLabel = (v: DoctorView) => (v.specialty.profession === 'medico' ? 'Médico verificado' : 'Profesional verificado');
+/** The Colegio Médico badge (cmd_*) only applies to physicians; other colleges are not tracked yet. */
+export const showsCmd = (v: DoctorView) => v.specialty.profession === 'medico' && v.doctor.cmd_member && !!v.doctor.cmd_verified_at;
 export const profilePath = (v: DoctorView) => `/${v.doctor.slug}`;
 export const isListedOnly = (v: DoctorView) => v.doctor.listing_status !== 'affiliated';
 

@@ -8,7 +8,7 @@ import GuiddoI from './GuiddoI.astro';
 import { BRAND } from '../config.ts';
 import { doctorMentions, isAffiliated, nearbyDoctors, type DoctorView } from '../lib/data.ts';
 import { MENTION_KIND_LABEL, MENTION_ORIGIN_LABEL } from '../lib/mentions.ts';
-import { agentNoun, doctorHubLinks, factSummary, isListedOnly, profileMetaDescription, profilePath, profileTitle, titleOf } from '../lib/facts.ts';
+import { agentNoun, doctorHubLinks, factSummary, isListedOnly, profileMetaDescription, profilePath, profileTitle, showsCmd, titleOf, verifiedLabel } from '../lib/facts.ts';
 import { formatDate, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
 import { profileIndexDecision } from '../lib/indexing.ts';
 import { breadcrumbJsonLd, physicianJsonLd } from '../lib/schema.ts';
@@ -49,10 +49,10 @@ const role = agentNoun(v).charAt(0).toUpperCase() + agentNoun(v).slice(1);
       <div>
     <h1>{[titleOf(v), d.full_legal_name].filter(Boolean).join(' ')}<span class="sr-only">, </span><span class="role">{role}</span></h1>
     <p style="margin:0">
-      {affiliated ? <span class="badge"><Icon name="shield" size={16} /> <span>Médico verificado en {BRAND}</span></span> : <span class="badge type">Perfil informativo · no verificado</span>}
+      {affiliated ? <span class="badge"><Icon name="shield" size={16} /> <span>{verifiedLabel(v)} en {BRAND}</span></span> : <span class="badge type">Perfil informativo · no verificado</span>}
       {d.exequatur_verified_at && <span class="badge" style="margin-left:8px"><Icon name="shield" size={16} /> <span>Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span></span>}
-      {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px"><span>Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span></span>}
-      {d.claimed && affiliated && <span class="badge" style="margin-left:8px">Confirmado con el médico</span>}
+      {showsCmd(v) && <span class="badge" style="margin-left:8px"><span>Miembro del CMD verificado el <time datetime={d.cmd_verified_at!}>{formatDate(d.cmd_verified_at!)}</time></span></span>}
+      {d.claimed && affiliated && <span class="badge" style="margin-left:8px">Confirmado con el profesional</span>}
     </p>
     {(waBooking || webBooking) && (
       <div class="head-actions" id="cita">
@@ -141,7 +141,7 @@ const role = agentNoun(v).charAt(0).toUpperCase() + agentNoun(v).slice(1);
     {!affiliated && (
       <div class="panel" style="margin-top:16px;max-width:46rem">
         <p style="margin:0 0 6px"><b>Perfil informativo.</b> Estos datos provienen de fuentes públicas{d.source_name ? <> ({d.source_url ? <a href={d.source_url} rel="noopener nofollow">{d.source_name}</a> : d.source_name})</> : ''}{d.source_retrieved_at ? <>, consultadas el <time datetime={d.source_retrieved_at}>{formatDate(d.source_retrieved_at)}</time></> : ''}, y no han sido verificados por {BRAND}. Pueden estar desactualizados.</p>
-        <p style="margin:0">¿Eres este médico? <a href="/contacto">Solicita verificación, corrección o retiro de tu perfil</a>.</p>
+        <p style="margin:0">¿Eres este profesional? <a href="/contacto">Solicita verificación, corrección o retiro de tu perfil</a>.</p>
       </div>
     )}
   </div>

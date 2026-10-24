@@ -18,31 +18,46 @@ export const facilityId = (slug: string) => `${SITE_URL}/centro/${slug}#org`;
 const clean = <T extends Record<string, unknown>>(o: T): T =>
   Object.fromEntries(Object.entries(o).filter(([, v]) => v != null && !(Array.isArray(v) && v.length === 0))) as T;
 
+/** schema.ts @type of a profile: physicians are IndividualPhysician, dentists Dentist, psychologists a plain Person (schema.org has no psychologist type). */
+export const profileSchemaType = (v: DoctorView) => (v.specialty.profession === 'medico' ? 'IndividualPhysician' : v.specialty.profession === 'odontologo' ? 'Dentist' : 'Person');
+
 export function physicianJsonLd(v: DoctorView) {
   const d = v.doctor; const loc = v.locations[0];
+  const type = profileSchemaType(v);
   const facilities = v.locations.map((l) => l.facility).filter((f): f is Facility => !!f);
   const sameAs = [d.website, d.gbp_url, ...d.sameas_urls].filter(Boolean);
   const opening = loc?.schedule.map((s) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: dayToSchema(s.day), opens: s.open, closes: s.close }));
-  return clean({
-    '@context': CTX, '@type': 'IndividualPhysician', '@id': physicianId(d.slug),
+  const address = loc ? { '@type': 'PostalAddress', streetAddress: loc.address, addressLocality: loc.city.name, addressRegion: loc.city.province, addressCountry: 'DO' } : undefined;
+  const geo = loc?.lat != null && loc.lng != null ? { '@type': 'GeoCoordinates', latitude: loc.lat, longitude: loc.lng } : undefined;
+  const common = {
+    '@context': CTX, '@type': type, '@id': physicianId(d.slug),
     name: d.display_name, url: abs(profilePath(v)),
     image: v.doctor.listing_status === 'affiliated' && d.photo_url ? (/^https?:\/\//.test(d.photo_url) ? d.photo_url : abs(d.photo_url)) : undefined,
     description: factSummary(v),
-    medicalSpecialty: v.specialty.schema_enum ? `https://schema.org/${v.specialty.schema_enum}` : undefined,
     knowsLanguage: d.languages,
-    isAcceptingNewPatients: d.accepting_new_patients ?? undefined,
     telephone: d.phone ?? loc?.phone ?? undefined,
-    address: loc ? { '@type': 'PostalAddress', streetAddress: loc.address, addressLocality: loc.city.name, addressRegion: loc.city.province, addressCountry: 'DO' } : undefined,
-    geo: loc?.lat != null && loc.lng != null ? { '@type': 'GeoCoordinates', latitude: loc.lat, longitude: loc.lng } : undefined,
-    practicesAt: facilities.map((f) => ({ '@type': f.type, '@id': facilityId(f.slug), name: f.name })),
     hasCredential: d.exequatur_verified_at ? { '@type': 'EducationalOccupationalCredential', credentialCategory: 'Exequátur', recognizedBy: { '@type': 'GovernmentOrganization', name: 'Poder Ejecutivo de la República Dominicana' } } : undefined,
     identifier: PUBLISH_EXEQUATUR_IDENTIFIER && d.exequatur_number ? { '@type': 'PropertyValue', propertyID: 'Exequátur', value: d.exequatur_number } : undefined,
     alumniOf: d.education.map((name) => ({ '@type': 'CollegeOrUniversity', name })),
-    paymentAccepted: v.ars.length ? `Efectivo, tarjeta, ${v.ars.map((a) => a.name).join(', ')}` : undefined,
-    openingHoursSpecification: opening,
     subjectOf: mentionsJsonLd(doctorMentions(v)),
     sameAs,
-  });
+  };
+  if (type === 'Person') { // psychologist: only properties Person defines
+    return clean({
+      ...common, hasOccupation: { '@type': 'Occupation', name: agentNoun(v).replace(/^./, (c) => c.toUpperCase()) },
+      address, workLocation: loc ? { '@type': 'Place', address, geo } : undefined,
+      worksFor: facilities.map((f) => ({ '@type': f.type, '@id': facilityId(f.slug), name: f.name })),
+    });
+  }
+  const medical = {
+    medicalSpecialty: v.specialty.schema_enum ? `https://schema.org/${v.specialty.schema_enum}` : undefined,
+    isAcceptingNewPatients: d.accepting_new_patients ?? undefined,
+    address, geo,
+    paymentAccepted: v.ars.length ? `Efectivo, tarjeta, ${v.ars.map((a) => a.name).join(', ')}` : undefined,
+    openingHoursSpecification: opening,
+  };
+  if (type === 'Dentist') return clean({ ...common, ...medical }); // Dentist is a business type: no practicesAt
+  return clean({ ...common, ...medical, practicesAt: facilities.map((f) => ({ '@type': f.type, '@id': facilityId(f.slug), name: f.name })) });
 }
 
 export function facilityJsonLd(f: Facility, doctors: DoctorView[], cityName: string, province: string) {
@@ -51,7 +66,7 @@ export function facilityJsonLd(f: Facility, doctors: DoctorView[], cityName: str
     telephone: f.phone ?? undefined,
     address: { '@type': 'PostalAddress', streetAddress: f.address, addressLocality: cityName, addressRegion: province, addressCountry: 'DO' },
     geo: f.lat != null && f.lng != null ? { '@type': 'GeoCoordinates', latitude: f.lat, longitude: f.lng } : undefined,
-    member: doctors.map((v) => ({ '@type': 'IndividualPhysician', '@id': physicianId(v.doctor.slug) })),
+    member: doctors.map((v) => ({ '@type': profileSchemaType(v), '@id': physicianId(v.doctor.slug) })),
   });
 }
 

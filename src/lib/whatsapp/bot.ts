@@ -8,7 +8,7 @@ import {
   doctorsForFacility, getArs, getArsBySlug, getCities, getCityBySlug, getDoctorBySlug, getFacilities, getFacilityBySlug, getGuideBySlug, getGuides,
   getSpecialties, getSpecialtyBySlug, isAffiliated, publishedDoctors, queryHub, type DoctorView,
 } from '../data.ts';
-import { agentNoun, profilePath, titleOf } from '../facts.ts';
+import { agentNoun, profilePath, titleOf, verifiedLabel } from '../facts.ts';
 import { formatDate, formatFeeRange, formatScheduleLines, joinList } from '../format.ts';
 import { hubPath, sortDoctors } from '../hubs.ts';
 import { hasPhrase, norm, parseQuery } from '../search.ts';
@@ -27,16 +27,16 @@ const HANDOFF = /\b(asesor\w*|operador\w*|agente humano|persona real|hablar con 
 const GREETING = /^(hola|buenas?|buenos dias|buenas tardes|buenas noches|menu|inicio|ayuda|start|empezar|comenzar|opciones|hi|hello)\b/;
 
 const welcome = (): Out[] => [
-  text(`👋 Hola, soy *${BOT_NAME}*, el directorio de médicos de República Dominicana.\n\nTe ayudo a encontrar médicos por especialidad, ciudad y seguro (ARS), ver clínicas y hospitales, leer guías de salud y programar citas.\n\nNo escribas información médica personal en este chat. En una emergencia llama al *911*.`),
+  text(`👋 Hola, soy *${BOT_NAME}*, el directorio de profesionales de la salud de República Dominicana.\n\nTe ayudo a encontrar profesionales por especialidad, ciudad y seguro (ARS), ver clínicas y hospitales, leer guías de salud y programar citas.\n\nNo escribas información médica personal en este chat. En una emergencia llama al *911*.`),
   menu(),
 ];
 
 export function menu(body = '¿Qué quieres hacer?'): Out {
   return list(body, 'Ver opciones', [
-    { id: 'm:doc', title: 'Buscar médico', description: 'Por especialidad, ciudad y seguro' },
-    { id: 'm:cen', title: 'Clínicas y hospitales', description: 'Médicos que atienden en cada centro' },
+    { id: 'm:doc', title: 'Buscar profesional', description: 'Por especialidad, ciudad y seguro' },
+    { id: 'm:cen', title: 'Clínicas y hospitales', description: 'Profesionales que atienden en cada centro' },
     { id: 'm:gui', title: 'Guías de salud', description: 'Respuestas claras, revisadas por médicos' },
-    { id: 'm:ver', title: 'Cómo verificamos', description: 'Qué significa «Médico verificado»' },
+    { id: 'm:ver', title: 'Cómo verificamos', description: 'Qué significa «verificado»' },
     { id: 'm:hum', title: 'Hablar con una persona', description: 'Correcciones, afiliación y dudas' },
   ]);
 }
@@ -50,7 +50,7 @@ function handoff(): Out[] {
 }
 function howWeVerify(): Out[] {
   const t = getTrustPage('como-verificamos');
-  const body = t ? t.body.slice(0, 2).join('\n\n') : 'Verificamos el exequátur de cada médico afiliado.';
+  const body = t ? t.body.slice(0, 2).join('\n\n') : 'Verificamos el exequátur de cada profesional afiliado.';
   return [text(`*${t?.title ?? 'Cómo verificamos'}*\n\n${body}\n\nMás detalle: ${abs('/como-verificamos')}`), menuButton()];
 }
 
@@ -68,7 +68,7 @@ function specialtiesWithCounts(cityId?: number) {
 
 function specialtyList(cityId: number | undefined, citySlug: string | undefined, page: number): Out[] {
   const all = specialtiesWithCounts(cityId);
-  if (!all.length) return [text('Todavía no tenemos médicos publicados en esa búsqueda.'), menu()];
+  if (!all.length) return [text('Todavía no tenemos profesionales publicados en esa búsqueda.'), menu()];
   const slice = all.slice(page * PAGE, page * PAGE + PAGE);
   const rows: Row[] = slice.map(({ s, n }) => ({ id: citySlug ? `r:${s.slug}:${citySlug}:all:0` : `c:${s.slug}`, title: s.name_singular, description: undefined }));
   if ((page + 1) * PAGE < all.length) rows.push({ id: `sp:${withAll(citySlug)}:${page + 1}`, title: 'Más especialidades', description: `Quedan ${all.length - (page + 1) * PAGE}` });
@@ -112,13 +112,13 @@ function results(spec: string, city: string | undefined, ars: string | undefined
   if (wantArs) rows.push({ id: `ar:${spec}:${withAll(city)}`, title: 'Filtrar por seguro', description: 'Elige tu ARS' });
   const verified = found.filter((v) => isAffiliated(v.doctor)).length;
   return [list(`*${label}*${verified ? '. Los verificados van primero.' : ''}
-Más en la web: ${abs(hubPath({ specialty: s, city: c ?? undefined, ars: a ?? undefined }))}`, 'Ver médicos', rows)];
+Más en la web: ${abs(hubPath({ specialty: s, city: c ?? undefined, ars: a ?? undefined }))}`, 'Ver profesionales', rows)];
 }
 
 // ---- Doctor ------------------------------------------------------------------------------------
 function doctorCard(v: DoctorView): string {
   const d = v.doctor; const loc = v.locations[0]; const aff = isAffiliated(d);
-  const lines = [`*${[titleOf(v), d.display_name.replace(/^Dra?\.\s*/, '')].filter(Boolean).join(' ')}*`, `${aff ? '✅ Médico verificado' : 'ℹ️ Perfil informativo · no verificado'}`, `${agentNoun(v)[0].toUpperCase()}${agentNoun(v).slice(1)}`];
+  const lines = [`*${[titleOf(v), d.display_name.replace(/^Dra?\.\s*/, '')].filter(Boolean).join(' ')}*`, `${aff ? `✅ ${verifiedLabel(v)}` : 'ℹ️ Perfil informativo · no verificado'}`, `${agentNoun(v)[0].toUpperCase()}${agentNoun(v).slice(1)}`];
   if (loc) {
     lines.push(`📍 ${loc.facility ? loc.facility.name + ', ' : ''}${loc.suite ? loc.suite + ', ' : ''}${loc.address}${loc.sector && !loc.address.toLowerCase().includes(loc.sector.name.toLowerCase()) ? ', ' + loc.sector.name : ''}, ${loc.city.name}`);
     const sched = formatScheduleLines(loc.schedule); if (aff && sched.length) lines.push(`🕒 ${sched.join(' · ')}`);
@@ -163,10 +163,10 @@ function bookingReply(slug: string, from: string): Out[] {
 // ---- Facilities & guides -----------------------------------------------------------------------
 function facilityList(page: number): Out[] {
   const all = getFacilities().map((f) => ({ f, n: doctorsForFacility(f.id).length })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n || a.f.name.localeCompare(b.f.name, 'es'));
-  if (!all.length) return [text('Aún no hay clínicas con médicos publicados.'), menu()];
+  if (!all.length) return [text('Aún no hay clínicas con profesionales publicados.'), menu()];
   const rows: Row[] = all.slice(page * PAGE, page * PAGE + PAGE).map(({ f, n }) => ({ id: `f:${f.slug}`, title: f.name, description: f.type === 'Hospital' ? 'Hospital' : 'Clínica' }));
   if ((page + 1) * PAGE < all.length) rows.push({ id: `fl:${page + 1}`, title: 'Más centros', description: `Quedan ${all.length - (page + 1) * PAGE}` });
-  return [list('Clínicas y hospitales con médicos en el directorio:', 'Centros', rows)];
+  return [list('Clínicas y hospitales con profesionales en el directorio:', 'Centros', rows)];
 }
 
 function facilityReply(slug: string): Out[] {
@@ -176,13 +176,13 @@ function facilityReply(slug: string): Out[] {
   if (f.phone) lines.push(`📞 ${f.phone}`);
   if (f.website) lines.push(`🌐 ${f.website}`);
   lines.push(`Más: ${abs('/centro/' + f.slug)}`);
-  return [buttons(lines.join('\n'), [{ id: `fd:${f.slug}`, title: 'Ver sus médicos' }, { id: 'm:cen', title: 'Otros centros' }, { id: 'menu', title: 'Menú principal' }])];
+  return [buttons(lines.join('\n'), [{ id: `fd:${f.slug}`, title: 'Ver profesionales' }, { id: 'm:cen', title: 'Otros centros' }, { id: 'menu', title: 'Menú principal' }])];
 }
 
 function facilityDoctors(slug: string): Out[] {
   const f = getFacilityBySlug(slug); if (!f) return [menu()];
   const docs = sortDoctors(doctorsForFacility(f.id), null).slice(0, 10);
-  return [list(`Médicos en *${f.name}*:`, 'Ver médicos', docs.map(rowOfDoctor))];
+  return [list(`Profesionales en *${f.name}*:`, 'Ver profesionales', docs.map(rowOfDoctor))];
 }
 
 function guideList(): Out[] {
@@ -211,11 +211,11 @@ function freeText(raw: string): Out[] {
   if (spec) return results(spec.slug, city?.slug, ars?.slug, 0);
   if (city) return specialtyList(city.id, city.slug, 0);
 
-  const tokens = q.replace(/\b(dr|dra|doctor|doctora|medico|medica)\b/g, ' ').split(' ').filter((t) => t.length >= 3);
+  const tokens = q.replace(/\b(dr|dra|doctor|doctora|medico|medica|lic|licda|licenciado|licenciada)\b/g, ' ').split(' ').filter((t) => t.length >= 3);
   if (tokens.length) {
     const hits = sortDoctors(publishedDoctors().filter((v) => { const n = norm(v.doctor.display_name); return tokens.every((t) => n.includes(t)); }), null).slice(0, 10);
     if (hits.length === 1) return doctorReply(hits[0].doctor.slug);
-    if (hits.length) return [list('Encontré estos doctores con ese nombre:', 'Ver médicos', hits.map(rowOfDoctor))];
+    if (hits.length) return [list('Encontré estos profesionales con ese nombre:', 'Ver profesionales', hits.map(rowOfDoctor))];
   }
   return [text('No entendí tu mensaje 🤔. Puedes escribir algo como «pediatra en Santiago», «Dr. Pérez», o elegir una opción del menú.'), menu()];
 }

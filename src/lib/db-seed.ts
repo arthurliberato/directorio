@@ -17,7 +17,7 @@ const insert = (table: string, cols: string[], rows: Record<string, unknown>[]) 
 export function datasetToSql(ds: Dataset): string[] {
   const specId = new Map(ds.specialties.map((s) => [s.slug, s.id]));
   const out: string[] = [];
-  out.push(...insert('specialties', ['id', 'slug', 'name_singular', 'name_plural', 'field_name', 'agent_f', 'agent_m', 'schema_enum', 'icon'], ds.specialties as any));
+  out.push(...insert('specialties', ['id', 'slug', 'name_singular', 'name_plural', 'field_name', 'agent_f', 'agent_m', 'schema_enum', 'icon', 'profession'], ds.specialties as any));
   out.push(...insert('cities', ['id', 'slug', 'name', 'province'], ds.cities as any));
   out.push(...insert('sectors', ['id', 'slug', 'name', 'city_id'], ds.sectors as any));
   out.push(...insert('ars', ['id', 'slug', 'name'], ds.ars as any));

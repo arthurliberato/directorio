@@ -7,7 +7,7 @@ const specs = getSpecialties();
 <Base title={`Página no encontrada | ${BRAND}`} description="La página que buscas no existe o cambió de lugar." robots="noindex,follow">
   <div class="wrap narrow section">
     <h1>No encontramos esta página</h1>
-    <p class="muted">Puede que el enlace haya cambiado o que aún no tengamos médicos verificados para esta búsqueda.</p>
+    <p class="muted">Puede que el enlace haya cambiado o que aún no tengamos profesionales verificados para esta búsqueda.</p>
     <p><a class="btn" href="/">Ir al inicio</a></p>
     <h2>Especialidades populares</h2>
     <ul class="linklist">{specs.map((s) => <li><a href={`/${s.slug}`}>{s.name_plural}</a></li>)}</ul>

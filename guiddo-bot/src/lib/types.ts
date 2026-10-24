@@ -2,6 +2,7 @@ export type IndexStatus = 'auto' | 'force_index' | 'force_noindex';
 export type Gender = 'f' | 'm';
 export type ListingStatus = 'draft' | 'listed' | 'affiliated';
 
+export type Profession = 'medico' | 'odontologo' | 'psicologo';
 export interface Specialty {
   id: number; slug: string; // plural, no accents: cardiologos
   name_singular: string; name_plural: string; // Cardiología / Cardiólogos
@@ -9,6 +10,7 @@ export interface Specialty {
   agent_f: string; agent_m: string; // cardióloga / cardiólogo
   schema_enum: string | null; // schema.org MedicalSpecialty value; null when schema.org has no matching term (never guess)
   icon: string;
+  profession: Profession; // physician, dentist or psychologist: decides wording, title and schema.org type
 }
 export interface City { id: number; slug: string; name: string; province: string; }
 export interface Sector { id: number; slug: string; name: string; city_id: number; }

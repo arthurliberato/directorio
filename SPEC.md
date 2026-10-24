@@ -66,7 +66,8 @@ locations          -- a doctor can have several
 facilities         -- clinics/hospitals
   id, slug, name, type (Hospital | MedicalClinic), address, city_id, sector_id, phone, website
 
-specialties        -- id, slug (plural, e.g. cardiologos), name_singular, name_plural, schema_enum (e.g. Cardiovascular)
+specialties        -- id, slug (plural, e.g. cardiologos), name_singular, name_plural, schema_enum (e.g. Cardiovascular),
+                      profession (medico | odontologo | psicologo)
 cities             -- id, slug, name, province
 sectors            -- id, slug, name, city_id
 ars                -- id, slug, name (Humano, Universal, SeNaSa, Mapfre Salud, ...)
@@ -95,6 +96,8 @@ Doctors come in three tiers (`doctors.listing_status`):
 - **affiliated (verificado):** exequátur verified by us (DB-enforced) and a relationship with the doctor. Shows photo and the "Médico verificado" badge, is **sorted first** everywhere (hubs, nearby, home), and follows the profile indexing rules of §4.2.
 - **listed (perfil informativo):** built from public sources (clinic directories, specialty societies). Shows **no photo**, a neutral "Perfil informativo · no verificado" badge, the source and date, and a "request verification, correction or removal" link. Never claims verification. `noindex,follow` always (override with `index_status`). Sorted after verified doctors.
 - **draft:** hidden everywhere.
+
+Professions (migration 008): the directory lists **health professionals**: physicians, dentists and psychologists (`specialties.profession`). Verified physicians carry "Médico verificado" and the Colegio Médico badge; verified dentists and psychologists carry "Profesional verificado" and no college badge until their college is tracked. Dr./Dra. comes from the gender we hold, except psychologists, who get no title or article by default (many are "Lic."; a credential is never guessed). General copy says "profesionales de la salud". schema.org type: `IndividualPhysician` (physicians), `Dentist` (dentists), `Person` + `hasOccupation` (psychologists; no medical-only properties).
 
 Rules that follow: no direct/mobile phones for listed doctors (only the clinic switchboard + extension); gender is never guessed (unknown ⇒ no title, "cardiólogo/a"); languages and fees are never assumed; a sector is optional; hubs count all published doctors and say how many are verified; import can create `listed`/`draft` but never `affiliated`.
 

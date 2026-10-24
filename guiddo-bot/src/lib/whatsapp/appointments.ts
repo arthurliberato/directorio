@@ -37,7 +37,7 @@ export const doctorNotice = (message: string, patientPhone: string) =>
 /** Handles the patient's request message. Always returns what to tell the patient. */
 export async function submitRequest(o: { slug: string; from: string; message: string }, deps: Deps, now = Date.now()): Promise<Out[]> {
   const v = getDoctorBySlug(o.slug);
-  if (!v || !canBook(v.doctor) || !v.doctor.whatsapp) return [text('Este doctor no recibe citas por este chat. Escribe «menú» para ver más opciones.')];
+  if (!v || !canBook(v.doctor) || !v.doctor.whatsapp) return [text('Este profesional no recibe citas por este chat. Escribe «menú» para ver más opciones.')];
   if (overLimit(o.from, now)) return [text('Ya enviaste varias solicitudes en la última hora. Espera un poco y vuelve a intentarlo, por favor.')];
   const message = clip(o.message, 500);
   recent.set(o.from, [...(recent.get(o.from) ?? []), now]);

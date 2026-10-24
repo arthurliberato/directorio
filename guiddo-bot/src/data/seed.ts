@@ -2,14 +2,16 @@
 import type { Ars, City, Doctor, DoctorArs, DoctorMention, Facility, Guide, Location, RedirectRow, Sector, Specialty } from '../lib/types.ts';
 
 export const specialties: Specialty[] = [
-  { id: 1, slug: 'cardiologos', name_singular: 'Cardiología', name_plural: 'Cardiólogos', field_name: 'Cardiología', agent_f: 'cardióloga', agent_m: 'cardiólogo', schema_enum: 'Cardiovascular', icon: 'heart' },
-  { id: 2, slug: 'pediatras', name_singular: 'Pediatría', name_plural: 'Pediatras', field_name: 'Pediatría', agent_f: 'pediatra', agent_m: 'pediatra', schema_enum: 'Pediatric', icon: 'baby' },
-  { id: 3, slug: 'ginecologos', name_singular: 'Ginecología', name_plural: 'Ginecólogos', field_name: 'Ginecología', agent_f: 'ginecóloga', agent_m: 'ginecólogo', schema_enum: 'Gynecologic', icon: 'flower' },
-  { id: 4, slug: 'dermatologos', name_singular: 'Dermatología', name_plural: 'Dermatólogos', field_name: 'Dermatología', agent_f: 'dermatóloga', agent_m: 'dermatólogo', schema_enum: 'Dermatology', icon: 'sparkle' },
-  { id: 5, slug: 'medicos-generales', name_singular: 'Medicina general', name_plural: 'Médicos generales', field_name: 'Medicina general', agent_f: 'médica general', agent_m: 'médico general', schema_enum: 'PrimaryCare', icon: 'stethoscope' },
-  { id: 6, slug: 'ortopedas', name_singular: 'Ortopedia', name_plural: 'Ortopedas', field_name: 'Ortopedia', agent_f: 'ortopeda', agent_m: 'ortopeda', schema_enum: 'Musculoskeletal', icon: 'bone' },
-  { id: 7, slug: 'oftalmologos', name_singular: 'Oftalmología', name_plural: 'Oftalmólogos', field_name: 'Oftalmología', agent_f: 'oftalmóloga', agent_m: 'oftalmólogo', schema_enum: 'Optometric', icon: 'eye' },
-  { id: 8, slug: 'neurologos', name_singular: 'Neurología', name_plural: 'Neurólogos', field_name: 'Neurología', agent_f: 'neuróloga', agent_m: 'neurólogo', schema_enum: 'Neurologic', icon: 'brain' },
+  { id: 1, slug: 'cardiologos', name_singular: 'Cardiología', name_plural: 'Cardiólogos', field_name: 'Cardiología', agent_f: 'cardióloga', agent_m: 'cardiólogo', schema_enum: 'Cardiovascular', icon: 'heart', profession: 'medico' },
+  { id: 2, slug: 'pediatras', name_singular: 'Pediatría', name_plural: 'Pediatras', field_name: 'Pediatría', agent_f: 'pediatra', agent_m: 'pediatra', schema_enum: 'Pediatric', icon: 'baby', profession: 'medico' },
+  { id: 3, slug: 'ginecologos', name_singular: 'Ginecología', name_plural: 'Ginecólogos', field_name: 'Ginecología', agent_f: 'ginecóloga', agent_m: 'ginecólogo', schema_enum: 'Gynecologic', icon: 'flower', profession: 'medico' },
+  { id: 4, slug: 'dermatologos', name_singular: 'Dermatología', name_plural: 'Dermatólogos', field_name: 'Dermatología', agent_f: 'dermatóloga', agent_m: 'dermatólogo', schema_enum: 'Dermatology', icon: 'sparkle', profession: 'medico' },
+  { id: 5, slug: 'medicos-generales', name_singular: 'Medicina general', name_plural: 'Médicos generales', field_name: 'Medicina general', agent_f: 'médica general', agent_m: 'médico general', schema_enum: 'PrimaryCare', icon: 'stethoscope', profession: 'medico' },
+  { id: 6, slug: 'ortopedas', name_singular: 'Ortopedia', name_plural: 'Ortopedas', field_name: 'Ortopedia', agent_f: 'ortopeda', agent_m: 'ortopeda', schema_enum: 'Musculoskeletal', icon: 'bone', profession: 'medico' },
+  { id: 7, slug: 'oftalmologos', name_singular: 'Oftalmología', name_plural: 'Oftalmólogos', field_name: 'Oftalmología', agent_f: 'oftalmóloga', agent_m: 'oftalmólogo', schema_enum: 'Optometric', icon: 'eye', profession: 'medico' },
+  { id: 8, slug: 'neurologos', name_singular: 'Neurología', name_plural: 'Neurólogos', field_name: 'Neurología', agent_f: 'neuróloga', agent_m: 'neurólogo', schema_enum: 'Neurologic', icon: 'brain', profession: 'medico' },
+  { id: 9, slug: 'odontologos', name_singular: 'Odontología general', name_plural: 'Odontólogos', field_name: 'Odontología general', agent_f: 'odontóloga', agent_m: 'odontólogo', schema_enum: 'Dentistry', icon: 'tooth', profession: 'odontologo' },
+  { id: 10, slug: 'psicologos', name_singular: 'Psicología clínica', name_plural: 'Psicólogos', field_name: 'Psicología clínica', agent_f: 'psicóloga', agent_m: 'psicólogo', schema_enum: null, icon: 'brain', profession: 'psicologo' },
 ];
 
 export const cities: City[] = [
@@ -155,6 +157,14 @@ LISTED.forEach(([name, specSlug, cityId, clinic, suite, ext], i) => {
   locations.push({ id: id2, doctor_id: id2, facility_id: cityId === 1 ? 1 : 4, address: cityId === 1 ? facilities[0].address : facilities[3].address, sector_id: null, city_id: cityId,
     lat: null, lng: null, schedule: [], phone: cityId === 1 ? '+1-809-555-0101' : '+1-809-555-0104', suite, phone_ext: ext });
 });
+
+// Non-physician professionals: wording ("Profesional verificado"), title (none for psychologists) and schema.org type depend on the profession.
+doctors.push({ ...doctors[3], id: 960, slug: 'dra-lucia-mena-odontologa', display_name: 'Dra. Lucía Mena', full_legal_name: 'Lucía Mena Rosario', gender: 'f', specialty_id: 9, subspecialties: [],
+  cmd_member: false, cmd_verified_at: null, claimed: false, claimed_at: null, bio: null, whatsapp: null, booking_url: null });
+locations.push({ ...locations[3], id: 960, doctor_id: 960 });
+doctors.push({ ...doctors[3], id: 961, slug: 'ana-pena-psicologo', display_name: 'Ana Peña', full_legal_name: 'Ana Peña Gil', gender: null, specialty_id: 10, subspecialties: [],
+  cmd_member: false, cmd_verified_at: null, claimed: false, claimed_at: null, bio: null, whatsapp: null, booking_url: null });
+locations.push({ ...locations[3], id: 961, doctor_id: 961 });
 
 // Illustrative mentions (example.com is reserved). Only published ones of affiliated doctors ever render.
 export const mentions: DoctorMention[] = [

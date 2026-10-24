@@ -4,11 +4,11 @@ import { getGuides, getSpecialties } from '../lib/data.ts';
 export const GET: APIRoute = () => {
   const body = `# ${BRAND}
 
-> Directorio de médicos verificados en República Dominicana. Cada perfil muestra la fecha de verificación del exequátur, ARS aceptadas, precio de consulta y horario.
+> Directorio de profesionales de la salud verificados en República Dominicana. Cada perfil muestra la fecha de verificación del exequátur, ARS aceptadas, precio de consulta y horario.
 
 ## Confianza
 - [Metodología](${SITE_URL}/metodologia)
-- [Cómo verificamos a los médicos](${SITE_URL}/como-verificamos)
+- [Cómo verificamos a los profesionales](${SITE_URL}/como-verificamos)
 - [Política editorial](${SITE_URL}/politica-editorial)
 
 ## Especialidades
