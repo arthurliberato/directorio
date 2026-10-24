@@ -61,7 +61,7 @@ p { margin: 0 0 1em; }
 /* Home finder: three presets, only the specialty is required */
 .finder { display: grid; gap: 0; background: var(--paper); border-radius: var(--radius); padding: 4px 14px 14px; margin-top: 18px; max-width: 34rem; }
 .finder .field > div { flex: 1; min-width: 0; } .finder .gd-btn { margin-top: 14px; padding: 12px 18px; font-size: 15px; }
-.finder .field:nth-of-type(3) { border-bottom: 0; }
+.finder .field:nth-of-type(4) { border-bottom: 0; }
 @media (min-width: 900px) { .finder { max-width: 62rem; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; gap: 0 18px; padding: 10px 18px; } .finder .field { border-bottom: 0; } .finder .gd-btn { margin: 0 0 8px; } }
 
 /* Sections */
@@ -203,4 +203,4 @@ body { overflow-x: clip; }
 .spec-row > span:last-child, .fcard, .city-row > span { min-width: 0; overflow-wrap: anywhere; }
 
 .finder .when-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .finder .when-row select { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); padding: 4px 0; min-width: 0; }
-@media (min-width: 900px) { .finder { grid-template-columns: repeat(4, 1fr) auto; } .finder .when { grid-column: auto; } }
+@media (min-width: 900px) { .finder { max-width: 62rem; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 18px; } .finder .field:nth-of-type(4) { grid-column: span 2; } .finder select { font-size: .95rem; } }
