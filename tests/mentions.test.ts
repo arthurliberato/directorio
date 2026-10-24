@@ -10,7 +10,7 @@ import { validateMention, type MentionInput } from '../src/lib/mentions.ts';
 import { physicianJsonLd } from '../src/lib/schema.ts';
 import { schemaSql } from './schema-sql.ts';
 
-const ok: MentionInput = { kind: 'press', title: 'Entrevista', source_name: 'Medio', url: 'https://medio.example.com/a', published_on: '2026-09-01', summary: 'Texto', summary_origin: 'summary', published: true };
+const ok: MentionInput = { kind: 'press', title: 'Entrevista', source_name: 'Medio', url: 'https://medio.example.com/a', published_on: '2026-09-01', image_url: '/img/foto.jpg', summary: 'Texto', summary_origin: 'summary', published: true };
 
 test('validation: https only, text needs an origin, bounds', () => {
   assert.deepEqual(validateMention(ok), []);
@@ -22,6 +22,11 @@ test('validation: https only, text needs an origin, bounds', () => {
   assert.ok(validateMention({ ...ok, summary_origin: null }).length, 'text without origin');
   assert.deepEqual(validateMention({ ...ok, summary: null, summary_origin: null }), []);
   assert.ok(validateMention({ ...ok, published_on: '2026-13-45' }).length);
+  assert.ok(validateMention({ ...ok, image_url: null }).length, 'publishing needs a photo');
+  assert.deepEqual(validateMention({ ...ok, image_url: null, published: false }), [], 'drafts may lack it');
+  assert.ok(validateMention({ ...ok, image_url: 'http://x.example.com/a.jpg' }).length);
+  assert.ok(validateMention({ ...ok, image_url: 'javascript:alert(1)' }).length);
+  assert.deepEqual(validateMention({ ...ok, image_url: 'https://cdn.example.com/a.jpg' }), []);
 });
 
 test('profile shows only published, reviewed items of verified doctors, newest first', () => {
@@ -33,6 +38,10 @@ test('profile shows only published, reviewed items of verified doctors, newest f
   const listed = getDoctorBySlug('marcos-tejeda-liriano-cardiologia')!;
   assert.equal(listed.doctor.listing_status, 'listed');
   assert.deepEqual(doctorMentions(listed), []);
+  // a published item without a photo is not shown
+  const noPhoto = seedDataset(); noPhoto.mentions = noPhoto.mentions.map((m) => (m.id === 1 ? { ...m, image_url: null } : m)); setDataset(noPhoto);
+  assert.deepEqual(doctorMentions(publishedDoctors()[0]).map((m) => m.id), [2]);
+  setDataset(seedDataset());
   // a published row without a review date is not shown
   const ds = seedDataset(); ds.mentions = ds.mentions.map((m) => (m.id === 1 ? { ...m, checked_at: null } : m)); setDataset(ds);
   assert.deepEqual(doctorMentions(publishedDoctors()[0]).map((m) => m.id), [2]);
@@ -45,6 +54,7 @@ test('JSON-LD lists exactly the visible items, and nothing for listed doctors', 
   assert.equal(ld.subjectOf.length, 2);
   assert.deepEqual(ld.subjectOf.map((x: any) => x.url), ['https://instagram.example.com/p/ejemplo', 'https://noticias.example.com/entrevista-prevencion']);
   assert.equal(ld.subjectOf[0]['@type'], 'SocialMediaPosting');
+  assert.match(ld.subjectOf[0].image, /^https?:\/\/.+\/img\/ejemplo-publicacion\.svg$/);
   assert.ok(!('review' in ld) && !('aggregateRating' in ld));
   assert.ok(!('subjectOf' in (physicianJsonLd(getDoctorBySlug('marcos-tejeda-liriano-cardiologia')!) as any)));
 });
@@ -65,6 +75,8 @@ test('database: constraints, admin writes, loader round trip, missing table tole
   await assert.rejects(() => addMention(run, 1, { ...ok, url: 'http://x.example.com' }), /https/);
   // the database refuses what the form should never send
   await assert.rejects(() => db.exec(`insert into doctor_mentions (doctor_id, kind, title, source_name, url, published) values (1, 'press', 'Titulo', 'Medio', 'https://a.example.com/z', true)`), /check/);
+  await assert.rejects(() => db.exec(`insert into doctor_mentions (doctor_id, kind, title, source_name, url, published, checked_at) values (1, 'press', 'Titulo', 'Medio', 'https://a.example.com/x', true, current_date)`), /check/, 'published needs a photo');
+  await assert.rejects(() => db.exec(`insert into doctor_mentions (doctor_id, kind, title, source_name, url, image_url) values (1, 'press', 'Titulo', 'Medio', 'https://a.example.com/w', 'http://a.example.com/i.jpg')`), /check/);
   await assert.rejects(() => db.exec(`insert into doctor_mentions (doctor_id, kind, title, source_name, url, summary) values (1, 'press', 'Titulo', 'Medio', 'https://a.example.com/y', 'texto sin origen')`), /check/);
   await assert.rejects(() => db.exec(`insert into doctor_mentions (doctor_id, kind, title, source_name, url) values (1, 'press', 'Titulo', 'Medio', 'ftp://a.example.com/y')`), /check/);
 

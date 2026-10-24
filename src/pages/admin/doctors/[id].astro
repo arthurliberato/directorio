@@ -36,7 +36,7 @@ const myArs = new Set(getDataset().doctorArs.filter((a) => a.doctor_id === id).m
 const specName = getSpecialties().find((s) => s.id === d.specialty_id)?.name_singular;
 ---
 <AdminShell title={d.display_name} message={message} error={error}>
-  <p><small>{specName} · exequátur: {d.exequatur_verified_at ?? 'sin verificar'} · {d.exequatur_verified_at ? <a href={`/${d.slug}`}>ver perfil público</a> : <a href="/admin/verify">verificar</a>} · <a href={`/admin/doctors/${d.id}/contenido`}>Prensa y publicaciones</a></small></p>
+  <p><small>{specName} · exequátur: {d.exequatur_verified_at ?? 'sin verificar'} · {d.exequatur_verified_at ? <a href={`/${d.slug}`}>ver perfil público</a> : <a href="/admin/verify">verificar</a>} · <a href={`/admin/doctors/${d.id}/contenido`}>Publicaciones</a></small></p>
   <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
     <div class="grid2">
       <div><label for="slug">Slug (URL)</label><input id="slug" name="slug" value={d.slug} pattern="[a-z0-9]+(-[a-z0-9]+)*" /></div>

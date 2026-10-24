@@ -1,13 +1,13 @@
 ---
 import Icon from './Icon.astro';
+import GuiddoI from './GuiddoI.astro';
 import { isAffiliated, type DoctorView } from '../lib/data.ts';
-import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
+import { agentNoun, profilePath } from '../lib/facts.ts';
 import { formatDOP } from '../lib/format.ts';
 interface Props { v: DoctorView; heading?: 'h2' | 'h3' }
 const { v, heading = 'h3' } = Astro.props;
 const H = heading;
 const d = v.doctor; const loc = v.locations[0];
-const initials = initialsOf(d.display_name);
 const affiliated = isAffiliated(d);
 const showPhoto = affiliated && !!d.photo_url; // photos are a verified-affiliate benefit
 const arsText = v.ars.length ? `${v.ars.slice(0, 2).map((a) => a.name).join(' · ')}${v.ars.length > 2 ? ' · …' : ''}` : null;
@@ -19,7 +19,7 @@ const zone = loc ? `${loc.sector ? `${loc.sector.name}, ` : ''}${loc.city.name}`
     {affiliated ? <span class="gd-rx__tier ok"><Icon name="shield" size={14} /> Verificado</span> : <span class="gd-rx__tier info">Informativo</span>}
   </div>
   <div class="gd-rx__who">
-    <div class="gd-avatar" aria-hidden="true">{showPhoto ? <img src={d.photo_url!} alt="" width="46" height="46" loading="lazy" /> : initials}</div>
+    <div class="gd-avatar" aria-hidden="true">{showPhoto ? <img src={d.photo_url!} alt="" width="46" height="46" loading="lazy" /> : <GuiddoI size={34} />}</div>
     <div>
       {d.sponsored && <div class="tag-sponsor">Patrocinado</div>}
       <H class="gd-rx__name"><a href={profilePath(v)}>{d.display_name}</a></H>

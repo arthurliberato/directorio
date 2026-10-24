@@ -14,7 +14,7 @@ if (Astro.request.method === 'POST' && adminCanWrite()) {
   const str = (k: string) => { const v = String(f.get(k) ?? '').trim(); return v === '' ? null : v; };
   const input: MentionInput = {
     kind: String(f.get('kind') ?? ''), title: String(f.get('title') ?? ''), source_name: String(f.get('source_name') ?? ''), url: String(f.get('url') ?? ''),
-    published_on: str('published_on'), summary: str('summary'), summary_origin: str('summary_origin'), published: f.get('published') === 'on',
+    published_on: str('published_on'), image_url: str('image_url'), summary: str('summary'), summary_origin: str('summary_origin'), published: f.get('published') === 'on',
   };
   const action = String(f.get('action') ?? '');
   try {
@@ -32,10 +32,10 @@ const items = allMentionsFor(id);
 const affiliated = isAffiliated(d);
 const origins = [['excerpt', 'Extracto literal del contenido (entre comillas)'], ['summary', 'Resumen escrito por nosotros']] as const;
 ---
-<AdminShell title={`Prensa y publicaciones · ${d.display_name}`} message={message} error={error}>
+<AdminShell title={`Publicaciones · ${d.display_name}`} message={message} error={error}>
   <p><a href={`/admin/doctors/${id}`}>← Ficha del médico</a>{affiliated ? <> · <a href={`/${d.slug}`}>ver perfil público</a></> : null}</p>
   {!affiliated && <p class="warn"><b>Este médico no es «Verificado (afiliado)».</b> Los perfiles informativos nunca muestran contenido de terceros: lo que guardes aquí no aparecerá hasta que se afilie.</p>}
-  <p><small>Reglas: solo enlaces <b>https</b> a contenido que de verdad trate de este médico; para redes sociales, solo cuentas propias del médico y con su permiso. Si el texto sale de un video, <b>míralo completo y compáralo</b> antes de publicar: no incluyas consejos médicos, cifras ni afirmaciones que el médico no dijo. Al marcar «Publicar» confirmas que revisaste el enlace y el texto; se guarda la fecha de hoy como fecha de revisión.</small></p>
+  <p><small>Reglas: cada publicación lleva una <b>foto</b> (usa una imagen que tengamos derecho a mostrar: la del propio medio con permiso, o una nuestra en <code>public/img</code>); solo enlaces <b>https</b> a contenido que de verdad trate de este médico; para redes sociales, solo cuentas propias del médico y con su permiso. Si el texto sale de un video, <b>míralo completo y compáralo</b> antes de publicar: no incluyas consejos médicos, cifras ni afirmaciones que el médico no dijo. Al marcar «Publicar» confirmas que revisaste el enlace y el texto; se guarda la fecha de hoy como fecha de revisión.</small></p>
 
   <h2>Añadir</h2>
   <form method="post"><fieldset disabled={!adminCanWrite()} style="border:0;padding:0">
@@ -45,6 +45,7 @@ const origins = [['excerpt', 'Extracto literal del contenido (entre comillas)'],
       <div><label for="n-src">Fuente (medio o cuenta)</label><input id="n-src" name="source_name" required maxlength="100" placeholder="Listín Diario / Instagram de la doctora" /></div>
       <div><label for="n-title">Título</label><input id="n-title" name="title" required maxlength="200" /></div>
       <div><label for="n-url">Enlace (https)</label><input id="n-url" name="url" type="url" required placeholder="https://" /></div>
+      <div><label for="n-img">Foto (https:// o ruta del sitio, p. ej. /img/foto.jpg) — obligatoria para publicar</label><input id="n-img" name="image_url" placeholder="https://" /></div>
       <div><label for="n-date">Fecha de publicación (opcional)</label><input id="n-date" name="published_on" type="date" /></div>
       <div><label for="n-origin">El texto de abajo es…</label><select id="n-origin" name="summary_origin"><option value="">(sin texto)</option>{origins.map(([v, l]) => <option value={v}>{l}</option>)}</select></div>
     </div>
@@ -65,6 +66,7 @@ const origins = [['excerpt', 'Extracto literal del contenido (entre comillas)'],
           <div><label>Fuente</label><input name="source_name" required maxlength="100" value={m.source_name} /></div>
           <div><label>Título</label><input name="title" required maxlength="200" value={m.title} /></div>
           <div><label>Enlace (https)</label><input name="url" type="url" required value={m.url} /></div>
+          <div><label>Foto (obligatoria para publicar)</label><input name="image_url" value={m.image_url ?? ''} /></div>
           <div><label>Fecha de publicación</label><input name="published_on" type="date" value={m.published_on ?? ''} /></div>
           <div><label>El texto es…</label><select name="summary_origin"><option value="">(sin texto)</option>{origins.map(([v, l]) => <option value={v} selected={m.summary_origin === v}>{l}</option>)}</select></div>
         </div>

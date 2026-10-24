@@ -173,6 +173,8 @@ address { font-style: normal; color: var(--muted); }
 
 /* Booking panel (verified doctors) */
 .panel.book { border-color: var(--ink); margin-bottom: 16px; }
+.panel.pub { display: flex; gap: 14px; padding: 12px; align-items: flex-start; } .pub__img { width: 96px; height: 96px; flex: none; object-fit: cover; border-radius: var(--radius-sm); background: var(--pale); }
+.portrait .gd-i, .gd-avatar .gd-i { display: block; }
 .summary.plain { background: none; border-radius: 0; padding: 0; margin: 14px 0 6px; max-width: 62rem; }
 .profile-head h1 .role { display: block; margin-top: 4px; font-size: .55em; font-weight: 700; color: var(--gd-blue-ink); }
 .head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; } .head-actions .muted { flex-basis: 100%; margin: 0; font-size: .85rem; }

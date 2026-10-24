@@ -48,7 +48,7 @@ export type MentionTextOrigin = 'excerpt' | 'summary';
 /** Press / article / video / social post about a doctor, added and reviewed by a person. Shown on affiliated profiles only. */
 export interface DoctorMention {
   id: number; doctor_id: number; kind: MentionKind; title: string; source_name: string; url: string;
-  published_on: string | null; summary: string | null; summary_origin: MentionTextOrigin | null;
+  published_on: string | null; image_url: string | null; summary: string | null; summary_origin: MentionTextOrigin | null;
   published: boolean; checked_at: string | null;
 }
 export interface DoctorArs { doctor_id: number; ars_id: number; verified_at: string; }

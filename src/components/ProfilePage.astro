@@ -4,10 +4,11 @@ import Breadcrumbs from './Breadcrumbs.astro';
 import DoctorCard from './DoctorCard.astro';
 import MapBox from './MapBox.astro';
 import Icon from './Icon.astro';
+import GuiddoI from './GuiddoI.astro';
 import { BRAND } from '../config.ts';
 import { doctorMentions, isAffiliated, nearbyDoctors, type DoctorView } from '../lib/data.ts';
 import { MENTION_KIND_LABEL, MENTION_ORIGIN_LABEL } from '../lib/mentions.ts';
-import { agentNoun, doctorHubLinks, factSummary, initialsOf, isListedOnly, profileMetaDescription, profilePath, profileTitle, titleOf } from '../lib/facts.ts';
+import { agentNoun, doctorHubLinks, factSummary, isListedOnly, profileMetaDescription, profilePath, profileTitle, titleOf } from '../lib/facts.ts';
 import { formatDate, formatFeeRange, formatScheduleLines, joinList, LANGUAGE_NAMES } from '../lib/format.ts';
 import { profileIndexDecision } from '../lib/indexing.ts';
 import { breadcrumbJsonLd, physicianJsonLd } from '../lib/schema.ts';
@@ -36,7 +37,6 @@ const verified = affiliated ? d.data_verified_at : null;
 const contactPhone = d.phone ?? loc?.phone ?? null;
 const ext = d.phone ? null : loc?.phone_ext ?? null; // an extension only makes sense on the clinic switchboard
 const fullAddress = loc ? `${loc.suite ? loc.suite + ', ' : ''}${loc.address}${loc.sector && !loc.address.toLowerCase().includes(loc.sector.name.toLowerCase()) ? ', ' + loc.sector.name : ''}, ${loc.city.name}` : '';
-const initials = initialsOf(d.display_name);
 const role = agentNoun(v).charAt(0).toUpperCase() + agentNoun(v).slice(1);
 ---
 <Base title={profileTitle(v, BRAND)} description={profileMetaDescription(v)} robots={decision.robots} jsonLd={jsonLd} canonicalPath={profilePath(v)}>
@@ -44,7 +44,7 @@ const role = agentNoun(v).charAt(0).toUpperCase() + agentNoun(v).slice(1);
   <div class="wrap page-head">
     <div class="profile-head">
       <div class="portrait" aria-hidden={d.photo_url ? undefined : 'true'}>
-        {showPhoto ? <img src={d.photo_url!} width="148" height="148" fetchpriority="high" alt={`Foto de ${d.display_name}`} /> : initials}
+        {showPhoto ? <img src={d.photo_url!} width="148" height="148" fetchpriority="high" alt={`Foto de ${d.display_name}`} /> : <GuiddoI size={92} />}
       </div>
       <div>
     <h1>{[titleOf(v), d.full_legal_name].filter(Boolean).join(' ')}<span class="sr-only">, </span><span class="role">{role}</span></h1>
@@ -68,17 +68,18 @@ const role = agentNoun(v).charAt(0).toUpperCase() + agentNoun(v).slice(1);
 
   <div class="wrap layout sidebar profile-layout">
     <div>
-      {d.bio && <section aria-labelledby="sobre"><h2 id="sobre" style="margin-top:1.5em">Sobre {titleOf(v)} {d.display_name.replace(/^Dra?\.\s*/, '')}</h2><p>{d.bio}</p></section>}
-
       {mentions.length > 0 && (
         <section aria-labelledby="prensa" style="margin-top:1.5em">
-          <h2 id="prensa">En los medios y publicaciones</h2>
+          <h2 id="prensa">Publicaciones</h2>
           <ul style="list-style:none;padding:0;margin:0;display:grid;gap:12px">
             {mentions.map((m) => (
-              <li class="panel" style="padding:14px">
-                <p class="muted" style="margin:0 0 4px;font-size:.88rem">{MENTION_KIND_LABEL[m.kind]} · {m.source_name}{m.published_on && <> · <time datetime={m.published_on}>{formatDate(m.published_on)}</time></>}</p>
-                <p style="margin:0"><a href={m.url} target="_blank" rel="noopener nofollow"><b>{m.title}</b></a></p>
-                {m.summary && <p style="margin:6px 0 0"><span class="muted">{MENTION_ORIGIN_LABEL[m.summary_origin!]}:</span> {m.summary_origin === 'excerpt' ? `«${m.summary}»` : m.summary}</p>}
+              <li class="panel pub">
+                <img class="pub__img" src={m.image_url!} alt="" width="96" height="96" loading="lazy" />
+                <div>
+                  <p class="muted" style="margin:0 0 4px;font-size:.88rem">{MENTION_KIND_LABEL[m.kind]} · {m.source_name}{m.published_on && <> · <time datetime={m.published_on}>{formatDate(m.published_on)}</time></>}</p>
+                  <p style="margin:0"><a href={m.url} target="_blank" rel="noopener nofollow"><b>{m.title}</b></a></p>
+                  {m.summary && <p style="margin:6px 0 0"><span class="muted">{MENTION_ORIGIN_LABEL[m.summary_origin!]}:</span> {m.summary_origin === 'excerpt' ? `«${m.summary}»` : m.summary}</p>}
+                </div>
               </li>
             ))}
           </ul>

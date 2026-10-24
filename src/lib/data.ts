@@ -33,7 +33,7 @@ const idx = (): Index => {
   const published = ds.doctors.filter(isPublished).map((d): DoctorView => ({ doctor: d, specialty: spec.get(d.specialty_id)!, locations: locs.get(d.id) ?? [], ars: arsByDoctor.get(d.id) ?? [] }));
   // Newest first; undated items last. Only published, reviewed items (the database also requires a review date for them).
   const mentionsByDoctor = new Map<number, DoctorMention[]>();
-  for (const m of [...ds.mentions].filter((x) => x.published && x.checked_at).sort((a, b) => (b.published_on ?? '').localeCompare(a.published_on ?? '') || b.id - a.id)) {
+  for (const m of [...ds.mentions].filter((x) => x.published && x.checked_at && x.image_url).sort((a, b) => (b.published_on ?? '').localeCompare(a.published_on ?? '') || b.id - a.id)) {
     mentionsByDoctor.set(m.doctor_id, [...(mentionsByDoctor.get(m.doctor_id) ?? []), m]);
   }
   i = {

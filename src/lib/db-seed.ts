@@ -30,7 +30,7 @@ export function datasetToSql(ds: Dataset): string[] {
   out.push(...insert('doctor_ars', ['doctor_id', 'ars_id', 'verified_at'], ds.doctorArs as any));
   out.push(...insert('guides', ['id', 'slug', 'title', 'category', 'icon', 'read_minutes', 'answer_summary', 'body', 'reviewer_doctor_id', 'reviewed_at', 'sources', 'related_specialty_ids'],
     ds.guides.map((g) => ({ ...g, related_specialty_ids: g.related_specialty_slugs.map((s) => specId.get(s)) })) as any));
-  out.push(...insert('doctor_mentions', ['id', 'doctor_id', 'kind', 'title', 'source_name', 'url', 'published_on', 'summary', 'summary_origin', 'published', 'checked_at'], ds.mentions as any));
+  out.push(...insert('doctor_mentions', ['id', 'doctor_id', 'kind', 'title', 'source_name', 'url', 'published_on', 'image_url', 'summary', 'summary_origin', 'published', 'checked_at'], ds.mentions as any));
   out.push(`select setval(pg_get_serial_sequence('doctor_mentions', 'id'), coalesce(max(id), 1), max(id) is not null) from doctor_mentions;`); // explicit ids were inserted
   out.push(...insert('redirects', ['from_path', 'to_path', 'status'], ds.redirects as any));
   return out;

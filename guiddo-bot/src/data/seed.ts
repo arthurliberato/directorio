@@ -159,13 +159,13 @@ LISTED.forEach(([name, specSlug, cityId, clinic, suite, ext], i) => {
 // Illustrative mentions (example.com is reserved). Only published ones of affiliated doctors ever render.
 export const mentions: DoctorMention[] = [
   { id: 1, doctor_id: doctors[0].id, kind: 'press', title: 'Entrevista sobre prevención cardiovascular', source_name: 'Ejemplo Noticias', url: 'https://noticias.example.com/entrevista-prevencion',
-    published_on: '2026-09-18', summary: 'Habla de la importancia de revisar la presión arterial cada año.', summary_origin: 'summary', published: true, checked_at: '2026-10-10' },
+    published_on: '2026-09-18', image_url: '/img/ejemplo-publicacion.svg', summary: 'Habla de la importancia de revisar la presión arterial cada año.', summary_origin: 'summary', published: true, checked_at: '2026-10-10' },
   { id: 2, doctor_id: doctors[0].id, kind: 'social', title: 'Consejos para el día a día del corazón', source_name: 'Instagram de la doctora', url: 'https://instagram.example.com/p/ejemplo',
-    published_on: '2026-10-02', summary: 'Caminar 30 minutos al día ayuda a cuidar el corazón.', summary_origin: 'excerpt', published: true, checked_at: '2026-10-10' },
+    published_on: '2026-10-02', image_url: '/img/ejemplo-publicacion.svg', summary: 'Caminar 30 minutos al día ayuda a cuidar el corazón.', summary_origin: 'excerpt', published: true, checked_at: '2026-10-10' },
   { id: 3, doctor_id: doctors[0].id, kind: 'article', title: 'Borrador sin revisar', source_name: 'Ejemplo Revista', url: 'https://revista.example.com/borrador',
-    published_on: null, summary: null, summary_origin: null, published: false, checked_at: null },
+    published_on: null, image_url: null, summary: null, summary_origin: null, published: false, checked_at: null },
   { id: 4, doctor_id: 950, kind: 'press', title: 'Nota de un médico listado (nunca se muestra)', source_name: 'Ejemplo Noticias', url: 'https://noticias.example.com/listado',
-    published_on: '2026-09-01', summary: null, summary_origin: null, published: true, checked_at: '2026-10-10' },
+    published_on: '2026-09-01', image_url: '/img/ejemplo-publicacion.svg', summary: null, summary_origin: null, published: true, checked_at: '2026-10-10' },
 ];
 
 // Sponsored placement (labeled, outside any ranking).

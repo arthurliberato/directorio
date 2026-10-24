@@ -110,8 +110,8 @@ export async function addMention(run: Run, doctorId: number, m: MentionInput): P
   const errs = validateMention(m);
   if (errs.length) throw new Error(errs.join('; '));
   try {
-    const rows = await run('insert into doctor_mentions (doctor_id, kind, title, source_name, url, published_on, summary, summary_origin, published, checked_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, case when $9 then current_date else null end) returning id',
-      [doctorId, m.kind, m.title.trim(), m.source_name.trim(), m.url.trim(), m.published_on, m.summary?.trim() || null, m.summary?.trim() ? m.summary_origin : null, m.published]);
+    const rows = await run('insert into doctor_mentions (doctor_id, kind, title, source_name, url, published_on, image_url, summary, summary_origin, published, checked_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, case when $10 then current_date else null end) returning id',
+      [doctorId, m.kind, m.title.trim(), m.source_name.trim(), m.url.trim(), m.published_on, m.image_url?.trim() || null, m.summary?.trim() || null, m.summary?.trim() ? m.summary_origin : null, m.published]);
     return Number(rows[0].id);
   } catch (e) { throw mentionDbError(e); }
 }
@@ -119,8 +119,8 @@ export async function updateMention(run: Run, id: number, m: MentionInput): Prom
   const errs = validateMention(m);
   if (errs.length) throw new Error(errs.join('; '));
   try {
-    const rows = await run('update doctor_mentions set kind = $1, title = $2, source_name = $3, url = $4, published_on = $5, summary = $6, summary_origin = $7, published = $8, checked_at = case when $8 then current_date else null end, updated_at = now() where id = $9 returning id',
-      [m.kind, m.title.trim(), m.source_name.trim(), m.url.trim(), m.published_on, m.summary?.trim() || null, m.summary?.trim() ? m.summary_origin : null, m.published, id]);
+    const rows = await run('update doctor_mentions set kind = $1, title = $2, source_name = $3, url = $4, published_on = $5, image_url = $6, summary = $7, summary_origin = $8, published = $9, checked_at = case when $9 then current_date else null end, updated_at = now() where id = $10 returning id',
+      [m.kind, m.title.trim(), m.source_name.trim(), m.url.trim(), m.published_on, m.image_url?.trim() || null, m.summary?.trim() || null, m.summary?.trim() ? m.summary_origin : null, m.published, id]);
     if (!rows.length) throw new Error(`mention ${id} not found`);
   } catch (e) { throw mentionDbError(e); }
 }
