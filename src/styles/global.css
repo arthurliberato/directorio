@@ -173,6 +173,14 @@ address { font-style: normal; color: var(--muted); }
 
 /* Booking panel (verified doctors) */
 .panel.book { border-color: var(--ink); margin-bottom: 16px; }
+.profile-head h1 .role { display: block; margin-top: 4px; font-size: .55em; font-weight: 700; color: var(--gd-blue-ink); }
+.head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; } .head-actions .muted { flex-basis: 100%; margin: 0; font-size: .85rem; }
+/* Profile: reading content on the left, the doctor's card on the right; on phones the content comes first. */
+.layout.sidebar.profile-layout > aside { order: 0; gap: 16px; }
+@media (min-width: 900px) { .layout.sidebar.profile-layout { grid-template-columns: 1fr 26rem; } }
+.profile-aside .ficha { padding: 14px 16px; } .profile-aside .ficha h2 { margin-bottom: 4px; }
+.profile-aside table.facts th, .profile-aside table.facts td { display: block; width: auto; border: 0; padding: 0; }
+.profile-aside table.facts th { padding-top: 10px; } .profile-aside table.facts tr { display: block; border-bottom: 1px solid var(--line); padding-bottom: 8px; } .profile-aside table.facts tr:last-child { border-bottom: 0; }
 .layout.sidebar > aside { display: grid; gap: 0; align-content: start; }
 
 /* Contrast fixes over the kit defaults (kit uses opacity/white-on-blue that fail WCAG AA) */

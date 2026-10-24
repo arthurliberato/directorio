@@ -37,6 +37,7 @@ const contactPhone = d.phone ?? loc?.phone ?? null;
 const ext = d.phone ? null : loc?.phone_ext ?? null; // an extension only makes sense on the clinic switchboard
 const fullAddress = loc ? `${loc.suite ? loc.suite + ', ' : ''}${loc.address}${loc.sector && !loc.address.toLowerCase().includes(loc.sector.name.toLowerCase()) ? ', ' + loc.sector.name : ''}, ${loc.city.name}` : '';
 const initials = initialsOf(d.display_name);
+const role = agentNoun(v).charAt(0).toUpperCase() + agentNoun(v).slice(1);
 ---
 <Base title={profileTitle(v, BRAND)} description={profileMetaDescription(v)} robots={decision.robots} jsonLd={jsonLd} canonicalPath={profilePath(v)}>
   <Breadcrumbs items={crumbs} />
@@ -46,42 +47,27 @@ const initials = initialsOf(d.display_name);
         {showPhoto ? <img src={d.photo_url!} width="148" height="148" fetchpriority="high" alt={`Foto de ${d.display_name}`} /> : initials}
       </div>
       <div>
-    <h1>{[titleOf(v), d.full_legal_name].filter(Boolean).join(' ')}, {agentNoun(v)}</h1>
+    <h1>{[titleOf(v), d.full_legal_name].filter(Boolean).join(' ')}<span class="sr-only">, </span><span class="role">{role}</span></h1>
     <p style="margin:0">
       {affiliated ? <span class="badge"><Icon name="shield" size={16} /> <span>Médico verificado en {BRAND}</span></span> : <span class="badge type">Perfil informativo · no verificado</span>}
       {d.exequatur_verified_at && <span class="badge" style="margin-left:8px"><Icon name="shield" size={16} /> <span>Exequátur verificado el <time datetime={d.exequatur_verified_at}>{formatDate(d.exequatur_verified_at)}</time></span></span>}
       {d.cmd_member && d.cmd_verified_at && <span class="badge" style="margin-left:8px"><span>Miembro del CMD verificado el <time datetime={d.cmd_verified_at}>{formatDate(d.cmd_verified_at)}</time></span></span>}
       {d.claimed && affiliated && <span class="badge" style="margin-left:8px">Confirmado con el médico</span>}
     </p>
+    {(waBooking || webBooking) && (
+      <div class="head-actions" id="cita">
+        {webBooking && <a class="btn" id="book-online" href={webBooking} target="_blank" rel="noopener" data-booking-cal={calLink ?? undefined} data-event="booking_click" data-doctor={d.slug}><Icon name="clock" size={20} /> Reservar en línea</a>}
+        {waBooking && <a class="btn wa" href={waBooking} target="_blank" rel="noopener" data-event="whatsapp_booking_click" data-doctor={d.slug}><Icon name="whatsapp" size={20} /> Agendar por WhatsApp</a>}
+        <p class="muted">La cita la confirma el consultorio de {d.display_name}.</p>
+      </div>
+    )}
       </div>
     </div>
     <p class="summary">{factSummary(v)}</p>
   </div>
 
-  <div class="wrap layout sidebar">
+  <div class="wrap layout sidebar profile-layout">
     <div>
-      <section aria-labelledby="datos">
-        <h2 id="datos">Datos del profesional</h2>
-        <table class="facts">
-          <tbody>
-            <tr><th scope="row">Especialidad</th><td><a href={hubPath({ specialty: v.specialty })}>{v.specialty.field_name}</a></td></tr>
-            {d.subspecialties.length > 0 && <tr><th scope="row">Subespecialidades</th><td>{d.subspecialties.join(', ')}</td></tr>}
-            {v.locations.map((l) => (
-              <tr><th scope="row">Consultorio</th><td>
-                {l.facility ? <a href={`/centro/${l.facility.slug}`}>{l.facility.name}</a> : null}{l.facility ? ' — ' : ''}{l.suite ? `${l.suite}, ` : ''}{l.address}, {l.sector && <><a href={hubPath({ specialty: v.specialty, city: l.city, sector: l.sector })}>{l.sector.name}</a>, </>}<a href={hubPath({ specialty: v.specialty, city: l.city })}>{l.city.name}</a>
-              </td></tr>
-            ))}
-            {loc && loc.schedule.length > 0 && <tr><th scope="row">Horario</th><td>{formatScheduleLines(loc.schedule).map((line) => <div>{line}</div>)}</td></tr>}
-            {v.ars.length > 0 && <tr><th scope="row">ARS que acepta</th><td>{v.ars.map((a, i) => <>{i > 0 && ', '}{a.name}</>)}</td></tr>}
-            {formatFeeRange(d.consultation_fee_min, d.consultation_fee_max) && <tr><th scope="row">Precio de consulta</th><td>{formatFeeRange(d.consultation_fee_min, d.consultation_fee_max)}</td></tr>}
-            {d.languages.length > 0 && <tr><th scope="row">Idiomas</th><td>{joinList(d.languages.map((l) => LANGUAGE_NAMES[l] ?? l))}</td></tr>}
-            {v.locations.some((l) => l.facility) && <tr><th scope="row">Clínicas y hospitales</th><td>{joinList(v.locations.filter((l) => l.facility).map((l) => l.facility!.name))}</td></tr>}
-            {d.education.length > 0 && <tr><th scope="row">Formación</th><td>{d.education.join('; ')}</td></tr>}
-            {d.accepting_new_patients != null && <tr><th scope="row">Acepta nuevos pacientes</th><td>{d.accepting_new_patients ? 'Sí' : 'No por ahora'}</td></tr>}
-          </tbody>
-        </table>
-      </section>
-
       {d.bio && <section aria-labelledby="sobre"><h2 id="sobre" style="margin-top:1.5em">Sobre {titleOf(v)} {d.display_name.replace(/^Dra?\.\s*/, '')}</h2><p>{d.bio}</p></section>}
 
       {mentions.length > 0 && (
@@ -108,17 +94,28 @@ const initials = initialsOf(d.display_name);
       </section>
     </div>
 
-    <aside aria-label="Contacto y ubicación">
-      {(waBooking || webBooking) && (
-        <div class="panel book" id="cita">
-          <h2 style="font-size:1.3rem;margin-bottom:12px">Programar cita</h2>
-          <div class="contact">
-            {webBooking && <a class="btn" id="book-online" href={webBooking} target="_blank" rel="noopener" data-booking-cal={calLink ?? undefined} data-event="booking_click" data-doctor={d.slug}><Icon name="clock" size={20} /> Reservar en línea</a>}
-            {waBooking && <a class="btn wa" href={waBooking} target="_blank" rel="noopener" data-event="whatsapp_booking_click" data-doctor={d.slug}><Icon name="whatsapp" size={20} /> Agendar por WhatsApp</a>}
-          </div>
-          <p class="muted" style="margin:10px 0 0;font-size:.85rem">La cita la confirma el consultorio de {d.display_name}.</p>
-        </div>
-      )}
+    <aside class="profile-aside" aria-label="Ficha, contacto y ubicación">
+        <section class="panel ficha" aria-labelledby="datos">
+            <h2 id="datos" style="font-size:1.3rem">Ficha del profesional</h2>
+            <table class="facts">
+              <tbody>
+                <tr><th scope="row">Especialidad</th><td><a href={hubPath({ specialty: v.specialty })}>{v.specialty.field_name}</a></td></tr>
+                {d.subspecialties.length > 0 && <tr><th scope="row">Subespecialidades</th><td>{d.subspecialties.join(', ')}</td></tr>}
+                {v.locations.map((l) => (
+                  <tr><th scope="row">Consultorio</th><td>
+                    {l.facility ? <a href={`/centro/${l.facility.slug}`}>{l.facility.name}</a> : null}{l.facility ? ' — ' : ''}{l.suite ? `${l.suite}, ` : ''}{l.address}, {l.sector && <><a href={hubPath({ specialty: v.specialty, city: l.city, sector: l.sector })}>{l.sector.name}</a>, </>}<a href={hubPath({ specialty: v.specialty, city: l.city })}>{l.city.name}</a>
+                  </td></tr>
+                ))}
+                {loc && loc.schedule.length > 0 && <tr><th scope="row">Horario</th><td>{formatScheduleLines(loc.schedule).map((line) => <div>{line}</div>)}</td></tr>}
+                {v.ars.length > 0 && <tr><th scope="row">ARS que acepta</th><td>{v.ars.map((a, i) => <>{i > 0 && ', '}{a.name}</>)}</td></tr>}
+                {formatFeeRange(d.consultation_fee_min, d.consultation_fee_max) && <tr><th scope="row">Precio de consulta</th><td>{formatFeeRange(d.consultation_fee_min, d.consultation_fee_max)}</td></tr>}
+                {d.languages.length > 0 && <tr><th scope="row">Idiomas</th><td>{joinList(d.languages.map((l) => LANGUAGE_NAMES[l] ?? l))}</td></tr>}
+                {v.locations.some((l) => l.facility) && <tr><th scope="row">Clínicas y hospitales</th><td>{joinList(v.locations.filter((l) => l.facility).map((l) => l.facility!.name))}</td></tr>}
+                {d.education.length > 0 && <tr><th scope="row">Formación</th><td>{d.education.join('; ')}</td></tr>}
+                {d.accepting_new_patients != null && <tr><th scope="row">Acepta nuevos pacientes</th><td>{d.accepting_new_patients ? 'Sí' : 'No por ahora'}</td></tr>}
+              </tbody>
+            </table>
+          </section>
       <div class="panel contact">
         <h2 style="font-size:1.3rem">{waNumber || contactPhone || d.website ? 'Contacto' : 'Ubicación'}</h2>
         {waNumber && !waBooking && <a class="btn wa" href={`https://wa.me/${waNumber}`} data-event="whatsapp_click" data-doctor={d.slug} rel="noopener"><Icon name="whatsapp" size={20} /> Escribir por WhatsApp</a>}
