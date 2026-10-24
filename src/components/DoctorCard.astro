@@ -1,10 +1,13 @@
 ---
 import Icon from './Icon.astro';
 import { isAffiliated, type DoctorView } from '../lib/data.ts';
+import { specialtyIcon } from '../data/hints.ts';
 import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
 import { formatDOP } from '../lib/format.ts';
-interface Props { v: DoctorView; heading?: 'h2' | 'h3' }
-const { v, heading = 'h3' } = Astro.props;
+import { hoursOn } from '../lib/availability.ts';
+interface Props { v: DoctorView; heading?: 'h2' | 'h3'; hoursDay?: number }
+const { v, heading = 'h3', hoursDay } = Astro.props;
+const hours = hoursDay ? hoursOn(v, hoursDay) : null;
 const H = heading;
 const d = v.doctor; const loc = v.locations[0];
 const initials = initialsOf(d.display_name);
@@ -23,12 +26,13 @@ const zone = loc ? `${loc.sector ? `${loc.sector.name}, ` : ''}${loc.city.name}`
     <div>
       {d.sponsored && <div class="tag-sponsor">Patrocinado</div>}
       <H class="gd-rx__name"><a href={profilePath(v)}>{d.display_name}</a></H>
-      <div class="gd-rx__spec">{v.specialty.field_name}</div>
+      <div class="gd-rx__spec"><Icon name={specialtyIcon(v.specialty.slug, v.specialty.icon)} size={15} /> {v.specialty.field_name}</div>
     </div>
   </div>
   <dl class="gd-rx__data gd-mono">
     {zone && <><dt>ZONA</dt><dd>{zone}</dd></>}
     {arsText && <><dt>ARS</dt><dd>{arsText}</dd></>}
+    {hours && <><dt>HORARIO</dt><dd>{hours}</dd></>}
     {loc?.facility && <><dt>CENTRO</dt><dd>{loc.facility.name}</dd></>}
   </dl>
   <div class="gd-rx__foot">

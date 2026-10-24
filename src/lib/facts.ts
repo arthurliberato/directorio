@@ -79,7 +79,7 @@ export function facilitySpecialtyCounts(doctors: DoctorView[]): { slug: string; 
 export function facilitySummary(f: Facility, doctors: DoctorView[], place: string): string {
   const specs = facilitySpecialtyCounts(doctors);
   const parts = [`${f.name} es ${f.type === 'Hospital' ? 'un hospital' : 'una clínica o centro médico'} en ${place}.`];
-  parts.push(`En el directorio hay ${doctors.length} ${doctors.length === 1 ? 'médico' : 'médicos'} que atienden aquí, en ${specs.length} ${specs.length === 1 ? 'especialidad' : 'especialidades'}: ${joinList(specs.slice(0, 6).map((s) => `${s.name} (${s.count})`))}.`);
+  parts.push(`Especialidades: ${joinList(specs.slice(0, 6).map((s) => s.name))}.`);
   const fees = doctors.map((v) => v.doctor.consultation_fee_min).filter((x): x is number => x != null);
   if (fees.length) parts.push(`Consultas desde ${formatDOP(Math.min(...fees))}.`);
   return parts.join(' ');

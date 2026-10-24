@@ -6,7 +6,7 @@ export const adminCanWrite = () => getDataset().source === 'postgres';
 /** One short-lived single connection (begin/commit stay in one session); reloads the snapshot and purges the CDN after. */
 export async function withDb<T>(fn: (run: Run) => Promise<T>, opts: { reload?: boolean; tx?: boolean } = { reload: true }): Promise<T> {
   const { default: postgres } = await import('postgres');
-  const sql = postgres(process.env.DATABASE_URL!, { max: 1, onnotice: () => {} });
+  const sql = postgres(process.env.DATABASE_URL!, { max: 1, prepare: false, onnotice: () => {} });
   try {
     const run: Run = (q, p) => sql.unsafe(q, p as any[]) as unknown as Promise<any[]>;
     let out: T;

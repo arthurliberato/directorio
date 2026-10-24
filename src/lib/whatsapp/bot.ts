@@ -69,7 +69,7 @@ function specialtyList(cityId: number | undefined, citySlug: string | undefined,
   const all = specialtiesWithCounts(cityId);
   if (!all.length) return [text('Todavía no tenemos médicos publicados en esa búsqueda.'), menu()];
   const slice = all.slice(page * PAGE, page * PAGE + PAGE);
-  const rows: Row[] = slice.map(({ s, n }) => ({ id: citySlug ? `r:${s.slug}:${citySlug}:all:0` : `c:${s.slug}`, title: s.name_singular, description: plural(n, 'médico', 'médicos') }));
+  const rows: Row[] = slice.map(({ s, n }) => ({ id: citySlug ? `r:${s.slug}:${citySlug}:all:0` : `c:${s.slug}`, title: s.name_singular, description: undefined }));
   if ((page + 1) * PAGE < all.length) rows.push({ id: `sp:${withAll(citySlug)}:${page + 1}`, title: 'Más especialidades', description: `Quedan ${all.length - (page + 1) * PAGE}` });
   const where = citySlug ? ` en ${getCityBySlug(citySlug)!.name}` : '';
   return [list(`¿Qué especialidad buscas${where}? También puedes escribirla, por ejemplo: «cardiólogo en Santiago con Humano».`, 'Especialidades', rows)];
@@ -81,8 +81,8 @@ function cityStep(spec: string): Out[] {
   for (const v of publishedDoctors()) if (v.specialty.id === s.id) for (const c of new Set(v.locations.map((l) => l.city_id))) byCity.set(c, (byCity.get(c) ?? 0) + 1);
   const cities = getCities().filter((c) => byCity.has(c.id)).sort((a, b) => byCity.get(b.id)! - byCity.get(a.id)!);
   if (cities.length <= 1) return results(spec, cities[0]?.slug, undefined, 0);
-  const rows: Row[] = [{ id: `r:${spec}:all:all:0`, title: 'Todas las ciudades', description: plural(publishedDoctors().filter((v) => v.specialty.id === s.id).length, 'médico', 'médicos') }];
-  for (const c of cities.slice(0, 9)) rows.push({ id: `r:${spec}:${c.slug}:all:0`, title: c.name, description: plural(byCity.get(c.id)!, 'médico', 'médicos') });
+  const rows: Row[] = [{ id: `r:${spec}:all:all:0`, title: 'Todas las ciudades', description: undefined }];
+  for (const c of cities.slice(0, 9)) rows.push({ id: `r:${spec}:${c.slug}:all:0`, title: c.name, description: undefined });
   return [list(`*${s.name_singular}*. ¿En qué ciudad?`, 'Ciudades', rows)];
 }
 
@@ -91,7 +91,7 @@ function arsStep(spec: string, city?: string): Out[] {
   const c = city ? getCityBySlug(city) : null;
   const base = queryHub({ specialty: s, city: c ?? undefined });
   const rows: Row[] = getArs().map((a) => ({ a, n: base.filter((v) => v.ars.some((x) => x.id === a.id)).length })).filter((x) => x.n > 0)
-    .sort((x, y) => y.n - x.n).slice(0, 10).map(({ a, n }) => ({ id: `r:${spec}:${withAll(city)}:${a.slug}:0`, title: a.name, description: plural(n, 'médico', 'médicos') }));
+    .sort((x, y) => y.n - x.n).slice(0, 10).map(({ a, n }) => ({ id: `r:${spec}:${withAll(city)}:${a.slug}:0`, title: a.name, description: undefined }));
   if (!rows.length) return [text('Aún no tenemos seguros registrados para esta búsqueda.'), menuButton()];
   return [list('¿Con qué seguro (ARS)?', 'Seguros', rows)];
 }
@@ -110,7 +110,8 @@ function results(spec: string, city: string | undefined, ars: string | undefined
   if (offset + shown < found.length) rows.push({ id: `r:${spec}:${withAll(city)}:${withAll(ars)}:${offset + shown}`, title: 'Ver más resultados', description: `Quedan ${found.length - offset - shown}` });
   if (wantArs) rows.push({ id: `ar:${spec}:${withAll(city)}`, title: 'Filtrar por seguro', description: 'Elige tu ARS' });
   const verified = found.filter((v) => isAffiliated(v.doctor)).length;
-  return [list(`*${label}*: ${plural(found.length, 'médico', 'médicos')}${verified ? ` (${verified} verificado${verified === 1 ? '' : 's'}, primero en la lista)` : ''}.\nMás en la web: ${abs(hubPath({ specialty: s, city: c ?? undefined, ars: a ?? undefined }))}`, 'Ver médicos', rows)];
+  return [list(`*${label}*${verified ? '. Los verificados van primero.' : ''}
+Más en la web: ${abs(hubPath({ specialty: s, city: c ?? undefined, ars: a ?? undefined }))}`, 'Ver médicos', rows)];
 }
 
 // ---- Doctor ------------------------------------------------------------------------------------
@@ -152,18 +153,16 @@ function bookingReply(slug: string): Out[] {
     const phone = v.locations[0]?.facility?.phone ?? v.locations[0]?.phone;
     return [text(`${d.display_name} tiene un perfil informativo y todavía no recibe citas por ${BOT_NAME}.${phone ? ` Puedes llamar a la central: ${phone}.` : ''}`), menuButton()];
   }
-  const parts = [`Para programar tu cita con *${d.display_name}*:`];
-  const wa = whatsappBookingLink(d, profilePath(v)); if (wa) parts.push(`💬 Escríbele por WhatsApp (el mensaje ya va escrito):\n${wa}`);
-  if (d.booking_url) parts.push(`🗓️ Reserva en línea:\n${d.booking_url}`);
-  parts.push('La cita se coordina directamente con el consultorio; no pidas ni envíes información médica por este chat.');
-  return [text(parts.join('\n\n')), menuButton()];
+  if (!d.whatsapp) return [text(`Reserva en línea con ${d.display_name}:\n${d.booking_url}`), menuButton()];
+  const online = d.booking_url ? `\n\nTambién puedes reservar en línea: ${d.booking_url}` : '';
+  return [buttons(`Para pedir tu cita con *${d.display_name}*, escribe en *un solo mensaje* tu nombre y el día u horario que prefieres. Ejemplo: «María Pérez, martes en la tarde».\n\nNo incluyas información médica. Al enviarlo, compartimos tu nombre y número con el consultorio para coordinar la cita.${online}`, [{ id: 'menu', title: 'Cancelar' }])];
 }
 
 // ---- Facilities & guides -----------------------------------------------------------------------
 function facilityList(page: number): Out[] {
   const all = getFacilities().map((f) => ({ f, n: doctorsForFacility(f.id).length })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n || a.f.name.localeCompare(b.f.name, 'es'));
   if (!all.length) return [text('Aún no hay clínicas con médicos publicados.'), menu()];
-  const rows: Row[] = all.slice(page * PAGE, page * PAGE + PAGE).map(({ f, n }) => ({ id: `f:${f.slug}`, title: f.name, description: `${f.type === 'Hospital' ? 'Hospital' : 'Clínica'} · ${plural(n, 'médico', 'médicos')}` }));
+  const rows: Row[] = all.slice(page * PAGE, page * PAGE + PAGE).map(({ f, n }) => ({ id: `f:${f.slug}`, title: f.name, description: f.type === 'Hospital' ? 'Hospital' : 'Clínica' }));
   if ((page + 1) * PAGE < all.length) rows.push({ id: `fl:${page + 1}`, title: 'Más centros', description: `Quedan ${all.length - (page + 1) * PAGE}` });
   return [list('Clínicas y hospitales con médicos en el directorio:', 'Centros', rows)];
 }
@@ -174,7 +173,7 @@ function facilityReply(slug: string): Out[] {
   const lines = [`*${f.name}*`, `${f.type === 'Hospital' ? 'Hospital' : 'Clínica o centro médico'}${city ? ' en ' + city.name : ''}`, `📍 ${f.address}`];
   if (f.phone) lines.push(`📞 ${f.phone}`);
   if (f.website) lines.push(`🌐 ${f.website}`);
-  lines.push(`${plural(docs.length, 'médico', 'médicos')} en el directorio.`, `Más: ${abs('/centro/' + f.slug)}`);
+  lines.push(`Más: ${abs('/centro/' + f.slug)}`);
   return [buttons(lines.join('\n'), [{ id: `fd:${f.slug}`, title: 'Ver sus médicos' }, { id: 'm:cen', title: 'Otros centros' }, { id: 'menu', title: 'Menú principal' }])];
 }
 
@@ -214,14 +213,28 @@ function freeText(raw: string): Out[] {
   if (tokens.length) {
     const hits = sortDoctors(publishedDoctors().filter((v) => { const n = norm(v.doctor.display_name); return tokens.every((t) => n.includes(t)); }), null).slice(0, 10);
     if (hits.length === 1) return doctorReply(hits[0].doctor.slug);
-    if (hits.length) return [list(`Encontré ${plural(hits.length, 'médico', 'médicos')} con ese nombre:`, 'Ver médicos', hits.map(rowOfDoctor))];
+    if (hits.length) return [list('Encontré estos doctores con ese nombre:', 'Ver médicos', hits.map(rowOfDoctor))];
   }
   return [text('No entendí tu mensaje 🤔. Puedes escribir algo como «pediatra en Santiago», «Dr. Pérez», o elegir una opción del menú.'), menu()];
 }
 
 // ---- Entry point -------------------------------------------------------------------------------
 /** Handles an inbound message. Returns the replies and a coarse intent label for logs (never the text). */
-export function respond(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'>): { out: Out[]; intent: string } {
+export interface BotResult {
+  out: Out[]; intent: string;
+  /** The patient wrote an appointment request: the caller must run submitRequest() and send its result instead of `out`. */
+  request?: { slug: string; message: string };
+  /** Conversation state for the caller to store: waiting for an appointment request for this doctor / no longer waiting. */
+  setPending?: string; clearPending?: boolean;
+}
+/** `pending` = doctor slug this patient is currently writing a request for (kept by the caller, see appointments.ts). */
+export function respond(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'> & { from?: string; pending?: string | null }): BotResult {
+  if (msg.pending && msg.kind === 'text' && (msg.text ?? '').trim()) return { out: [], intent: 'appt', clearPending: true, request: { slug: msg.pending, message: msg.text!.trim() } };
+  const base = respondNew(msg);
+  return msg.pending ? { clearPending: true, ...base } : base; // any other tap or message abandons the request
+}
+
+function respondNew(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'>): BotResult {
   if (msg.kind === 'other') return { out: [text('Por ahora solo puedo leer mensajes de texto. Elige una opción:'), menu()], intent: 'unsupported' };
   if (msg.kind === 'text') {
     const out = freeText(msg.text ?? '');
@@ -236,7 +249,7 @@ export function respond(msg: Pick<Inbound, 'kind' | 'text' | 'replyId'>): { out:
     case 'r': return { intent, out: results(a, b === 'all' ? undefined : b, c === 'all' ? undefined : c, Number(d) || 0) };
     case 'ar': return { intent, out: arsStep(a, b === 'all' ? undefined : b) };
     case 'd': return { intent, out: doctorReply(a) };
-    case 'bk': return { intent, out: bookingReply(a) };
+    case 'bk': { const dv = getDoctorBySlug(a)?.doctor; return { intent, out: bookingReply(a), setPending: dv && canBook(dv) && dv.whatsapp ? a : undefined }; }
     case 'f': return { intent, out: facilityReply(a) };
     case 'fd': return { intent, out: facilityDoctors(a) };
     case 'fl': return { intent, out: facilityList(Number(a) || 0) };

@@ -1,11 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import DoctorCard from '../components/DoctorCard.astro';
+import AvailableList from '../components/AvailableList.astro';
 import GuiddoPattern from '../components/GuiddoPattern.astro';
 import Icon from '../components/Icon.astro';
-import { SPECIALTY_HINTS } from '../data/hints.ts';
+import { DAY_NAMES, DAY_SLUGS, SLOTS } from '../lib/availability.ts';
+import { SPECIALTY_HINTS, specialtyIcon } from '../data/hints.ts';
 import { BRAND, MIN_DOCTORS_FOR_HUB_INDEX } from '../config.ts';
-import { doctorCount, getArs, getCities, getGuides, getSpecialties, isAffiliated, publishedDoctors, queryHub } from '../lib/data.ts';
+import { doctorCount, doctorsForFacility, getCities, getFacilities, getGuides, getSpecialties, queryHub } from '../lib/data.ts';
 import { hubPath } from '../lib/hubs.ts';
 import { siteJsonLd } from '../lib/schema.ts';
 
@@ -15,68 +16,47 @@ const cities = getCities().map((c) => {
   const best = getSpecialties().map((sp) => ({ sp, k: queryHub({ specialty: sp, city: c }).length })).sort((a, b) => b.k - a.k)[0];
   return { c, n: doctorCount(undefined, c.id), href: best && best.k > 0 ? hubPath({ specialty: best.sp, city: c }) : null };
 }).filter((x) => x.n > 0 && x.href);
-const arsList = getArs();
+const centers = getFacilities().filter((f) => doctorsForFacility(f.id).length > 0).sort((x, y) => x.name.localeCompare(y.name, 'es'));
 const SIGN_TONES = ['ink', 'blue', 'pale', 'pale'] as const; // Ink -> Guiddo Blue -> Pale Blue -> Pale Blue, repeating (kit §6.3)
 const signs = [...specs].sort((a, b) => b.n - a.n).slice(0, 8);
-const sd = getCities().find((c) => c.slug === 'santo-domingo')!;
-const quick = specs.map((x) => x.s).filter((s) => queryHub({ specialty: s, city: sd }).length >= MIN_DOCTORS_FOR_HUB_INDEX).slice(0, 3);
-// Home features verified affiliates only (sponsored first, labeled), never public-source listings.
-const verifiedDocs = publishedDoctors().filter((v) => isAffiliated(v.doctor));
-const featured = [...verifiedDocs.filter((v) => v.doctor.sponsored), ...verifiedDocs.filter((v) => !v.doctor.sponsored && v.doctor.claimed)].slice(0, 3);
 const guides = getGuides().slice(0, 3);
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300'); // the list shows who is in consultation right now
 ---
 <Base title={`${BRAND} — la guía de doctores dominicanos`} description="Encuentra doctores en República Dominicana: perfiles verificados con exequátur comprobado, clínicas y hospitales, ARS aceptadas y precios de consulta." jsonLd={siteJsonLd()}>
   <section class="hero">
     <GuiddoPattern />
     <div class="wrap">
       <div class="gd-label">La guía de doctores dominicanos</div>
-      <h1 class="gd-h1">El doctor que buscas, <span class="accent">con datos claros</span></h1>
-      <p class="lead">Especialidad, zona, seguro y precio de consulta en un solo lugar. Los perfiles verificados van primero.</p>
-      <!-- Works with zero JS: GET /buscar (noindex) redirects server-side to the clean hub URL. -->
-      <form class="gd-search" action="/buscar" method="get" role="search" data-event="search">
-        <input type="search" name="q" placeholder="¿Qué te duele?" aria-label="Buscar doctor o especialidad" autocomplete="off" />
-        <button class="gd-btn" type="submit">Buscar</button>
+      <h1 class="gd-h1">Encuentra un doctor <span class="accent">disponible hoy</span></h1>
+      <!-- Filters update the list below in place (script at the bottom). Without JS the form falls back to GET /buscar (noindex). -->
+      <div class="board"><form class="finder" action="/buscar" method="get" data-live data-event="search" aria-label="Filtros">
+        <select class="fsel fsel--wide" name="especialidad" aria-label="Especialidad"><option value="">Especialidad</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select>
+        <select class="fsel" name="ciudad" aria-label="Provincia (recomendado)"><option value="">Provincia</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select>
+        <select class="fsel" name="centro" aria-label="Centro médico"><option value="">Centro médico</option>{centers.map((f) => <option value={f.slug}>{f.name}</option>)}</select>
+        <select class="fsel" name="dia" aria-label="Día"><option value="">Hoy</option><option value="manana">Mañana</option>{DAY_SLUGS.map((d, i) => <option value={d}>{DAY_NAMES[i]}</option>)}</select>
+        <select class="fsel" name="hora" aria-label="Hora"><option value="ahora">Ahora</option><option value="">Cualquier hora</option>{Object.entries(SLOTS).map(([k, s]) => <option value={k}>{s.label}</option>)}</select>
+        <button class="gd-btn" type="submit">Ver resultados</button>
       </form>
-      <details>
-        <summary>Buscar por especialidad, ciudad y seguro</summary>
-        <form class="search-card" action="/buscar" method="get" data-event="search">
-          <div class="field"><Icon name="stethoscope" size={24} /><div style="flex:1"><label for="q-esp">Especialidad</label>
-            <select id="q-esp" name="especialidad" required><option value="">¿Qué doctor necesitas?</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
-          <div class="field"><Icon name="pin" size={24} /><div style="flex:1"><label for="q-ciu">Ciudad</label>
-            <select id="q-ciu" name="ciudad"><option value="">¿Dónde buscas?</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}</option>)}</select></div></div>
-          <div class="field" style="border-bottom:0"><Icon name="shield" size={24} /><div style="flex:1"><label for="q-ars">Tu seguro <small>Opcional</small></label>
-            <select id="q-ars" name="ars"><option value="">Selecciona tu ARS</option>{arsList.map((a) => <option value={a.slug}>{a.name}</option>)}</select></div></div>
-          <button class="btn block" type="submit">Buscar doctor</button>
-        </form>
-      </details>
-      {quick.length > 0 && <div class="quick">{quick.map((s) => <a href={hubPath({ specialty: s, city: sd })}>{s.name_singular} en Santo Domingo</a>)}</div>}
+      <div id="resultados" class="board__body" aria-live="polite" aria-labelledby="res-titulo"><AvailableList filters={{}} /></div></div>
       <div class="ticks"><span><Icon name="check" size={18} /> Exequátur verificado</span><span><Icon name="check" size={18} /> Información transparente</span></div>
     </div>
   </section>
 
-  <section class="section wrap" aria-labelledby="esp" style="padding-bottom:14px">
+  <section class="section wrap" aria-labelledby="esp" style="padding-bottom:14px;padding-top:14px">
     <div class="gd-label soft">Especialidades</div>
     <div class="section-head"><h2 class="gd-h2" id="esp">¿Hacia dónde vas?</h2><a class="more" href="/especialidad">Todas las especialidades →</a></div>
     <nav class="gd-signs cols" aria-label="Especialidades">
       {signs.map(({ s, n }, i) => (
-        <a class={`gd-sign gd-sign--${SIGN_TONES[i % 4]}`} href={`/${s.slug}`}><span><span class="gd-sign__name">{s.name_singular}</span>{SPECIALTY_HINTS[s.slug] && <span class="gd-sign__hint">{SPECIALTY_HINTS[s.slug]}</span>}</span><span class="gd-mono">{n} →</span></a>
+        <a class={`gd-sign gd-sign--${SIGN_TONES[i % 4]}`} href={`/${s.slug}`}><span class="gd-sign__lead"><Icon name={specialtyIcon(s.slug, s.icon)} size={28} /><span><span class="gd-sign__name">{s.name_singular}</span>{SPECIALTY_HINTS[s.slug] && <span class="gd-sign__hint">{SPECIALTY_HINTS[s.slug]}</span>}</span></span><span class="gd-mono">→</span></a>
       ))}
     </nav>
   </section>
-
-  {featured.length > 0 && (
-    <section class="section wrap" aria-labelledby="medicos" style="padding-top:14px">
-      <div class="gd-label soft">Doctores verificados</div>
-      <div class="section-head"><h2 class="gd-h2" id="medicos">Conoce a nuestros doctores</h2><a class="more" href="/especialidad">Ver todos →</a></div>
-      <div class="grid cards">{featured.map((v) => <DoctorCard v={v} />)}</div>
-    </section>
-  )}
 
   <section class="section wrap" style="padding-top:0" aria-labelledby="ciudades">
     <div class="gd-label soft">Ciudades</div>
     <h2 class="gd-h2" id="ciudades" style="margin-bottom:8px">Tu salud, cerca de ti</h2>
     <div class="grid cities">
-      {cities.map(({ c, n, href }) => <a class="city-row" href={href!}><Icon name="pin" size={22} /><span><strong>{c.name}</strong><small>{n} {n === 1 ? 'doctor' : 'doctores'}</small></span><Icon name="arrow" size={18} /></a>)}
+      {cities.map(({ c, n, href }) => <a class="city-row" href={href!}><Icon name="pin" size={22} /><span><strong>{c.name}</strong></span><Icon name="arrow" size={18} /></a>)}
     </div>
   </section>
 
@@ -101,4 +81,34 @@ const guides = getGuides().slice(0, 3);
       <a href="/doctores" class="gd-btn gd-btn--blue" style="margin-top:14px">Únete a guiddo</a>
     </div>
   </section>
+  <script is:inline>
+    // Tiles open their info box (<dialog>); without JS they are plain links to the profile.
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest && e.target.closest('[data-open]');
+      if (t) { var dlg = document.getElementById(t.getAttribute('data-open')); if (dlg && dlg.showModal) { e.preventDefault(); dlg.showModal(); } return; }
+      var c = e.target.closest && e.target.closest('dialog [data-close]');
+      if (c) { c.closest('dialog').close(); return; }
+      if (e.target.matches && e.target.matches('dialog.gd-modal')) e.target.close(); // click on the backdrop
+    });
+  </script>
+  <script is:inline>
+    // Filters re-render the list in place (no page change). Without JS the form still works: it goes to /buscar.
+    (function () {
+      var f = document.querySelector('[data-live]'), box = document.getElementById('resultados');
+      if (!f || !box || !window.fetch) return;
+      var btn = f.querySelector('button[type=submit]'); if (btn) btn.hidden = true;
+      var seq = 0;
+      function load() {
+        var n = ++seq;
+        box.setAttribute('aria-busy', 'true');
+        fetch('/disponibles?' + new URLSearchParams(new FormData(f)))
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+          .then(function (html) { if (n === seq) box.innerHTML = html; })
+          .catch(function () { if (n === seq) box.innerHTML = '<p class="panel">No pudimos actualizar la lista. <a href="/especialidad">Ver todos los doctores</a></p>'; })
+          .then(function () { if (n === seq) box.removeAttribute('aria-busy'); });
+      }
+      f.addEventListener('change', load);
+      f.addEventListener('submit', function (e) { e.preventDefault(); load(); });
+    })();
+  </script>
 </Base>

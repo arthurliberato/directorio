@@ -99,16 +99,14 @@ export function hubStats(doctors: DoctorView[]): HubStats {
 /** Data-driven intro: unique per hub because it is built from that hub's own numbers. */
 export function hubIntro(q: HubQuery, s: HubStats, langName: (c: string) => string): string {
   const parts: string[] = [];
-  const what = s.n === 1 ? `1 ${q.specialty.agent_m}` : `${s.n} ${q.specialty.name_plural.toLowerCase()}`;
-  const verified = s.affiliated === 0 ? 'ninguno verificado todavía' : s.affiliated === s.n && s.n > 1 ? 'todos verificados' : s.affiliated === 1 ? '1 verificado' : `${s.affiliated} verificados`;
-  parts.push(`Hay ${what} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''} (${verified}).`);
+  parts.push(`Compara ${q.specialty.name_plural.toLowerCase()} en ${hubPlace(q)}${q.ars ? ` que aceptan ${q.ars.name}` : ''}: precio de consulta, ARS aceptadas y centros médicos.${s.affiliated > 0 ? ' Los perfiles verificados aparecen primero.' : ''}`);
   if (s.feeMin != null && s.feeMax != null) {
     parts.push(s.feeMin === s.feeMax
       ? `La consulta cuesta desde ${formatDOP(s.feeMin)}.`
       : `El precio de consulta va de ${formatDOP(s.feeMin)} a ${formatDOP(s.feeMax)}, con una mediana de ${formatDOP(s.feeMedian!)}.`);
   }
   if (s.arsCounts.length) {
-    const top = s.arsCounts.slice(0, 3).map((a) => `${a.name} (${a.count})`);
+    const top = s.arsCounts.slice(0, 3).map((a) => a.name);
     parts.push(`Las ARS más aceptadas son ${joinList(top)}.`);
   }
   if (s.facilities.length) parts.push(`Atienden principalmente en ${joinList(s.facilities.slice(0, 3).map((f) => f.name))}.`);
@@ -130,6 +128,7 @@ export const paginate = <T>(list: T[], page: number) => ({
   totalPages: Math.max(1, Math.ceil(list.length / PAGE_SIZE)),
 });
 
+import { matchesWhen, type When } from './availability.ts';
 import { hubIndexDecision, type IndexDecision } from './indexing.ts';
 import { LANGUAGE_NAMES } from './format.ts';
 
@@ -138,10 +137,10 @@ export type HubResolution =
   | { status: 'redirect'; to: string }
   | {
       status: 'ok'; query: HubQuery; page: number; totalPages: number; total: number;
-      items: DoctorView[]; stats: HubStats; decision: IndexDecision; intro: string; path: string;
+      items: DoctorView[]; stats: HubStats; when: When | null; decision: IndexDecision; intro: string; path: string;
     };
 
-export function resolveHub(segments: string[], orden: string | null = null): HubResolution {
+export function resolveHub(segments: string[], orden: string | null = null, when: When | null = null): HubResolution {
   const parsed = parseHubPath(segments);
   if (!parsed.ok) return { status: 'not_found' };
   const { query, page, explicitPage1 } = parsed;
@@ -149,13 +148,15 @@ export function resolveHub(segments: string[], orden: string | null = null): Hub
   const all = queryHub(query);
   const decision = hubIndexDecision(all.length);
   if (decision.kind === 'not_found') return { status: 'not_found' }; // real 404, never soft
-  const sorted = sortDoctors(all, orden);
+  const shown = when ? all.filter((v) => matchesWhen(v, when)) : all;
+  const sorted = sortDoctors(shown, orden);
   const { items, totalPages } = paginate(sorted, page);
-  if (page > totalPages) return { status: 'not_found' };
+  if (page > totalPages && !(when && page === 1)) return { status: 'not_found' };
   const stats = hubStats(all);
   return {
-    status: 'ok', query, page, totalPages, total: all.length, items, stats,
-    decision: { robots: decision.robots, indexable: decision.indexable, reason: decision.reason },
+    status: 'ok', query, page, totalPages, total: shown.length, items, stats, when,
+    // a filtered view is never indexable: robots.txt blocks the params and the page says noindex, canonical stays the clean hub
+    decision: when ? { robots: 'noindex,follow' as const, indexable: false, reason: 'filtered by day/time' } : { robots: decision.robots, indexable: decision.indexable, reason: decision.reason },
     intro: hubIntro(query, stats, (c) => LANGUAGE_NAMES[c] ?? c), path: hubPath(query, page),
   };
 }

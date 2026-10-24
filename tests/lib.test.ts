@@ -222,3 +222,51 @@ test('calLinkOf extracts the Cal.com link (user names may contain dots) and igno
   assert.equal(calLinkOf('https://cal.com/usuario'), null, 'a profile without an event is not an embeddable link');
   assert.equal(calLinkOf(null), null);
 });
+
+test('availability filter: day and time slot match stored hours; doctors without hours never match', async () => {
+  const { matchesWhen, parseWhen, whenQuery, dayInDR } = await import('../src/lib/availability.ts');
+  const v = getDoctorBySlug('dra-maria-perez-cardiologa')!; // seed: Mon-Thu 08:00-12:00
+  assert.equal(matchesWhen(v, { day: 1 }), true);
+  assert.equal(matchesWhen(v, { day: 6 }), false, 'no Saturday hours');
+  assert.equal(matchesWhen(v, { day: 1, slot: 'manana' }), true);
+  assert.equal(matchesWhen(v, { day: 1, slot: 'tarde' }), false, 'hours end at 12:00');
+  assert.equal(matchesWhen(v, { slot: 'noche' }), false);
+  const noHours = { ...v, locations: v.locations.map((l) => ({ ...l, schedule: [] })) };
+  assert.equal(matchesWhen(noHours, { day: 1 }), false);
+  assert.deepEqual(parseWhen(new URLSearchParams('dia=mie&hora=tarde')), { day: 3, slot: 'tarde' });
+  assert.equal(parseWhen(new URLSearchParams('dia=xx&hora=yy')), null);
+  assert.equal(whenQuery({ day: 3, slot: 'tarde' }), '?dia=mie&hora=tarde');
+  // Dominican Republic is UTC-4: 02:00 UTC on a Wednesday is still Tuesday there
+  assert.equal(dayInDR(new Date('2026-10-21T02:00:00Z')), 2);
+  assert.equal(dayInDR(new Date('2026-10-21T02:00:00Z'), 1), 3);
+  const r = resolveHub(['cardiologos'], null, { day: 6 }); const all = resolveHub(['cardiologos']);
+  assert.ok(r.status === 'ok' && all.status === 'ok' && r.decision.robots === 'noindex,follow' && r.total < all.total);
+  assert.match(buildRobotsTxt('production', 'https://guiddo.net'), /Disallow: \/\*\?\*dia=/);
+});
+
+test('available now: who is at the practice at this moment (DR time), later today, fallbacks', async () => {
+  const { availableDoctors, filtersFrom } = await import('../src/lib/available.ts');
+  const mon10 = new Date('2026-10-19T14:00:00Z'); // Monday 10:00 in the Dominican Republic
+  const now = availableDoctors({}, mon10);
+  assert.equal(now.mode, 'now'); assert.ok(now.items.length > 0);
+  assert.ok(now.items.every((u) => u.live && u.v.locations.some((l) => l.schedule.some((e) => e.day === 1 && e.open <= '10:00' && '10:00' < e.close))), 'everyone listed is in consultation at 10:00');
+  assert.deepEqual(now.items.map((u) => u.hour ?? ''), [...now.items.map((u) => u.hour ?? '')].sort(), 'board is ordered by hour');
+  assert.ok(now.items.every((u) => !u.hour || u.hour >= '10:00'), 'hour = next whole hour from now, never one already past');
+  const sat = availableDoctors({}, new Date('2026-10-24T14:00:00Z')); // Saturday: nobody has hours
+  assert.equal(sat.mode, 'fallback'); assert.ok(sat.items.every((u) => u.v.doctor.listing_status === 'affiliated'));
+  const night = availableDoctors({}, new Date('2026-10-20T03:00:00Z')); // Monday 23:00 DR: nobody now, nothing later today
+  assert.ok(night.mode !== 'now');
+  const ped = availableDoctors({ especialidad: 'pediatras', dia: 'lun', hora: 'tarde' }, mon10);
+  assert.equal(ped.mode, 'filtered'); assert.ok(ped.items.length > 0 && ped.items.every((u) => u.v.specialty.slug === 'pediatras' && (u.hour ?? '') >= '12:00'));
+  assert.equal(availableDoctors({ dia: 'dom', hora: '' }, mon10).items.length, 0);
+  assert.deepEqual(filtersFrom(new URLSearchParams('hora=&dia=lun')), { especialidad: undefined, ciudad: undefined, centro: undefined, dia: 'lun', hora: '' });
+});
+
+test('hour chips come only from published hours', async () => {
+  const { hourChips, closesAt } = await import('../src/lib/availability.ts');
+  const v = getDoctorBySlug('dra-maria-perez-cardiologa')!; // Mon-Thu 08:00-12:00
+  assert.deepEqual(hourChips(v, 1), ['08:00', '09:00', '10:00', '11:00']);
+  assert.deepEqual(hourChips(v, 1, 10 * 60 + 15), ['11:00'], 'hours already past are hidden');
+  assert.deepEqual(hourChips(v, 6), [], 'no Saturday hours, no chips');
+  assert.equal(closesAt(v, 1, 9 * 60), '12:00'); assert.equal(closesAt(v, 1, 13 * 60), null);
+});

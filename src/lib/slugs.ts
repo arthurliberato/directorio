@@ -1,7 +1,7 @@
 // Root slugs that doctor profiles must never use (SPEC §3). Specialty slugs are added at runtime.
 export const RESERVED_ROOT_SLUGS = [
   'especialidad', 'ciudad', 'ars', 'guia', 'centro', 'en', 'metodologia', 'quienes-somos',
-  'como-verificamos', 'politica-editorial', 'publicidad-y-patrocinios', 'privacidad', 'contacto', 'doctores',
+  'como-verificamos', 'politica-editorial', 'publicidad-y-patrocinios', 'privacidad', 'contacto', 'doctores', 'disponibles',
   'buscar', 'api', 'admin', 'pagina', 'llms.txt', 'robots.txt', 'sitemap-index.xml',
 ];
 

@@ -29,8 +29,8 @@ for (const ua of BOTS) {
   const ld = ldBlocks(html);
   ok(ld.some((d) => d['@type'] === 'CollectionPage' && d.mainEntity.itemListElement.length > 0), 'hub CollectionPage + ItemList');
   ok((html.match(/<a href="\/dr[a]?-/g) ?? []).length >= 9, 'hub doctor links are plain <a href> in HTML');
-  ok(/<table class="compare"/.test(html), 'hub comparison table');
-  ok(/n=\d+ perfiles/.test(html), 'hub Q&A states n');
+  ok(/<table class="compare[ "]/.test(html), 'hub comparison table');
+  ok(/<form class="wrap refine"/.test(html) && !/Hay \d+ /.test(html), 'hub has refine filters and does not state how many doctors exist');
 }
 {
   const html = await (await get('/cardiologos/santo-domingo?orden=precio')).text();

@@ -1,0 +1,50 @@
+---
+// One board row = doctor + specialty + hour. Click opens a box with the rest; without JS it is a plain link to the profile.
+import Icon from './Icon.astro';
+import { canBook, whatsappBookingLink } from '../lib/booking.ts';
+import { hoursOn } from '../lib/availability.ts';
+import type { Unit } from '../lib/available.ts';
+import { specialtyIcon } from '../data/hints.ts';
+import { isAffiliated } from '../lib/data.ts';
+import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
+import { formatDOP } from '../lib/format.ts';
+interface Props { u: Unit; day: number }
+const { u, day } = Astro.props;
+const { v } = u; const d = v.doctor; const loc = v.locations[0]; const aff = isAffiliated(d);
+const showPhoto = aff && !!d.photo_url;
+const id = `m-${d.slug}`;
+const waLink = canBook(d) ? whatsappBookingLink(d, profilePath(v)) : null;
+const address = loc ? `${loc.facility ? loc.facility.name + ', ' : ''}${loc.suite ? loc.suite + ', ' : ''}${loc.address}, ${loc.city.name}` : null;
+const others = u.chips.slice(1);
+---
+<li class="gd-slotwrap">
+  <a class:list={['gd-slot', { 'gd-slot--soon': u.soon }]} href={profilePath(v)} data-open={id} aria-haspopup="dialog">
+    <span class="gd-slot__time">{u.hour ?? (u.live ? 'Ahora' : '→')}{u.hour && u.soon && <small>{u.live ? 'en consulta' : u.away ? `en ${u.away} min` : 'ahora'}</small>}</span>
+    <span class="gd-slot__who">
+      <span class="gd-slot__name">{d.display_name}{aff && <Icon name="shield" size={15} />}{d.sponsored && <em>Patrocinado</em>}</span>
+      <span class="gd-slot__spec"><Icon name={specialtyIcon(v.specialty.slug, v.specialty.icon)} size={16} />{v.specialty.field_name}</span>
+    </span>
+    <span class="gd-slot__go" aria-hidden="true">›</span>
+  </a>
+  <dialog class="gd-modal" id={id} aria-label={`Información de ${d.display_name}`}>
+    <div class="gd-modal__box">
+      <button type="button" class="gd-modal__x" data-close aria-label="Cerrar">×</button>
+      <div class="gd-modal__head">
+        <span class="gd-tile__avatar" aria-hidden="true">{showPhoto ? <img src={d.photo_url!} alt="" width="52" height="52" loading="lazy" /> : initialsOf(d.display_name)}</span>
+        <div><strong class="gd-modal__name">{d.display_name}</strong><div class="gd-tile__spec">{agentNoun(v)[0].toUpperCase() + agentNoun(v).slice(1)}</div>
+          <span class:list={['gd-rx__tier', aff ? 'ok' : 'info']}>{aff ? 'Verificado' : 'Perfil informativo · no verificado'}</span></div>
+      </div>
+      {u.chips.length > 0 && <div><div class="gd-label soft">Horas {day ? 'del día' : ''}</div><div class="gd-tile__chips">{u.chips.map((h, i) => <span class:list={['gd-chip', { 'gd-chip--first': i === 0, 'gd-chip--soon': i === 0 && u.soon }]}>{h}</span>)}</div></div>}
+      <dl class="gd-rx__data gd-mono">
+        {address && <><dt>LUGAR</dt><dd>{address}</dd></>}
+        {hoursOn(v, day) && <><dt>HORARIO</dt><dd>{hoursOn(v, day)}</dd></>}
+        {v.ars.length > 0 && <><dt>ARS</dt><dd>{v.ars.map((a) => a.name).join(' · ')}</dd></>}
+        {d.consultation_fee_min != null && <><dt>CONSULTA</dt><dd>desde {formatDOP(d.consultation_fee_min)}</dd></>}
+      </dl>
+      <div class="gd-modal__actions">
+        {waLink && <a class="btn wa" href={waLink} rel="noopener" data-event="whatsapp_click" data-doctor={d.slug}>Programar cita{u.hour ? ` · ${u.hour}` : ''}</a>}
+        <a class="btn ghost" href={profilePath(v)}>Ver perfil completo →</a>
+      </div>
+    </div>
+  </dialog>
+</li>

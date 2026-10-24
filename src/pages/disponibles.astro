@@ -1,0 +1,8 @@
+---
+// HTML fragment for the home page's live filters (fetched by a tiny script, swapped in place). Not a page: noindex + robots-blocked.
+import AvailableList from '../components/AvailableList.astro';
+import { filtersFrom } from '../lib/available.ts';
+Astro.response.headers.set('X-Robots-Tag', 'noindex');
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120'); // "now" changes by the minute
+---
+<AvailableList filters={filtersFrom(Astro.url.searchParams)} />

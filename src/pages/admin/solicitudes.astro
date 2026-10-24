@@ -1,0 +1,23 @@
+---
+import AdminShell from '../../components/AdminShell.astro';
+import { adminCanWrite, withDb } from '../../lib/admin-run.ts';
+import { listRequests } from '../../lib/whatsapp/appointments.ts';
+
+// Appointment requests received by the WhatsApp bot. "failed" = the doctor's WhatsApp could not be reached: forward it by hand.
+const rows = adminCanWrite() ? await withDb((run) => listRequests(run), { reload: false }).catch(() => null) : null;
+const label: Record<string, string> = { received: 'Recibida', forwarded: 'Enviada al consultorio', failed: 'No se pudo enviar' };
+---
+<AdminShell title="Solicitudes de cita (WhatsApp)">
+  {rows === null && <p class="warn">Sin base de datos (o la tabla no existe todavía: ejecuta <code>db/migrations/006_appointment_requests.sql</code>).</p>}
+  {rows && rows.length === 0 && <p>Todavía no hay solicitudes.</p>}
+  {rows && rows.length > 0 && (
+    <table>
+      <thead><tr><th>Fecha</th><th>Doctor</th><th>Mensaje del paciente</th><th>Paciente</th><th>Estado</th></tr></thead>
+      <tbody>{rows.map((r) => (
+        <tr><td>{new Date(r.created_at).toLocaleString('es-DO', { timeZone: 'America/Santo_Domingo' })}</td><td><a href={`/${r.slug}`}>{r.display_name}</a></td><td>{r.message}</td>
+          <td><a href={`https://wa.me/${String(r.patient_phone).replace(/\D/g, '')}`}>{r.patient_phone}</a></td><td>{label[r.status] ?? r.status}{r.error && <><br /><small>{r.error}</small></>}</td></tr>
+      ))}</tbody>
+    </table>
+  )}
+  <p><small>Contienen el número y el mensaje del paciente: úsalos solo para coordinar la cita.</small></p>
+</AdminShell>
