@@ -259,3 +259,12 @@ test('available now: who is at the practice at this moment (DR time), later toda
   assert.equal(availableDoctors({ dia: 'dom', hora: '' }, mon10).items.length, 0);
   assert.deepEqual(filtersFrom(new URLSearchParams('hora=&dia=lun')), { especialidad: undefined, ciudad: undefined, centro: undefined, dia: 'lun', hora: '' });
 });
+
+test('hour chips come only from published hours', async () => {
+  const { hourChips, closesAt } = await import('../src/lib/availability.ts');
+  const v = getDoctorBySlug('dra-maria-perez-cardiologa')!; // Mon-Thu 08:00-12:00
+  assert.deepEqual(hourChips(v, 1), ['08:00', '09:00', '10:00', '11:00']);
+  assert.deepEqual(hourChips(v, 1, 10 * 60 + 15), ['11:00'], 'hours already past are hidden');
+  assert.deepEqual(hourChips(v, 6), [], 'no Saturday hours, no chips');
+  assert.equal(closesAt(v, 1, 9 * 60), '12:00'); assert.equal(closesAt(v, 1, 13 * 60), null);
+});

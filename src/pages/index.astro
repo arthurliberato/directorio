@@ -89,6 +89,16 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     </div>
   </section>
   <script is:inline>
+    // Tiles open their info box (<dialog>); without JS they are plain links to the profile.
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest && e.target.closest('[data-open]');
+      if (t) { var dlg = document.getElementById(t.getAttribute('data-open')); if (dlg && dlg.showModal) { e.preventDefault(); dlg.showModal(); } return; }
+      var c = e.target.closest && e.target.closest('dialog [data-close]');
+      if (c) { c.closest('dialog').close(); return; }
+      if (e.target.matches && e.target.matches('dialog.gd-modal')) e.target.close(); // click on the backdrop
+    });
+  </script>
+  <script is:inline>
     // Filters re-render the list in place (no page change). Without JS the form still works: it goes to /buscar.
     (function () {
       var f = document.querySelector('[data-live]'), box = document.getElementById('resultados');

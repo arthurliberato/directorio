@@ -205,3 +205,26 @@ body { overflow-x: clip; }
 .finder .when-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .finder .when-row select { width: 100%; border: 0; background: transparent; font: inherit; color: var(--ink); padding: 4px 0; min-width: 0; }
 @media (min-width: 900px) { .finder { max-width: 62rem; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 18px; } .finder .field:nth-of-type(4) { grid-column: span 2; } .finder select { font-size: .95rem; } }
 [hidden] { display: none !important; }
+
+/* Doctor tiles (home): doctor + specialty + hour chips; the rest opens in a box */
+.gd-tiles { display: grid; gap: 12px; grid-template-columns: 1fr; } @media (min-width: 640px) { .gd-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } } @media (min-width: 1000px) { .gd-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.gd-tile { display: flex; gap: 12px; align-items: flex-start; padding: 14px; background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--gd-blue-pattern); border-radius: var(--radius); text-decoration: none; color: var(--ink); height: 100%; transition: transform .12s ease, border-color .12s ease; }
+.gd-tile--ok { border-left-color: var(--gd-blue); } .gd-tile:hover { border-color: var(--ink); transform: translateY(-2px); }
+.gd-tile__avatar { width: 52px; height: 52px; border-radius: var(--radius); background: var(--pale); display: grid; place-items: center; font: 900 1.05rem var(--font-head); flex: none; overflow: hidden; } .gd-tile__avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.gd-tile__main { display: grid; gap: 2px; min-width: 0; }
+.gd-tile__name { font: 900 1.08rem/1.15 var(--font-head); letter-spacing: -.01em; display: flex; gap: 6px; align-items: center; } .gd-tile__name svg { color: var(--accent); flex: none; }
+.gd-tile__spec { color: var(--muted); font-size: .92rem; font-weight: 700; }
+.gd-tile__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.gd-chip { font: 500 12px var(--gd-font-mono); background: var(--pale); color: var(--ink); border-radius: var(--radius-sm); padding: 4px 8px; border: 1px solid var(--gd-blue-pattern); }
+.gd-tile:hover .gd-chip:not(.gd-chip--more) { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.gd-chip--more { background: transparent; border-style: dashed; }
+.gd-live { display: inline-flex; align-items: center; gap: 6px; font: 800 12px var(--font-body); background: var(--ink); color: var(--paper); border-radius: var(--radius-sm); padding: 4px 8px; }
+.gd-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--gd-blue); animation: gd-pulse 1.6s ease-out infinite; }
+@keyframes gd-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gd-blue) 70%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+@media (prefers-reduced-motion: reduce) { .gd-live i { animation: none; } .gd-tile { transition: none; } .gd-tile:hover { transform: none; } }
+dialog.gd-modal { border: 1px solid var(--ink); border-radius: var(--radius); padding: 0; background: var(--paper); color: var(--ink); width: min(30rem, calc(100vw - 24px)); max-height: calc(100vh - 24px); }
+dialog.gd-modal::backdrop { background: color-mix(in srgb, var(--gd-ink) 60%, transparent); }
+.gd-modal__box { padding: 20px 18px 18px; position: relative; display: grid; gap: 14px; }
+.gd-modal__x { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; font-size: 1.8rem; line-height: 1; cursor: pointer; color: var(--ink); padding: 4px 10px; }
+.gd-modal__head { display: flex; gap: 12px; align-items: center; padding-right: 28px; } .gd-modal__name { font: 900 1.25rem/1.1 var(--font-head); display: block; }
+.gd-modal__actions { display: grid; gap: 8px; } .gd-modal__actions .btn { width: 100%; }

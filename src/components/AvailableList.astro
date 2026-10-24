@@ -1,7 +1,7 @@
 ---
 // Server-rendered list of doctors at the practice right now (or per filters). Used by the home page and by /disponibles,
 // the fragment the home filters fetch so results change in place.
-import DoctorCard from './DoctorCard.astro';
+import DoctorTile from './DoctorTile.astro';
 import { availableDoctors, type AvailFilters } from '../lib/available.ts';
 import { hubPath } from '../lib/hubs.ts';
 import { getCityBySlug, getSpecialtyBySlug } from '../lib/data.ts';
@@ -12,6 +12,6 @@ const city = Astro.props.filters.ciudad ? getCityBySlug(Astro.props.filters.ciud
 const seeAll = spec ? hubPath({ specialty: spec, city: city ?? undefined }) : '/especialidad';
 ---
 <h2 class="gd-h2" id="res-titulo">{a.heading}{a.mode === 'now' && ' · según su horario publicado'}</h2>
-{a.items.length > 0 && <div class="grid cards">{a.items.map((v) => <DoctorCard v={v} hoursDay={a.mode === 'fallback' ? undefined : a.day} />)}</div>}
+{a.items.length > 0 && <div class="gd-tiles">{a.items.map((v) => <DoctorTile v={v} day={a.day} fromMinutes={a.mode === 'now' || a.mode === 'later' ? a.fromMinutes : null} />)}</div>}
 {a.items.length === 0 && <p class="panel">Prueba con otro día u hora, o <a href={seeAll}>mira todos los doctores{spec ? ` de ${spec.name_singular}` : ''}</a>.</p>}
 <p class="muted" style="margin-top:12px;font-size:.9rem">Es el horario de consulta que publica cada perfil, no una cita confirmada: confirma siempre con el consultorio. <a href={seeAll}>Ver todos {spec ? `los ${spec.name_plural.toLowerCase()}` : 'los doctores'} →</a></p>

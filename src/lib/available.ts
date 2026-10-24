@@ -8,6 +8,8 @@ export interface Available {
   mode: 'now' | 'later' | 'filtered' | 'fallback'; items: DoctorView[]; day: number; timeLabel: string; heading: string;
   /** Specialty slug when one is chosen (for the "ver todos" link). */
   specialty?: string;
+  /** Minutes since midnight in the DR when the list was built; set only in 'now' / 'later' modes (hours already past are hidden). */
+  fromMinutes: number | null;
 }
 const MAX = 12;
 const sponsoredFirst = (a: DoctorView, b: DoctorView) => Number(b.doctor.sponsored) - Number(a.doctor.sponsored);
@@ -30,7 +32,7 @@ export function availableDoctors(f: AvailFilters, nowDate = new Date()): Availab
   const matches = asNow ? base.filter((v) => atPracticeAt(v, now.day, now.minutes)) : base.filter((v) => matchesWhen(v, when));
   const sort = (l: DoctorView[]) => [...l].sort((a, b) => sponsoredFirst(a, b) || byTierThenName(a, b));
   const timeLabel = asNow ? `ahora (${hhmmOf(now.minutes)})` : `${DAY_NAMES[day - 1].toLowerCase()}${slot ? `, ${SLOTS[slot].label.toLowerCase()}` : ''}`;
-  const common = { day, timeLabel, specialty: spec?.slug };
+  const common = { day, timeLabel, specialty: spec?.slug, fromMinutes: isToday ? now.minutes : null };
 
   if (matches.length) return { ...common, mode: asNow ? 'now' : 'filtered', items: sort(matches).slice(0, MAX), heading: asNow ? 'Atienden ahora' : `Atienden ${timeLabel}` };
   if (asNow) {
