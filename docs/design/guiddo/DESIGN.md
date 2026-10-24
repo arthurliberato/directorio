@@ -38,7 +38,7 @@ Two neutrals (paper + ink), one signature, one tint. That's the whole palette.
 | Guiddo Blue | `--gd-blue` | `#5E9BD6` | Logo d, accents, highlight words, buttons on Ink |
 | Pale Blue | `--gd-blue-pale` | `#DDE8F4` | Hero, tinted surfaces, avatars, chips |
 
-Added by us (not in the original kit): `--gd-soon` `#57C785` (green) marks the soonest available hour on the home board; ink text on it is ~7:1.
+Added by us (not in the original kit): `--gd-soon` `#3FCDB4` (teal-green) marks the soonest available hour on the home board; ink text on it is ~7:1.
 
 Derived (use via tokens, don't invent new ones):
 
