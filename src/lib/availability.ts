@@ -41,3 +41,25 @@ export function matchesWhen(v: DoctorView, w: When): boolean {
   const slot = w.slot ? SLOTS[w.slot] : null;
   return v.locations.some((l) => l.schedule.some((e) => (!w.day || e.day === w.day) && (!slot || (mins(e.open) < mins(slot.to) && mins(e.close) > mins(slot.from)))));
 }
+
+/** Current weekday (1 = Monday) and minutes since midnight in the Dominican Republic (UTC-4, no DST). */
+export function nowInDR(now = new Date()): { day: number; minutes: number } {
+  const d = new Date(now.getTime() - 4 * 3_600_000);
+  return { day: d.getUTCDay() === 0 ? 7 : d.getUTCDay(), minutes: d.getUTCHours() * 60 + d.getUTCMinutes() };
+}
+export const hhmmOf = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+/** At practice at this exact moment, according to the published hours (open <= now < close). */
+export function atPracticeAt(v: DoctorView, day: number, minutes: number): boolean {
+  return v.locations.some((l) => l.schedule.some((e) => e.day === day && mins(e.open) <= minutes && minutes < mins(e.close)));
+}
+/** Earliest opening later today after `minutes`, or null. */
+export function opensLaterToday(v: DoctorView, day: number, minutes: number): number | null {
+  const next = v.locations.flatMap((l) => l.schedule).filter((e) => e.day === day && mins(e.open) > minutes).map((e) => mins(e.open));
+  return next.length ? Math.min(...next) : null;
+}
+/** Hours for one weekday, e.g. "08:00–12:00, 14:00–18:00"; null when none are published. */
+export function hoursOn(v: DoctorView, day: number): string | null {
+  const parts = v.locations.flatMap((l) => l.schedule).filter((e) => e.day === day).sort((a, b) => mins(a.open) - mins(b.open)).map((e) => `${e.open}–${e.close}`);
+  return parts.length ? [...new Set(parts)].join(', ') : null;
+}

@@ -4,7 +4,7 @@ import { SITE_MODE, SITE_URL } from '../config.ts';
 export const SEARCH_BOTS = ['Googlebot', 'Bingbot', 'Applebot'];
 export const AI_SEARCH_BOTS = ['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User'];
 export const AI_TRAINING_BOTS = ['GPTBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended'];
-export const FILTER_DISALLOWS = ['/buscar', '/admin', '/api/', '/*?*orden=', '/*?*genero=', '/*?*precio=', '/*?*disponibilidad=', '/*?*dia=', '/*?*hora='];
+export const FILTER_DISALLOWS = ['/buscar', '/admin', '/api/', '/*?*orden=', '/*?*genero=', '/*?*precio=', '/*?*disponibilidad=', '/*?*dia=', '/*?*hora=', '/disponibles'];
 
 /** A bot matching a specific group ignores `*`, so Disallow lines are repeated in every group. */
 export function buildRobotsTxt(mode = SITE_MODE, site = SITE_URL): string {

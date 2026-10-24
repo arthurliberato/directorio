@@ -3,8 +3,10 @@ import Icon from './Icon.astro';
 import { isAffiliated, type DoctorView } from '../lib/data.ts';
 import { agentNoun, initialsOf, profilePath } from '../lib/facts.ts';
 import { formatDOP } from '../lib/format.ts';
-interface Props { v: DoctorView; heading?: 'h2' | 'h3' }
-const { v, heading = 'h3' } = Astro.props;
+import { hoursOn } from '../lib/availability.ts';
+interface Props { v: DoctorView; heading?: 'h2' | 'h3'; hoursDay?: number }
+const { v, heading = 'h3', hoursDay } = Astro.props;
+const hours = hoursDay ? hoursOn(v, hoursDay) : null;
 const H = heading;
 const d = v.doctor; const loc = v.locations[0];
 const initials = initialsOf(d.display_name);
@@ -29,6 +31,7 @@ const zone = loc ? `${loc.sector ? `${loc.sector.name}, ` : ''}${loc.city.name}`
   <dl class="gd-rx__data gd-mono">
     {zone && <><dt>ZONA</dt><dd>{zone}</dd></>}
     {arsText && <><dt>ARS</dt><dd>{arsText}</dd></>}
+    {hours && <><dt>HORARIO</dt><dd>{hours}</dd></>}
     {loc?.facility && <><dt>CENTRO</dt><dd>{loc.facility.name}</dd></>}
   </dl>
   <div class="gd-rx__foot">
