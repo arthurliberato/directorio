@@ -249,3 +249,11 @@ dialog.gd-modal::backdrop { background: color-mix(in srgb, var(--gd-ink) 60%, tr
 .gd-slot__go { font-size: 1.6rem; line-height: 1; color: var(--ink); }
 .gd-chip--first { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .gd-slot { transition: none; } }
+
+/* Compact filter bar: five small selects, no labels (aria-labels instead) */
+.board .finder { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; max-width: none; }
+.board .finder .fsel--wide, .board .finder .gd-btn { grid-column: 1 / -1; }
+.fsel { width: 100%; min-width: 0; height: 40px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); color: var(--ink); font: 700 .88rem var(--font-body); text-overflow: ellipsis; }
+.fsel:hover { border-color: var(--ink); }
+.board .finder .gd-btn { margin: 0; height: 40px; padding: 0 16px; }
+@media (min-width: 900px) { .board .finder { grid-template-columns: 1.35fr 1.1fr 1.1fr .8fr .9fr; } .board .finder .fsel--wide { grid-column: auto; } .board .finder .gd-btn { grid-column: auto; } }

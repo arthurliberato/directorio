@@ -29,16 +29,12 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <div class="gd-label">La guía de doctores dominicanos</div>
       <h1 class="gd-h1">Encuentra un doctor <span class="accent">disponible hoy</span></h1>
       <!-- Filters update the list below in place (script at the bottom). Without JS the form falls back to GET /buscar (noindex). -->
-      <div class="board"><form class="finder" action="/buscar" method="get" data-live data-event="search">
-        <div class="field"><Icon name="stethoscope" size={24} /><div><label for="q-esp">Especialidad <small>Opcional</small></label>
-          <select id="q-esp" name="especialidad"><option value="">Todas las especialidades</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select></div></div>
-        <div class="field"><Icon name="pin" size={24} /><div><label for="q-ciu">Provincia <small>Recomendado</small></label>
-          <select id="q-ciu" name="ciudad"><option value="">Todas las provincias</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select></div></div>
-        <div class="field"><Icon name="building" size={24} /><div><label for="q-cen">Centro médico <small>Opcional</small></label>
-          <select id="q-cen" name="centro"><option value="">Cualquier centro</option>{centers.map((f) => <option value={f.slug}>{f.name}</option>)}</select></div></div>
-        <div class="field"><Icon name="clock" size={24} /><div class="when"><label for="q-dia">Día y hora</label>
-          <div class="when-row"><select id="q-dia" name="dia" aria-label="Día"><option value="">Hoy</option><option value="manana">Mañana</option>{DAY_SLUGS.map((d, i) => <option value={d}>{DAY_NAMES[i]}</option>)}</select>
-          <select name="hora" aria-label="Hora"><option value="ahora">Ahora</option><option value="">Cualquier hora</option>{Object.entries(SLOTS).map(([k, s]) => <option value={k}>{s.label}</option>)}</select></div></div></div>
+      <div class="board"><form class="finder" action="/buscar" method="get" data-live data-event="search" aria-label="Filtros">
+        <select class="fsel fsel--wide" name="especialidad" aria-label="Especialidad"><option value="">Especialidad</option>{specs.map(({ s }) => <option value={s.slug}>{s.name_singular}</option>)}</select>
+        <select class="fsel" name="ciudad" aria-label="Provincia (recomendado)"><option value="">Provincia</option>{cities.map(({ c }) => <option value={c.slug}>{c.name}{c.province !== c.name ? ` · ${c.province}` : ''}</option>)}</select>
+        <select class="fsel" name="centro" aria-label="Centro médico"><option value="">Centro médico</option>{centers.map((f) => <option value={f.slug}>{f.name}</option>)}</select>
+        <select class="fsel" name="dia" aria-label="Día"><option value="">Hoy</option><option value="manana">Mañana</option>{DAY_SLUGS.map((d, i) => <option value={d}>{DAY_NAMES[i]}</option>)}</select>
+        <select class="fsel" name="hora" aria-label="Hora"><option value="ahora">Ahora</option><option value="">Cualquier hora</option>{Object.entries(SLOTS).map(([k, s]) => <option value={k}>{s.label}</option>)}</select>
         <button class="gd-btn" type="submit">Ver resultados</button>
       </form>
       <div id="resultados" class="board__body" aria-live="polite" aria-labelledby="res-titulo"><AvailableList filters={{}} /></div></div>
