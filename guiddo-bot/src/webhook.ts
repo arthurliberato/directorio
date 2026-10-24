@@ -26,6 +26,16 @@ export function verifyChallenge(params: URLSearchParams, env = process.env): Rep
   return plain(403, 'Forbidden');
 }
 
+/** Delivery receipts that failed (Meta's reason only: never the number or the text). */
+export function failedStatuses(body: any): { code: number; title: string }[] {
+  const out: { code: number; title: string }[] = [];
+  for (const e of body?.entry ?? []) for (const c of e?.changes ?? []) for (const st of c?.value?.statuses ?? []) {
+    if (st?.status !== 'failed') continue;
+    for (const err of st.errors?.length ? st.errors : [{}]) out.push({ code: Number(err.code ?? 0), title: String(err.title ?? err.message ?? 'unknown').slice(0, 120) });
+  }
+  return out;
+}
+
 const UNAVAILABLE = 'Estamos con problemas técnicos en este momento. Intenta de nuevo en unos minutos, por favor.';
 
 /**
@@ -40,6 +50,7 @@ export function handleEvent(raw: string, signature: string | null, env = process
   let body: unknown;
   try { body = JSON.parse(raw); } catch { return fail(plain(400, 'Bad JSON')); }
 
+  for (const f of failedStatuses(body)) console.warn(`[wa] delivery failed code=${f.code} title=${f.title}`);
   const jobs: Promise<void>[] = [];
   if (waConfigured(env)) {
     for (const m of parseWebhook(body)) {

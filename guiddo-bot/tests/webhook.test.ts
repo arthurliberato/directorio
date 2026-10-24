@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { test } from 'node:test';
 import { checkAuth, renderSimulator } from '../src/simulator.ts';
-import { handleEvent, verifyChallenge, type Io } from '../src/webhook.ts';
+import { failedStatuses, handleEvent, verifyChallenge, type Io } from '../src/webhook.ts';
 
 const env = { WHATSAPP_TOKEN: 't', WHATSAPP_PHONE_NUMBER_ID: '1', WHATSAPP_APP_SECRET: 's3cret', WHATSAPP_VERIFY_TOKEN: 'v3rify' } as NodeJS.ProcessEnv;
 const sign = (b: string) => 'sha256=' + createHmac('sha256', 's3cret').update(b).digest('hex');
@@ -47,4 +47,13 @@ test('simulator: disabled without password, Basic auth otherwise, escapes output
   assert.equal(checkAuth('Basic ' + Buffer.from('me:pw').toString('base64'), e), null);
   const html = renderSimulator(new URLSearchParams({ q: '<script>alert(1)</script>' }), e).body;
   assert.doesNotMatch(html, /<script>alert/);
+});
+
+test('failed delivery receipts are reduced to Meta\'s reason', () => {
+  const body = { entry: [{ changes: [{ value: { statuses: [
+    { status: 'delivered', recipient_id: '18095550100' },
+    { status: 'failed', recipient_id: '18095550100', errors: [{ code: 131031, title: 'Business Account locked', message: 'x' }] },
+  ] } }] }] };
+  assert.deepEqual(failedStatuses(body), [{ code: 131031, title: 'Business Account locked' }]);
+  assert.deepEqual(failedStatuses({}), []);
 });
